@@ -11,7 +11,7 @@ export enum BathroomType {
 export enum Gender {
   BOYS = "boys",
   GIRLS = "girls",
-  MIXED = "Mixed",
+  MIXED = "mixed",
 }
 
 export interface PropertyDetails {
