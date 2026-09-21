@@ -1,8 +1,3 @@
-export enum BoostingStatus {
-  ACTIVE = "active",
-  EXPIRED = "expired",
-}
-
 export interface PropertyBoosting {
   property_boosting_id: string;
   property_id: string;
@@ -10,5 +5,5 @@ export interface PropertyBoosting {
   is_paid: boolean;
   start_date: string;
   end_date: string;
-  status: BoostingStatus;
+  status: "active" | "expired";
 }
