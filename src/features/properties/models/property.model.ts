@@ -1,3 +1,9 @@
+export enum PropertyType {
+  DORM = "dorm",
+  STUDIO = "studio",
+  APARTMENT = "apartment",
+}
+
 export enum KitchenType {
   PRIVATE = "private",
   SHARED = "shared",
@@ -14,8 +20,15 @@ export enum Gender {
   MIXED = "mixed",
 }
 
-export interface PropertyDetails {
-  property_id: string;
+export interface Property {
+  host_id: string;
+  property_type: PropertyType;
+  title: string;
+  description: string;
+  address: string;
+  latitude: number;
+  longitude: number;
+  price: number;
   bedrooms: number;
   bathrooms: number;
   bed_count: number;
