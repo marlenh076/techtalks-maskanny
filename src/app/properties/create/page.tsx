@@ -1,4 +1,4 @@
-import PropertyForm from "../../../features/Property/presentation/components/PropertyForm";
+import PropertyForm from "../../../features/properties/presentation/components/PropertyForm";
 
 export default function CreatePropertyPage() {
   return (

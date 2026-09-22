@@ -1,4 +1,4 @@
-import PropertyDetails from "../../../features/Property/presentation/components/PropertyDetails";
+import PropertyDetails from "../../../features/properties/presentation/components/PropertyDetails";
 
 type PropertyDetailsPageProps = {
   params: Promise<{
