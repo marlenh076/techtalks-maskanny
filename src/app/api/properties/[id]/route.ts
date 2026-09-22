@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
-import { PropertyService } from "@/src/features/property/service/property";
-import { PropertyRepository } from "@/src/features/property/repository/property.repository";
+import { PropertyService } from "@/src/features/properties/service/property";
+import { PropertyRepository } from "@/src/features/properties/repository/property.repository";
 
 const propertyRepository = new PropertyRepository();
 const propertyService = new PropertyService(propertyRepository);

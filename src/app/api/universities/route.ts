@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
-import { UniversityService } from "@/src/features/university/service/university";
-import { UniversityRepository } from "@/src/features/university/repository/university.repository";
-import { universityFiltersSchema } from "@/src/features/university/validation/university.schema";
+import { UniversityService } from "@/src/features/universities/service/university";
+import { UniversityRepository } from "@/src/features/universities/repository/university.repository";
+import { universityFiltersSchema } from "@/src/features/universities/validation/university.schema";
 
 const universityRepository = new UniversityRepository();
 const universityService = new UniversityService(universityRepository);

@@ -1,10 +1,10 @@
 import { NextResponse, NextRequest } from "next/server";
-import { PropertyService } from "../../../features/property/service/property";
-import { PropertyRepository } from "../../../features/property/repository/property.repository";
+import { PropertyService } from "../../../features/properties/service/property";
+import { PropertyRepository } from "../../../features/properties/repository/property.repository";
 import {
   propertySchema,
   propertyFiltersSchema,
-} from "@/src/features/property/validation/property.schema";
+} from "@/src/features/properties/validation/property.schema";
 
 const propertyRepository = new PropertyRepository();
 const propertyService = new PropertyService(propertyRepository);

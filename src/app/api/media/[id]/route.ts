@@ -1,9 +1,9 @@
 import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
 
-import { MediaService } from "@/src/features/property/service/media";
-import { MediaRepository } from "@/src/features/property/repository/media.repository";
-import { mediaSchema } from "@/src/features/property/validation/media.schema";
+import { MediaService } from "@/src/features/properties/service/media";
+import { MediaRepository } from "@/src/features/properties/repository/media.repository";
+import { mediaSchema } from "@/src/features/properties/validation/media.schema";
 
 import { BoostingPlanService } from "@/src/features/boosting/service/boosting_plan";
 import { BoostingPlanRepository } from "@/src/features/boosting/repository/boosting_plan.repository";

@@ -6,11 +6,15 @@ import { PropertyBoostingRepository } from "@/src/features/boosting/repository/p
 import { propertyBoostingUpdateSchema } from "@/src/features/boosting/validation/property_boosting.schema";
 
 const propertyBoostingRepository = new PropertyBoostingRepository();
+
 const propertyBoostingService = new PropertyBoostingService(
   propertyBoostingRepository,
 );
 
-export async function GET({ params }: { params: Promise<{ id: string }> }) {
+export async function GET(
+  _request: Request,
+  { params }: { params: Promise<{ id: string }> },
+) {
   try {
     const { id } = await params;
 
@@ -55,6 +59,15 @@ export async function PATCH(
       );
     }
 
+    const existingPropertyBoosting = await propertyBoostingService.getById(id);
+
+    if (!existingPropertyBoosting) {
+      return NextResponse.json(
+        { error: "Property boosting not found" },
+        { status: 404 },
+      );
+    }
+
     const propertyBoosting = await propertyBoostingService.update(
       id,
       result.data,
@@ -71,7 +84,10 @@ export async function PATCH(
   }
 }
 
-export async function DELETE({ params }: { params: Promise<{ id: string }> }) {
+export async function DELETE(
+  _request: Request,
+  { params }: { params: Promise<{ id: string }> },
+) {
   try {
     const { id } = await params;
 

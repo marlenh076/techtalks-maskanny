@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
-import { UniversityService } from "@/src/features/university/service/university";
-import { UniversityRepository } from "@/src/features/university/repository/university.repository";
+import { UniversityService } from "@/src/features/universities/service/university";
+import { UniversityRepository } from "@/src/features/universities/repository/university.repository";
 
 const universityRepository = new UniversityRepository();
 const universityService = new UniversityService(universityRepository);
