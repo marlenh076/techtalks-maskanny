@@ -12,10 +12,12 @@ export default async function PropertyDetailsPage({
   const { propertyId } = await params;
 
   // Temporary property data.
+  void propertyId;
   // Later, this will come from the backend API using propertyId.
   const property = {
     name: "Hamra Student Residence",
-    description: "A furnished student residence located near the university.",
+    description:
+      "A furnished student residence located near the university.",
     price: 250,
     location: "Hamra, Beirut",
     university: "Lebanese American University",
@@ -28,11 +30,7 @@ export default async function PropertyDetailsPage({
   };
 
   return (
-    <main>
-      <h1>Property Details</h1>
-
-      <p>Property ID: {propertyId}</p>
-
+    <main className="property-details-page">
       <PropertyDetails
         name={property.name}
         description={property.description}

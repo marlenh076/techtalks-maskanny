@@ -25,53 +25,211 @@ export default function PropertyDetails({
   availability,
   amenities,
 }: PropertyDetailsProps) {
+  const isAvailable = availability.toLowerCase() === "available";
+
   return (
-    <section>
-      <h2>{name}</h2>
+    <article className="property-details">
+      {/* Header */}
+      <header className="property-details-header">
+        <div className="property-details-heading">
+          <div className="property-details-location">
+            <span aria-hidden="true">⌖</span>
+            <span>{location}</span>
+          </div>
 
-      <p>{description}</p>
+          <h1>{name}</h1>
 
-      <p>
-        <strong>Monthly Price:</strong> ${price}
-      </p>
+          <p className="property-details-university">
+            Near {university}
+          </p>
+        </div>
 
-      <p>
-        <strong>Location:</strong> {location}
-      </p>
+        <div className="property-details-price">
+          <span className="property-price-value">${price}</span>
+          <span className="property-price-period">/ month</span>
+        </div>
+      </header>
 
-      <p>
-        <strong>Nearby University:</strong> {university}
-      </p>
+      {/* Property gallery placeholder */}
+      <section
+        className="property-gallery"
+        aria-label="Property photos"
+      >
+        <div className="property-gallery-main">
+          <div className="property-gallery-placeholder">
+            <span className="property-gallery-icon" aria-hidden="true">
+              ◇
+            </span>
+            <span>Property photos will appear here</span>
+          </div>
 
-      <p>
-        <strong>Room Type:</strong> {roomType}
-      </p>
+          <span
+            className={`property-availability-badge ${
+              isAvailable
+                ? "property-availability-badge--available"
+                : "property-availability-badge--unavailable"
+            }`}
+          >
+            <span className="property-status-dot" />
+            {availability}
+          </span>
+        </div>
 
-      <p>
-        <strong>Gender:</strong> {gender}
-      </p>
+        <div className="property-gallery-side">
+          <div className="property-gallery-placeholder">
+            <span>Photo</span>
+          </div>
 
-      <p>
-        <strong>Furnished:</strong> {furnished}
-      </p>
+          <div className="property-gallery-placeholder">
+            <span>Photo</span>
+          </div>
+        </div>
+      </section>
 
-      <p>
-        <strong>Availability:</strong> {availability}
-      </p>
+      {/* Quick facts */}
+      <section
+        className="property-quick-facts"
+        aria-label="Property highlights"
+      >
+        <div className="property-fact">
+          <span className="property-fact-label">Room type</span>
+          <strong>{roomType}</strong>
+        </div>
 
-      <p>
-        <strong>Rules:</strong> {rules}
-      </p>
+        <div className="property-fact">
+          <span className="property-fact-label">Gender</span>
+          <strong>{gender}</strong>
+        </div>
 
-      <div>
-        <strong>Amenities:</strong>
+        <div className="property-fact">
+          <span className="property-fact-label">Furnished</span>
+          <strong>{furnished}</strong>
+        </div>
 
-        <ul>
-          {amenities.map((amenity) => (
-            <li key={amenity}>{amenity}</li>
-          ))}
-        </ul>
+        <div className="property-fact">
+          <span className="property-fact-label">Availability</span>
+          <strong>{availability}</strong>
+        </div>
+      </section>
+
+      {/* Main content */}
+      <div className="property-details-layout">
+        <div className="property-details-main">
+          {/* About */}
+          <section className="property-content-section">
+            <span className="property-section-eyebrow">
+              About
+            </span>
+
+            <h2>About this property</h2>
+
+            <p className="property-description">
+              {description}
+            </p>
+          </section>
+
+          {/* Amenities */}
+          <section className="property-content-section">
+            <span className="property-section-eyebrow">
+              What&apos;s included
+            </span>
+
+            <h2>Amenities</h2>
+
+            {amenities.length > 0 ? (
+              <div className="property-amenities">
+                {amenities.map((amenity) => (
+                  <div
+                    className="property-amenity"
+                    key={amenity}
+                  >
+                    <span
+                      className="property-amenity-check"
+                      aria-hidden="true"
+                    >
+                      ✓
+                    </span>
+
+                    <span>{amenity}</span>
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <p className="property-empty-text">
+                No amenities have been added yet.
+              </p>
+            )}
+          </section>
+
+          {/* Rules */}
+          <section className="property-content-section">
+            <span className="property-section-eyebrow">
+              Before you move in
+            </span>
+
+            <h2>House rules</h2>
+
+            <div className="property-rules">
+              <span
+                className="property-rules-icon"
+                aria-hidden="true"
+              >
+                i
+              </span>
+
+              <p>
+                {rules.trim()
+                  ? rules
+                  : "No specific house rules have been provided."}
+              </p>
+            </div>
+          </section>
+        </div>
+
+        {/* Sidebar */}
+        <aside className="property-sidebar">
+          <div className="property-contact-card">
+            <span className="property-contact-eyebrow">
+              Interested in this place?
+            </span>
+
+            <div className="property-contact-price">
+              <strong>${price}</strong>
+              <span>/ month</span>
+            </div>
+
+            <div className="property-contact-divider" />
+
+            <div className="property-contact-detail">
+              <span>Location</span>
+              <strong>{location}</strong>
+            </div>
+
+            <div className="property-contact-detail">
+              <span>University</span>
+              <strong>{university}</strong>
+            </div>
+
+            <div className="property-contact-detail">
+              <span>Status</span>
+              <strong>{availability}</strong>
+            </div>
+
+            <button
+              type="button"
+              className="btn btn-block property-contact-button"
+            >
+              Contact owner
+              <span aria-hidden="true">→</span>
+            </button>
+
+            <p className="property-contact-note">
+              Contact the property owner to ask questions or
+              arrange a viewing.
+            </p>
+          </div>
+        </aside>
       </div>
-    </section>
+    </article>
   );
 }
