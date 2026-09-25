@@ -3,6 +3,7 @@
 import { useState } from "react";
 
 export default function PropertyForm() {
+  const [propertyType, setPropertyType] = useState("");
   const [name, setName] = useState("");
   const [description, setDescription] = useState("");
   const [price, setPrice] = useState("");
@@ -15,7 +16,7 @@ export default function PropertyForm() {
   const [availability, setAvailability] = useState("");
   const [amenities, setAmenities] = useState<string[]>([]);
   const [photos, setPhotos] = useState<File[]>([]);
-
+  const [otherAmenities, setOtherAmenities] = useState("");
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -53,6 +54,11 @@ export default function PropertyForm() {
 
     setError("");
     setSuccess("");
+
+    if (propertyType === "") {
+  setError("Please select a property type.");
+  return;
+}
 
     if (name.trim() === "") {
       setError("Property name is required.");
@@ -108,11 +114,20 @@ export default function PropertyForm() {
   }
 
   const amenityOptions = [
-    { value: "wifi", label: "Wi-Fi" },
-    { value: "electricity", label: "Electricity" },
-    { value: "generator", label: "Generator" },
-    { value: "kitchen", label: "Kitchen" },
-  ];
+  { value: "wifi", label: "Wi-Fi" },
+  { value: "electricity", label: "Electricity" },
+  { value: "generator", label: "Generator" },
+  { value: "private-kitchen", label: "Private Kitchen" },
+  { value: "shared-kitchen", label: "Shared Kitchen" },
+  { value: "private-bathroom", label: "Private Bathroom" },
+  { value: "shared-bathroom", label: "Shared Bathroom" },
+  { value: "washing-machine", label: "Washing Machine" },
+  { value: "parking", label: "Parking" },
+  { value: "air-conditioning", label: "Air Conditioning" },
+  { value: "heating", label: "Heating" },
+  { value: "elevator", label: "Elevator" },
+  { value: "balcony", label: "Balcony" },
+];
 
   return (
     <form onSubmit={handleSubmit} className="listing-form">
@@ -221,7 +236,23 @@ export default function PropertyForm() {
           </div>
         </div>
 
-        <div className="listing-grid listing-grid-three">
+        <div className="listing-grid listing-grid-two">
+          <div className="listing-field">
+            <label htmlFor="propertyType">Property type</label>
+
+          <select
+              className="field"
+              id="propertyType"
+              value={propertyType}
+              onChange={(e) => setPropertyType(e.target.value)}
+            >
+              <option value="">Select property type</option>
+              <option value="dorm">Dorm</option>
+              <option value="apartment">Apartment</option>
+              <option value="studio">Studio</option>
+              <option value="room">Room</option>
+           </select>
+          </div>
           <div className="listing-field">
             <label htmlFor="roomType">Room type</label>
             <select
@@ -374,39 +405,58 @@ export default function PropertyForm() {
           </legend>
 
           <div className="amenities-grid">
-            {amenityOptions.map((amenity) => {
-              const selected = amenities.includes(amenity.value);
+  {amenityOptions.map((amenity) => {
+    const selected = amenities.includes(amenity.value);
 
-              return (
-                <label
-                  key={amenity.value}
-                  className={`amenity-option ${
-                    selected ? "amenity-option--selected" : ""
-                  }`}
-                >
-                  <input
-                    className="sr-only"
-                    type="checkbox"
-                    checked={selected}
-                    onChange={() =>
-                      handleAmenityChange(amenity.value)
-                    }
-                  />
+    return (
+      <label
+        key={amenity.value}
+        className={`amenity-option ${
+          selected ? "amenity-option--selected" : ""
+        }`}
+      >
+        <input
+          className="sr-only"
+          type="checkbox"
+          checked={selected}
+          onChange={() =>
+            handleAmenityChange(amenity.value)
+          }
+        />
 
-                  <span
-                    className="amenity-check"
-                    aria-hidden="true"
-                  >
-                    {selected ? "✓" : "+"}
-                  </span>
+        <span
+          className="amenity-check"
+          aria-hidden="true"
+        >
+          {selected ? "✓" : "+"}
+        </span>
 
-                  <span>{amenity.label}</span>
-                </label>
-              );
-            })}
-          </div>
-        </fieldset>
-      </section>
+        <span>{amenity.label}</span>
+      </label>
+    );
+  })}
+</div>
+
+<div className="listing-field listing-field-full other-amenities-field">
+  <label htmlFor="otherAmenities">
+    Other amenities
+  </label>
+
+  <input
+    id="otherAmenities"
+    className="field"
+    type="text"
+    placeholder="e.g. Rooftop access, gym, study room"
+    value={otherAmenities}
+    onChange={(e) => setOtherAmenities(e.target.value)}
+  />
+
+  <p className="listing-field-hint">
+    Add any additional amenities not listed above.
+  </p>
+</div>
+</fieldset>
+</section>
 
       {/* 06 - Availability and rules */}
       <section className="listing-section">

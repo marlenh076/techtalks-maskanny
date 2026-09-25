@@ -912,6 +912,18 @@ textarea.field {
   gap: 24px;
 }
 
+/* Two-column form grid */
+
+.listing-grid-two {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+@media (max-width: 700px) {
+  .listing-grid-two {
+    grid-template-columns: 1fr;
+  }
+}
+
 .listing-field {
   min-width: 0;
 }
@@ -2328,5 +2340,307 @@ textarea.field {
 
   .property-contact-card {
     padding: 24px;
+  }
+}
+/* ============================================================
+   FEATURED LISTINGS
+   ============================================================ */
+
+.featured-listings {
+  width: min(1180px, 100%);
+  margin: 110px auto 0;
+  padding-top: 72px;
+
+  border-top: 1px solid var(--line);
+}
+
+.featured-listings-header {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 32px;
+
+  margin-bottom: 36px;
+}
+
+.featured-listings-eyebrow {
+  display: block;
+  margin-bottom: 12px;
+
+  color: var(--soft);
+
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.13em;
+  text-transform: uppercase;
+}
+
+.featured-listings-header h2 {
+  margin: 0;
+
+  color: var(--ink);
+
+  font-size: clamp(38px, 5vw, 58px);
+  font-weight: 500;
+  line-height: 1;
+  letter-spacing: -0.045em;
+}
+
+.featured-listings-header p {
+  max-width: 520px;
+  margin: 16px 0 0;
+
+  color: var(--soft);
+
+  font-size: 14px;
+  line-height: 1.6;
+}
+
+
+/* Listings grid */
+
+.featured-listings-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 18px;
+}
+
+
+/* Individual listing */
+
+.featured-listing-card {
+  min-width: 0;
+  overflow: hidden;
+
+  background: var(--surface);
+
+  border: 1px solid var(--line);
+  border-radius: 24px;
+
+  color: inherit;
+  text-decoration: none;
+
+  transition:
+    transform 220ms ease,
+    box-shadow 220ms ease;
+}
+
+.featured-listing-card:hover {
+  transform: translateY(-4px);
+
+  box-shadow:
+    0 20px 50px -34px rgba(22, 23, 26, 0.35);
+}
+
+
+/* Image */
+
+.featured-listing-image {
+  position: relative;
+
+  height: 270px;
+  overflow: hidden;
+
+  background: var(--placeholder-bg);
+}
+
+.featured-listing-placeholder {
+  width: 100%;
+  height: 100%;
+
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+
+  background:
+    linear-gradient(
+      145deg,
+      #e9e6df,
+      #dedbd3
+    );
+
+  color: var(--soft);
+
+  font-size: 12px;
+}
+
+.featured-listing-placeholder > span:first-child {
+  display: grid;
+  place-items: center;
+
+  width: 42px;
+  height: 42px;
+
+  background: rgba(255, 255, 255, 0.65);
+
+  border: 1px solid rgba(22, 23, 26, 0.1);
+  border-radius: 50%;
+
+  color: var(--ink);
+
+  font-size: 17px;
+}
+
+
+/* Room type pill */
+
+.featured-listing-room-type {
+  position: absolute;
+  top: 16px;
+  right: 16px;
+
+  padding: 8px 13px;
+
+  background: rgba(255, 255, 255, 0.92);
+  color: var(--ink);
+
+  border-radius: 999px;
+
+  font-size: 11px;
+  font-weight: 600;
+
+  backdrop-filter: blur(8px);
+}
+
+
+/* Card information */
+
+.featured-listing-content {
+  padding: 20px;
+}
+
+.featured-listing-top {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 18px;
+}
+
+.featured-listing-top > div:first-child {
+  min-width: 0;
+}
+
+.featured-listing-top h3 {
+  margin: 0;
+
+  color: var(--ink);
+
+  font-size: 17px;
+  font-weight: 500;
+  line-height: 1.3;
+
+  letter-spacing: -0.02em;
+}
+
+.featured-listing-location {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+
+  margin: 8px 0 0;
+
+  color: var(--soft);
+
+  font-size: 12px;
+}
+
+.featured-listing-price {
+  flex: 0 0 auto;
+
+  display: flex;
+  align-items: baseline;
+  gap: 3px;
+
+  white-space: nowrap;
+}
+
+.featured-listing-price strong {
+  color: var(--ink);
+
+  font-size: 17px;
+  font-weight: 600;
+}
+
+.featured-listing-price span {
+  color: var(--soft);
+
+  font-size: 10px;
+}
+
+
+/* Divider */
+
+.featured-listing-divider {
+  height: 1px;
+
+  margin: 18px 0 14px;
+
+  background: var(--line);
+}
+
+
+/* Property information */
+
+.featured-listing-meta {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+
+  color: var(--ink-2);
+
+  font-size: 12px;
+}
+
+.featured-listing-meta-dot {
+  color: var(--faint);
+}
+
+.featured-listing-university {
+  margin: 10px 0 0;
+
+  color: var(--soft);
+
+  font-size: 11px;
+  line-height: 1.45;
+}
+
+
+/* ============================================================
+   FEATURED LISTINGS — RESPONSIVE
+   ============================================================ */
+
+@media (max-width: 950px) {
+  .featured-listings-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .featured-listing-card:last-child {
+    display: none;
+  }
+}
+
+@media (max-width: 650px) {
+  .featured-listings {
+    margin-top: 72px;
+    padding-top: 52px;
+  }
+
+  .featured-listings-header {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+
+  .featured-listings-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .featured-listing-card:last-child {
+    display: block;
+  }
+
+  .featured-listing-image {
+    height: 250px;
   }
 }

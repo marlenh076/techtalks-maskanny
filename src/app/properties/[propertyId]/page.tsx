@@ -1,4 +1,5 @@
 import PropertyDetails from "../../../features/properties/presentation/components/PropertyDetails";
+import FeaturedListings from "../../../features/properties/presentation/components/FeaturedListings";
 
 type PropertyDetailsPageProps = {
   params: Promise<{
@@ -26,24 +27,38 @@ export default async function PropertyDetailsPage({
     furnished: "Yes",
     rules: "No smoking.",
     availability: "Available",
-    amenities: ["Wi-Fi", "Electricity", "Generator", "Kitchen"],
+    amenities: [
+  "Wi-Fi",
+  "Electricity",
+  "Generator",
+  "Private Kitchen",
+  "Private Bathroom",
+  "Washing Machine",
+  "Parking",
+  "Air Conditioning",
+  "Heating",
+  "Elevator",
+  "Balcony",
+],
   };
 
   return (
-    <main className="property-details-page">
-      <PropertyDetails
-        name={property.name}
-        description={property.description}
-        price={property.price}
-        location={property.location}
-        university={property.university}
-        roomType={property.roomType}
-        gender={property.gender}
-        furnished={property.furnished}
-        rules={property.rules}
-        availability={property.availability}
-        amenities={property.amenities}
-      />
-    </main>
-  );
+  <main className="property-details-page">
+    <PropertyDetails
+      name={property.name}
+      description={property.description}
+      price={property.price}
+      location={property.location}
+      university={property.university}
+      roomType={property.roomType}
+      gender={property.gender}
+      furnished={property.furnished}
+      rules={property.rules}
+      availability={property.availability}
+      amenities={property.amenities}
+    />
+
+    <FeaturedListings />
+  </main>
+);
 }
