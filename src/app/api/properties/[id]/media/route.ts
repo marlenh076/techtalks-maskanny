@@ -1,14 +1,17 @@
 import { NextRequest, NextResponse } from "next/server";
-import { z } from "zod";
 
 import { MediaService } from "@/src/features/properties/service/media";
 import { MediaRepository } from "@/src/features/properties/repository/media.repository";
-import { mediaSchema } from "@/src/features/properties/validation/media.schema";
+import { PropertyRepository } from "@/src/features/properties/repository/property.repository";
+import { HostRepository } from "@/src/features/users/repository/host.repository";
+import { StorageService } from "@/src/lib/supabase/storage";
 
 import { BoostingPlanService } from "@/src/features/boosting/service/boosting_plan";
 import { BoostingPlanRepository } from "@/src/features/boosting/repository/boosting_plan.repository";
 import { PropertyBoostingService } from "@/src/features/boosting/service/property_boosting";
 import { PropertyBoostingRepository } from "@/src/features/boosting/repository/property_boosting.repository";
+import { getAccessToken, getCurrentUser } from "@/src/lib/supabase/auth";
+import { z } from "zod";
 
 const mediaRepository = new MediaRepository();
 
@@ -26,12 +29,31 @@ const mediaService = new MediaService(
   boostingPlanService,
 );
 
+async function cleanupUploadedFile(
+  storageService: StorageService,
+  token: string,
+  filePath: string,
+) {
+  try {
+    await storageService.delete(token, "properties-media", filePath);
+  } catch (error) {
+    console.error("Failed to clean up uploaded media file:", error);
+  }
+}
+
 export async function GET(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> },
 ) {
   try {
     const { id } = await params;
+
+    if (!z.uuid().safeParse(id).success) {
+      return NextResponse.json(
+        { error: "Invalid property ID" },
+        { status: 400 },
+      );
+    }
 
     const media = await mediaService.getByPropertyId(id);
 
@@ -50,31 +72,126 @@ export async function POST(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> },
 ) {
+  let uploadedFilePath: string | null = null;
+  let token: string | null = null;
+  let storageService: StorageService | null = null;
+
   try {
     const { id } = await params;
 
-    const body = await request.json();
-
-    const result = mediaSchema.safeParse(body);
-
-    if (!result.success) {
+    if (!z.uuid().safeParse(id).success) {
       return NextResponse.json(
-        {
-          error: "Invalid media data",
-          details: z.treeifyError(result.error),
-        },
+        { error: "Invalid property ID" },
         { status: 400 },
       );
     }
 
+    token = getAccessToken(request);
+
+    if (!token) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
+
+    const user = await getCurrentUser(request);
+
+    if (!user) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
+
+    const property = await new PropertyRepository(token).getById(id);
+
+    if (!property) {
+      return NextResponse.json({ error: "Property not found" }, { status: 404 });
+    }
+
+    const host = await new HostRepository(token).getByUserId(user.id);
+
+    if (!host || property.host_id !== host.host_id) {
+      return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+    }
+
+    const formData = await request.formData().catch(() => null);
+
+    if (!formData) {
+      return NextResponse.json({ error: "Invalid form data" }, { status: 400 });
+    }
+
+    const file = formData.get("file");
+
+    if (!(file instanceof File)) {
+      return NextResponse.json({ error: "File is required" }, { status: 400 });
+    }
+
+    const allowedTypes = [
+      "image/jpeg",
+      "image/png",
+      "image/webp",
+      "video/mp4",
+      "video/webm",
+    ];
+
+    if (!allowedTypes.includes(file.type)) {
+      return NextResponse.json(
+        { error: "Unsupported file type" },
+        { status: 400 },
+      );
+    }
+
+    const maxFileSize = 50 * 1024 * 1024;
+
+    if (file.size > maxFileSize) {
+      return NextResponse.json(
+        { error: "File size must not exceed 50 MB" },
+        { status: 400 },
+      );
+    }
+
+    const fileExtension = file.name.split(".").pop();
+
+    const fileName = `${crypto.randomUUID()}.${fileExtension}`;
+
+    const filePath = `${id}/${fileName}`;
+
+    storageService = new StorageService();
+
+    await storageService.upload(token, "properties-media", filePath, file);
+
+    // From this point onward, cleanup is required if something fails.
+    uploadedFilePath = filePath;
+
+    const url = storageService.getPublicUrl("properties-media", filePath);
+
+    const type = file.type.startsWith("image/") ? "image" : "video";
+
+    const mediaRepository = new MediaRepository(token);
+
+    const propertyBoostingRepository = new PropertyBoostingRepository(token);
+
+    const propertyBoostingService = new PropertyBoostingService(
+      propertyBoostingRepository,
+    );
+
+    const mediaService = new MediaService(
+      mediaRepository,
+      propertyBoostingService,
+      boostingPlanService,
+    );
+
     const media = await mediaService.create({
       property_id: id,
-      url: result.data.url,
-      type: result.data.type,
+      url,
+      type,
     });
+
+    // DB creation succeeded, so this file should no longer be rolled back.
+    uploadedFilePath = null;
 
     return NextResponse.json(media, { status: 201 });
   } catch (error) {
+    if (uploadedFilePath && token && storageService) {
+      await cleanupUploadedFile(storageService, token, uploadedFilePath);
+    }
+
     console.error(error);
 
     return NextResponse.json(

@@ -1,4 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
+import { z } from "zod";
+
 import { UniversityService } from "@/src/features/universities/service/university";
 import { UniversityRepository } from "@/src/features/universities/repository/university.repository";
 
@@ -11,6 +13,13 @@ export async function GET(
 ) {
   try {
     const { id } = await params;
+
+    if (!z.uuid().safeParse(id).success) {
+      return NextResponse.json(
+        { error: "Invalid university ID" },
+        { status: 400 },
+      );
+    }
 
     const university = await universityService.getById(id);
 

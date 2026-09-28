@@ -9,4 +9,3 @@ export const propertyBoostingSchema = z.object({
   status: z.enum(["active", "expired"]),
 });
 
-export const propertyBoostingUpdateSchema = propertyBoostingSchema.partial();

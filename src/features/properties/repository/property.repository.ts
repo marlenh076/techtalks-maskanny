@@ -1,13 +1,29 @@
-import { supabase } from "../../../lib/supabase/client";
+import {
+  supabase,
+  createAuthenticatedClient,
+} from "../../../lib/supabase/client";
 import { Property } from "../models/property.model";
-import { IPropertyRepository } from "./IProperty.repository";
-import { PropertyFilters } from "./IProperty.repository";
+import { IPropertyRepository, PropertyFilters } from "./IProperty.repository";
+
+export class PropertyUnavailableError extends Error {
+  constructor() {
+    super("Property not found or access denied");
+  }
+}
 
 export class PropertyRepository implements IPropertyRepository {
+  private supabase;
+
+  constructor(accessToken?: string) {
+    this.supabase = accessToken
+      ? createAuthenticatedClient(accessToken)
+      : supabase;
+  }
+
   async create(
     data: Omit<Property, "property_id" | "created_at">,
   ): Promise<Property> {
-    const { data: property, error } = await supabase
+    const { data: property, error } = await this.supabase
       .from("property")
       .insert(data)
       .select()
@@ -21,33 +37,43 @@ export class PropertyRepository implements IPropertyRepository {
   }
 
   async update(id: string, data: Partial<Property>): Promise<Property> {
-    const { data: property, error } = await supabase
+    const { data: property, error } = await this.supabase
       .from("property")
       .update(data)
       .eq("property_id", id)
       .select()
-      .single();
+      .maybeSingle();
 
     if (error) {
       throw new Error(error.message);
+    }
+
+    if (!property) {
+      throw new PropertyUnavailableError();
     }
 
     return property;
   }
 
   async delete(id: string): Promise<void> {
-    const { error } = await supabase
+    const { data: property, error } = await this.supabase
       .from("property")
       .delete()
-      .eq("property_id", id);
+      .eq("property_id", id)
+      .select()
+      .maybeSingle();
 
     if (error) {
       throw new Error(error.message);
     }
+
+    if (!property) {
+      throw new PropertyUnavailableError();
+    }
   }
 
   async getAll(): Promise<Property[]> {
-    const { data, error } = await supabase.from("property").select("*");
+    const { data, error } = await this.supabase.from("property").select("*");
 
     if (error) {
       throw new Error(error.message);
@@ -57,7 +83,7 @@ export class PropertyRepository implements IPropertyRepository {
   }
 
   async getById(id: string): Promise<Property | null> {
-    const { data, error } = await supabase
+    const { data, error } = await this.supabase
       .from("property")
       .select("*")
       .eq("property_id", id)
@@ -71,12 +97,16 @@ export class PropertyRepository implements IPropertyRepository {
   }
 
   async search(filters: PropertyFilters): Promise<Property[]> {
-    let query = supabase.from("property").select("*");
+    let query = this.supabase.from("property").select("*");
 
     if (filters.query) {
-      query = query.or(
-        `title.ilike.%${filters.query}%,description.ilike.%${filters.query}%,address.ilike.%${filters.query}%`,
-      );
+      const searchQuery = filters.query.replace(/[(),]/g, " ").trim();
+
+      if (searchQuery) {
+        query = query.or(
+          `title.ilike.%${searchQuery}%,description.ilike.%${searchQuery}%,address.ilike.%${searchQuery}%`,
+        );
+      }
     }
 
     if (filters.property_type) {

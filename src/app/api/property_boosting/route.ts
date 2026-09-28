@@ -2,32 +2,43 @@ import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
 
 import { PropertyBoostingService } from "@/src/features/boosting/service/property_boosting";
-import { PropertyBoostingRepository } from "@/src/features/boosting/repository/property_boosting.repository";
+import {
+  PropertyBoostingConflictError,
+  PropertyBoostingRepository,
+} from "@/src/features/boosting/repository/property_boosting.repository";
 import { propertyBoostingSchema } from "@/src/features/boosting/validation/property_boosting.schema";
-
-const propertyBoostingRepository = new PropertyBoostingRepository();
-const propertyBoostingService = new PropertyBoostingService(
-  propertyBoostingRepository,
-);
-
-export async function GET() {
-  try {
-    const propertyBoosting = await propertyBoostingService.getAll();
-
-    return NextResponse.json(propertyBoosting);
-  } catch (error) {
-    console.error(error);
-
-    return NextResponse.json(
-      { error: "Failed to fetch property boosting" },
-      { status: 500 },
-    );
-  }
-}
+import { HostRepository } from "@/src/features/users/repository/host.repository";
+import { getAccessToken, getCurrentUser } from "@/src/lib/supabase/auth";
+import { PropertyRepository } from "@/src/features/properties/repository/property.repository";
 
 export async function POST(request: NextRequest) {
   try {
-    const body = await request.json();
+    const body = await request.json().catch(() => undefined);
+
+    if (body === undefined) {
+      return NextResponse.json({ error: "Invalid JSON body" }, { status: 400 });
+    }
+
+    const token = getAccessToken(request);
+
+    if (!token) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
+
+    const user = await getCurrentUser(request);
+
+    if (!user) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
+
+    const host = await new HostRepository(token).getByUserId(user.id);
+
+    if (!host) {
+      return NextResponse.json(
+        { error: "Host access required" },
+        { status: 403 },
+      );
+    }
 
     const result = propertyBoostingSchema.safeParse(body);
 
@@ -41,10 +52,41 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    const propertyRepository = new PropertyRepository(token);
+
+    const property = await propertyRepository.getById(result.data.property_id);
+
+    if (!property) {
+      return NextResponse.json(
+        { error: "Property not found" },
+        { status: 404 },
+      );
+    }
+
+    if (property.host_id !== host.host_id) {
+      return NextResponse.json(
+        { error: "You do not own this property" },
+        { status: 403 },
+      );
+    }
+
+    const propertyBoostingRepository = new PropertyBoostingRepository(token);
+
+    const propertyBoostingService = new PropertyBoostingService(
+      propertyBoostingRepository,
+    );
+
     const propertyBoosting = await propertyBoostingService.create(result.data);
 
     return NextResponse.json(propertyBoosting, { status: 201 });
   } catch (error) {
+    if (error instanceof PropertyBoostingConflictError) {
+      return NextResponse.json(
+        { error: "Property already has a boost" },
+        { status: 409 },
+      );
+    }
+
     console.error(error);
 
     return NextResponse.json(

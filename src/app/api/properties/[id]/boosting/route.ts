@@ -1,19 +1,38 @@
-import { NextResponse } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
 import { PropertyBoostingService } from "@/src/features/boosting/service/property_boosting";
 import { PropertyBoostingRepository } from "@/src/features/boosting/repository/property_boosting.repository";
-
-const propertyBoostingRepository = new PropertyBoostingRepository();
-
-const propertyBoostingService = new PropertyBoostingService(
-  propertyBoostingRepository,
-);
+import { getAccessToken, getCurrentUser } from "@/src/lib/supabase/auth";
+import { z } from "zod";
 
 export async function GET(
-  _request: Request,
+  request: NextRequest,
   { params }: { params: Promise<{ id: string }> },
 ) {
   try {
     const { id } = await params;
+
+    if (!z.uuid().safeParse(id).success) {
+      return NextResponse.json(
+        { error: "Invalid property ID" },
+        { status: 400 },
+      );
+    }
+
+    const token = getAccessToken(request);
+
+    if (!token) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
+
+    if (!(await getCurrentUser(request))) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
+
+    const propertyBoostingRepository = new PropertyBoostingRepository(token);
+
+    const propertyBoostingService = new PropertyBoostingService(
+      propertyBoostingRepository,
+    );
 
     const propertyBoosting = await propertyBoostingService.getByPropertyId(id);
 

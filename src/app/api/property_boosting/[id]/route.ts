@@ -3,20 +3,37 @@ import { z } from "zod";
 
 import { PropertyBoostingService } from "@/src/features/boosting/service/property_boosting";
 import { PropertyBoostingRepository } from "@/src/features/boosting/repository/property_boosting.repository";
-import { propertyBoostingUpdateSchema } from "@/src/features/boosting/validation/property_boosting.schema";
-
-const propertyBoostingRepository = new PropertyBoostingRepository();
-
-const propertyBoostingService = new PropertyBoostingService(
-  propertyBoostingRepository,
-);
+import { getAccessToken, getCurrentUser } from "@/src/lib/supabase/auth";
 
 export async function GET(
-  _request: Request,
+  request: NextRequest,
   { params }: { params: Promise<{ id: string }> },
 ) {
   try {
     const { id } = await params;
+
+    if (!z.uuid().safeParse(id).success) {
+      return NextResponse.json(
+        { error: "Invalid property boosting ID" },
+        { status: 400 },
+      );
+    }
+
+    const token = getAccessToken(request);
+
+    if (!token) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
+
+    if (!(await getCurrentUser(request))) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
+
+    const propertyBoostingRepository = new PropertyBoostingRepository(token);
+
+    const propertyBoostingService = new PropertyBoostingService(
+      propertyBoostingRepository,
+    );
 
     const propertyBoosting = await propertyBoostingService.getById(id);
 
@@ -38,58 +55,35 @@ export async function GET(
   }
 }
 
-export async function PATCH(
+export async function DELETE(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> },
 ) {
   try {
     const { id } = await params;
 
-    const body = await request.json();
-
-    const result = propertyBoostingUpdateSchema.safeParse(body);
-
-    if (!result.success) {
+    if (!z.uuid().safeParse(id).success) {
       return NextResponse.json(
-        {
-          error: "Invalid property boosting data",
-          details: z.treeifyError(result.error),
-        },
+        { error: "Invalid property boosting ID" },
         { status: 400 },
       );
     }
 
-    const existingPropertyBoosting = await propertyBoostingService.getById(id);
+    const token = getAccessToken(request);
 
-    if (!existingPropertyBoosting) {
-      return NextResponse.json(
-        { error: "Property boosting not found" },
-        { status: 404 },
-      );
+    if (!token) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    const propertyBoosting = await propertyBoostingService.update(
-      id,
-      result.data,
+    if (!(await getCurrentUser(request))) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
+
+    const propertyBoostingRepository = new PropertyBoostingRepository(token);
+
+    const propertyBoostingService = new PropertyBoostingService(
+      propertyBoostingRepository,
     );
-
-    return NextResponse.json(propertyBoosting);
-  } catch (error) {
-    console.error(error);
-
-    return NextResponse.json(
-      { error: "Failed to update property boosting" },
-      { status: 500 },
-    );
-  }
-}
-
-export async function DELETE(
-  _request: Request,
-  { params }: { params: Promise<{ id: string }> },
-) {
-  try {
-    const { id } = await params;
 
     const existingPropertyBoosting = await propertyBoostingService.getById(id);
 

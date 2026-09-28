@@ -1,10 +1,27 @@
-import { supabase } from "../../../lib/supabase/client";
+import {
+  supabase,
+  createAuthenticatedClient,
+} from "../../../lib/supabase/client";
 import { Media } from "../models/media.model";
 import { IMediaRepository } from "./IMedia.repository";
 
+export class MediaUnavailableError extends Error {
+  constructor() {
+    super("Media not found or access denied");
+  }
+}
+
 export class MediaRepository implements IMediaRepository {
+  private supabase;
+
+  constructor(accessToken?: string) {
+    this.supabase = accessToken
+      ? createAuthenticatedClient(accessToken)
+      : supabase;
+  }
+
   async create(data: Omit<Media, "media_id" | "created_at">): Promise<Media> {
-    const { data: media, error } = await supabase
+    const { data: media, error } = await this.supabase
       .from("media")
       .insert(data)
       .select()
@@ -18,22 +35,26 @@ export class MediaRepository implements IMediaRepository {
   }
 
   async update(id: string, data: Partial<Media>): Promise<Media> {
-    const { data: media, error } = await supabase
+    const { data: media, error } = await this.supabase
       .from("media")
       .update(data)
       .eq("media_id", id)
       .select()
-      .single();
+      .maybeSingle();
 
     if (error) {
       throw new Error(error.message);
+    }
+
+    if (!media) {
+      throw new MediaUnavailableError();
     }
 
     return media;
   }
 
   async getById(id: string): Promise<Media | null> {
-    const { data: media, error } = await supabase
+    const { data: media, error } = await this.supabase
       .from("media")
       .select("*")
       .eq("media_id", id)
@@ -47,7 +68,9 @@ export class MediaRepository implements IMediaRepository {
   }
 
   async getAll(): Promise<Media[]> {
-    const { data: media, error } = await supabase.from("media").select("*");
+    const { data: media, error } = await this.supabase
+      .from("media")
+      .select("*");
 
     if (error) {
       throw new Error(error.message);
@@ -57,7 +80,7 @@ export class MediaRepository implements IMediaRepository {
   }
 
   async getByPropertyId(propertyId: string): Promise<Media[]> {
-    const { data: media, error } = await supabase
+    const { data: media, error } = await this.supabase
       .from("media")
       .select("*")
       .eq("property_id", propertyId);
@@ -70,10 +93,19 @@ export class MediaRepository implements IMediaRepository {
   }
 
   async delete(id: string): Promise<void> {
-    const { error } = await supabase.from("media").delete().eq("media_id", id);
+    const { data: media, error } = await this.supabase
+      .from("media")
+      .delete()
+      .eq("media_id", id)
+      .select()
+      .maybeSingle();
 
     if (error) {
       throw new Error(error.message);
+    }
+
+    if (!media) {
+      throw new MediaUnavailableError();
     }
   }
 }

@@ -1,8 +1,6 @@
 import { z } from "zod";
 
 export const propertySchema = z.object({
-  host_id: z.string().uuid(),
-
   property_type: z.enum(["dorm", "studio", "apartment"]),
 
   title: z.string().min(1, "Title is required"),
@@ -59,3 +57,5 @@ export const propertyFiltersSchema = z.object({
 
   gender: z.enum(["boys", "girls", "mixed"]).optional(),
 });
+
+export const propertyUpdateSchema = propertySchema.partial();

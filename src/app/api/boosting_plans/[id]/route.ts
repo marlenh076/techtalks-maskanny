@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
+import { z } from "zod";
 
 import { BoostingPlanService } from "@/src/features/boosting/service/boosting_plan";
 import { BoostingPlanRepository } from "@/src/features/boosting/repository/boosting_plan.repository";
@@ -12,6 +13,13 @@ export async function GET(
 ) {
   try {
     const { id } = await params;
+
+    if (!z.uuid().safeParse(id).success) {
+      return NextResponse.json(
+        { error: "Invalid boosting plan ID" },
+        { status: 400 },
+      );
+    }
 
     const plan = await boostingPlanService.getById(id);
 
