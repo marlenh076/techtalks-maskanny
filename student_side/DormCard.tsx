@@ -2,12 +2,7 @@
 
 import Image from "next/image";
 import Link from "next/link";
-import type { Dorm } from "@/types/dorm";
-
-/**
- * One dorm in the results grid. Tall photo, details underneath.
- * Every optional field is guarded, so a sparse record still renders cleanly.
- */
+import type { Dorm } from "./types";
 
 const GENDER_LABEL: Record<string, string> = {
   male: "Men only",
@@ -23,23 +18,15 @@ interface DormCardProps {
   dorm: Dorm;
   saved?: boolean;
   onToggleSave?: (id: string) => void;
-  /** Cards above the fold should load eagerly; the rest lazily. */
   priority?: boolean;
 }
 
-export default function DormCard({
-  dorm,
-  saved = false,
-  onToggleSave,
-  priority = false,
-}: DormCardProps) {
+export default function DormCard({ dorm, saved = false, onToggleSave, priority = false }: DormCardProps) {
   const chips: string[] = [];
   if (dorm.gender && GENDER_LABEL[dorm.gender]) chips.push(GENDER_LABEL[dorm.gender]);
   if (dorm.roomType) chips.push(dorm.roomType);
   if (typeof dorm.availableRooms === "number") {
-    chips.push(
-      dorm.availableRooms === 1 ? "1 room left" : `${dorm.availableRooms} rooms left`
-    );
+    chips.push(dorm.availableRooms === 1 ? "1 room left" : `${dorm.availableRooms} rooms left`);
   }
 
   return (
@@ -55,12 +42,9 @@ export default function DormCard({
             className="object-cover transition-transform duration-700 ease-out group-hover:scale-[1.04] motion-reduce:transition-none motion-reduce:group-hover:scale-100"
           />
         ) : (
-          <div className="flex h-full items-center justify-center text-sm text-[#8A8B82]">
-            No photo yet
-          </div>
+          <div className="flex h-full items-center justify-center text-sm text-[#8A8B82]">No photo yet</div>
         )}
 
-        {/* Keeps the white distance pill legible over bright photos. */}
         <div className="pointer-events-none absolute inset-x-0 top-0 h-28 bg-gradient-to-b from-black/25 to-transparent" />
 
         {typeof dorm.distanceFromUniversity === "number" && (
@@ -92,9 +76,7 @@ export default function DormCard({
 
       <div className="flex flex-1 flex-col gap-4 p-6">
         <div>
-          <h3 className="text-[19px] font-medium leading-snug tracking-[-0.015em] text-[#16171A]">
-            {dorm.name}
-          </h3>
+          <h3 className="text-[19px] font-medium leading-snug tracking-[-0.015em] text-[#16171A]">{dorm.name}</h3>
           <p className="mt-1.5 text-sm text-[#6F7168]">
             {dorm.location}
             {dorm.university ? ` · near ${dorm.university}` : ""}
@@ -104,10 +86,7 @@ export default function DormCard({
         {chips.length > 0 && (
           <ul className="flex flex-wrap gap-2">
             {chips.map((chip) => (
-              <li
-                key={chip}
-                className="rounded-full bg-[#F1EFE9] px-3 py-1 text-xs text-[#5A5C54]"
-              >
+              <li key={chip} className="rounded-full bg-[#F1EFE9] px-3 py-1 text-xs text-[#5A5C54]">
                 {chip}
               </li>
             ))}

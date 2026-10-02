@@ -1,30 +1,22 @@
 "use client";
 
-/**
- * Renders whichever of the four result states applies. Keeping all four here
- * means the page never branches on status itself, and no state gets forgotten.
- */
-
 import DormCard from "./DormCard";
-import type { SearchStatus } from "@/hooks/useDormSearch";
-import type { Dorm } from "@/types/dorm";
+import type { SearchStatus } from "./useDormSearch";
+import type { Dorm } from "./types";
 
 interface DormResultsProps {
   status: SearchStatus;
   dorms: Dorm[];
   onRetry: () => void;
   onReset: () => void;
-  /** Decides whether the empty state offers a reset. */
   filtersApplied: boolean;
   isSaved?: (id: string) => boolean;
   onToggleSave?: (id: string) => void;
 }
 
 const gridClass = "grid grid-cols-1 gap-7 sm:grid-cols-2 xl:grid-cols-3";
-const stateClass =
-  "rounded-[28px] bg-white px-6 py-20 text-center ring-1 ring-black/[0.06]";
-const ctaClass =
-  "mt-7 rounded-full bg-[#16171A] px-7 py-3.5 text-sm font-medium text-white transition-colors duration-200 hover:bg-[#33352F]";
+const stateClass = "rounded-[28px] bg-white px-6 py-20 text-center ring-1 ring-black/[0.06]";
+const ctaClass = "mt-7 rounded-full bg-[#16171A] px-7 py-3.5 text-sm font-medium text-white transition-colors duration-200 hover:bg-[#33352F]";
 
 function Skeleton() {
   return (
@@ -39,21 +31,11 @@ function Skeleton() {
   );
 }
 
-export default function DormResults({
-  status,
-  dorms,
-  onRetry,
-  onReset,
-  filtersApplied,
-  isSaved,
-  onToggleSave,
-}: DormResultsProps) {
+export default function DormResults({ status, dorms, onRetry, onReset, filtersApplied, isSaved, onToggleSave }: DormResultsProps) {
   if (status === "loading" || status === "idle") {
     return (
       <div className={gridClass} aria-busy="true" aria-live="polite">
-        {[0, 1, 2, 3, 4, 5].map((n) => (
-          <Skeleton key={n} />
-        ))}
+        {[0, 1, 2, 3, 4, 5].map((n) => <Skeleton key={n} />)}
       </div>
     );
   }
@@ -65,12 +47,9 @@ export default function DormResults({
           Something went wrong. We couldn&apos;t load the dorms.
         </h3>
         <p className="mx-auto mt-3 max-w-[42ch] text-sm leading-relaxed text-[#6F7168]">
-          The listings didn&apos;t come through. Check your connection and try
-          again.
+          The listings didn&apos;t come through. Check your connection and try again.
         </p>
-        <button type="button" onClick={onRetry} className={ctaClass}>
-          Try again
-        </button>
+        <button type="button" onClick={onRetry} className={ctaClass}>Try again</button>
       </div>
     );
   }
@@ -85,9 +64,7 @@ export default function DormResults({
           Try a wider price range, or search a nearby area.
         </p>
         {filtersApplied && (
-          <button type="button" onClick={onReset} className={ctaClass}>
-            Clear filters
-          </button>
+          <button type="button" onClick={onReset} className={ctaClass}>Clear filters</button>
         )}
       </div>
     );
@@ -96,13 +73,7 @@ export default function DormResults({
   return (
     <div className={gridClass}>
       {dorms.map((dorm, index) => (
-        <DormCard
-          key={dorm.id}
-          dorm={dorm}
-          priority={index < 3}
-          saved={isSaved?.(dorm.id) ?? false}
-          onToggleSave={onToggleSave}
-        />
+        <DormCard key={dorm.id} dorm={dorm} priority={index < 3} saved={isSaved?.(dorm.id) ?? false} onToggleSave={onToggleSave} />
       ))}
     </div>
   );
