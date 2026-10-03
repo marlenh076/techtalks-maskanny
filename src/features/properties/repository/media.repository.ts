@@ -11,6 +11,8 @@ export class MediaUnavailableError extends Error {
   }
 }
 
+export class MediaLimitError extends Error {}
+
 export class MediaRepository implements IMediaRepository {
   private supabase;
 
@@ -28,6 +30,7 @@ export class MediaRepository implements IMediaRepository {
       .single();
 
     if (error) {
+      if (error.code === "M4093") throw new MediaLimitError(error.message);
       throw new Error(error.message);
     }
 
@@ -43,6 +46,7 @@ export class MediaRepository implements IMediaRepository {
       .maybeSingle();
 
     if (error) {
+      if (error.code === "M4093") throw new MediaLimitError(error.message);
       throw new Error(error.message);
     }
 
