@@ -7,9 +7,10 @@ import {
 } from "@/src/features/properties/validation/property.schema";
 import { HostRepository } from "@/src/features/users/repository/host.repository";
 import { getAccessToken, getCurrentUser } from "@/src/lib/supabase/auth";
+import { MediaRepository } from "@/src/features/properties/repository/media.repository";
+import { PropertyDiscoveryService } from "@/src/features/properties/service/discovery";
 
 const propertyRepository = new PropertyRepository();
-const propertyService = new PropertyService(propertyRepository);
 
 export async function GET(request: NextRequest) {
   try {
@@ -23,7 +24,10 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ error: result.error.issues }, { status: 400 });
     }
 
-    const properties = await propertyService.search(result.data);
+    const properties = await new PropertyDiscoveryService(
+      propertyRepository,
+      new MediaRepository(),
+    ).search(result.data);
 
     return NextResponse.json(properties);
   } catch (error) {

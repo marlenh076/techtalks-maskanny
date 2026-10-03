@@ -83,13 +83,28 @@ export class MediaRepository implements IMediaRepository {
     const { data: media, error } = await this.supabase
       .from("media")
       .select("*")
-      .eq("property_id", propertyId);
+      .eq("property_id", propertyId)
+      .order("media_id", { ascending: true });
 
     if (error) {
       throw new Error(error.message);
     }
 
     return media;
+  }
+
+  async getImagesByPropertyIds(propertyIds: string[]): Promise<Pick<Media, "property_id" | "url">[]> {
+    if (propertyIds.length === 0) return [];
+
+    const { data, error } = await this.supabase
+      .from("media")
+      .select("property_id,url")
+      .in("property_id", propertyIds)
+      .eq("type", "image")
+      .order("media_id", { ascending: true });
+
+    if (error) throw new Error(error.message);
+    return data;
   }
 
   async delete(id: string): Promise<void> {
