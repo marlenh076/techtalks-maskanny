@@ -30,7 +30,7 @@ export async function GET(
 
     const property = await propertyService.getById(id);
 
-    if (!property) {
+    if (!property || property.approval_status !== "approved") {
       return NextResponse.json(
         { error: "Property not found" },
         { status: 404 },

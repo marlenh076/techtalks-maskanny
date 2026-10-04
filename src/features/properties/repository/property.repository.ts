@@ -2,7 +2,7 @@ import {
   supabase,
   createAuthenticatedClient,
 } from "../../../lib/supabase/client";
-import { Property } from "../models/property.model";
+import { Property, PropertyCreate } from "../models/property.model";
 import { IPropertyRepository, PropertyFilters } from "./IProperty.repository";
 
 export class PropertyUnavailableError extends Error {
@@ -20,9 +20,7 @@ export class PropertyRepository implements IPropertyRepository {
       : supabase;
   }
 
-  async create(
-    data: Omit<Property, "property_id" | "created_at">,
-  ): Promise<Property> {
+  async create(data: PropertyCreate): Promise<Property> {
     const { data: property, error } = await this.supabase
       .from("property")
       .insert(data)
@@ -74,6 +72,19 @@ export class PropertyRepository implements IPropertyRepository {
 
   async getAll(): Promise<Property[]> {
     const { data, error } = await this.supabase.from("property").select("*");
+
+    if (error) {
+      throw new Error(error.message);
+    }
+
+    return data;
+  }
+
+  async getByHostId(hostId: string): Promise<Property[]> {
+    const { data, error } = await this.supabase
+      .from("property")
+      .select("*")
+      .eq("host_id", hostId);
 
     if (error) {
       throw new Error(error.message);

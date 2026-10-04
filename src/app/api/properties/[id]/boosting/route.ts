@@ -34,7 +34,7 @@ export async function GET(
       propertyBoostingRepository,
     );
 
-    const propertyBoosting = await propertyBoostingService.getByPropertyId(id);
+    const propertyBoosting = await propertyBoostingService.getCurrentByPropertyId(id);
 
     if (!propertyBoosting) {
       return NextResponse.json(

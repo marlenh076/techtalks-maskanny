@@ -4,5 +4,10 @@ export interface User {
   lastname: string;
   email: string;
   phone: string;
+  role: "user" | "admin";
   created_at: string;
 }
+
+export type UserProfileUpdate = Partial<
+  Pick<User, "firstname" | "lastname" | "phone">
+>;
