@@ -1,0 +1,17 @@
+import { createClient } from "@supabase/supabase-js";
+import { Database } from "../database/types";
+
+const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
+const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY!;
+
+export const supabase = createClient<Database>(supabaseUrl, supabaseKey);
+
+export function createAuthenticatedClient(accessToken: string) {
+  return createClient<Database>(supabaseUrl, supabaseKey, {
+    global: {
+      headers: {
+        Authorization: `Bearer ${accessToken}`,
+      },
+    },
+  });
+}

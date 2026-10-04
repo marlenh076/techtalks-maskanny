@@ -1,40 +1,33 @@
-export enum PropertyType {
-  DORM = "dorm",
-  STUDIO = "studio",
-  APARTMENT = "apartment",
-}
-
-export enum KitchenType {
-  PRIVATE = "private",
-  SHARED = "shared",
-}
-
-export enum BathroomType {
-  PRIVATE = "private",
-  SHARED = "shared",
-}
-
-export enum Gender {
-  BOYS = "boys",
-  GIRLS = "girls",
-  MIXED = "mixed",
-}
-
 export interface Property {
+  property_id: string;
   host_id: string;
-  property_type: PropertyType;
+  approval_status: "pending" | "approved" | "rejected";
+
+  property_type: "dorm" | "studio" | "apartment";
+
   title: string;
-  description: string;
+  description: string | null;
   address: string;
+
   latitude: number;
   longitude: number;
   price: number;
+
   bedrooms: number;
   bathrooms: number;
   bed_count: number;
+
   furnished: boolean;
   electricity_included: boolean;
-  kitchen_type: KitchenType;
-  bathroom_type: BathroomType;
-  gender: Gender;
+
+  kitchen_type: "private" | "shared";
+  bathroom_type: "private" | "shared";
+  gender: "boys" | "girls" | "mixed";
+
+  created_at: string;
 }
+
+export type PropertyCreate = Omit<
+  Property,
+  "property_id" | "created_at" | "approval_status"
+>;
