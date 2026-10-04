@@ -204,7 +204,9 @@ function FormSection({
           <h2 className="m-0 text-[26px] leading-[1.15] font-medium tracking-[-0.025em]">
             {title}
           </h2>
-          <p>{description}</p>
+          <p className="mt-[7px] mb-0 text-[13px] leading-[1.55] text-(--soft)">
+            {description}
+          </p>
         </div>
       </div>
 
@@ -287,7 +289,11 @@ function FormField({
         />
       )}
 
-      {hint && <p>{hint}</p>}
+      {hint && (
+        <p className="mt-[9px] mb-0 text-[13px] leading-[1.5] text-(--soft)">
+          {hint}
+        </p>
+      )}
     </div>
   );
 }
@@ -519,7 +525,7 @@ export default function PropertyForm() {
               group m-0! flex! min-h-[220px] w-full cursor-pointer
               flex-col items-center justify-center gap-[8px]
               rounded-[24px] border border-dashed
-              border-[rgba(22,23,26,0.2)] bg-(--bg)
+              border-(--line-strong) bg-(--bg)
               px-[24px] py-[36px] text-center
               transition-[background,border-color,transform]
               duration-[200ms] ease-[ease]
@@ -616,7 +622,8 @@ export default function PropertyForm() {
                 <label
                   key={amenity.value}
                   className={`
-                    relative flex! min-h-[62px] cursor-pointer items-center
+                    relative m-0! flex! min-h-[62px] cursor-pointer items-center
+                    gap-[12px]
                     rounded-(--radius-sm) border px-[20px] py-0
                     transition-[background,color,border-color,transform]
                     duration-(--duration-fast) ease-[ease]
@@ -645,15 +652,17 @@ export default function PropertyForm() {
             })}
           </div>
 
-          <FormField
-            {...fieldProps}
-            id="otherAmenities"
-            label="Other amenities"
-            value={values.otherAmenities}
-            placeholder="e.g. Rooftop access, gym, study room"
-            hint="Add any additional amenities not listed above."
-            fullWidth
-          />
+          <div className="mt-[24px]">
+            <FormField
+              {...fieldProps}
+              id="otherAmenities"
+              label="Other amenities"
+              value={values.otherAmenities}
+              placeholder="e.g. Rooftop access, gym, study room"
+              hint="Add any additional amenities not listed above."
+              fullWidth
+            />
+          </div>
         </fieldset>
       </FormSection>
 
@@ -715,7 +724,7 @@ export default function PropertyForm() {
       <div
         className="
           flex items-center justify-between gap-[24px]
-          border-t border-(--line) bg-[#faf9f6] px-[40px] py-[30px]
+          border-t border-(--line) bg-(--bg) px-[40px] py-[30px]
           [@media(width<=700px)]:flex-col
           [@media(width<=700px)]:items-stretch
           [@media(480px<width<=700px)]:px-[24px]
@@ -725,8 +734,10 @@ export default function PropertyForm() {
         "
       >
         <div>
-          <p>Ready to publish?</p>
-          <p className="text-[13px] leading-[1.5] text-(--soft)">
+          <p className="mb-[6px] text-[14px] font-semibold text-(--ink)">
+            Ready to publish?
+          </p>
+          <p className="m-0 text-[13px] leading-[1.5] text-(--soft)">
             You can review and update your listing later.
           </p>
         </div>
