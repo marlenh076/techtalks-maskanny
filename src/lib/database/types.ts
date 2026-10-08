@@ -124,6 +124,7 @@ export type Database = {
       property: {
         Row: {
           address: string;
+          approval_status: Database["public"]["Enums"]["property_approval_status"];
           bathroom_type: Database["public"]["Enums"]["bathroom_type"];
           bathrooms: number;
           bed_count: number;
@@ -144,6 +145,7 @@ export type Database = {
         };
         Insert: {
           address: string;
+          approval_status?: Database["public"]["Enums"]["property_approval_status"];
           bathroom_type: Database["public"]["Enums"]["bathroom_type"];
           bathrooms: number;
           bed_count: number;
@@ -164,6 +166,7 @@ export type Database = {
         };
         Update: {
           address?: string;
+          approval_status?: Database["public"]["Enums"]["property_approval_status"];
           bathroom_type?: Database["public"]["Enums"]["bathroom_type"];
           bathrooms?: number;
           bed_count?: number;
@@ -195,29 +198,29 @@ export type Database = {
       property_boosting: {
         Row: {
           boosting_plan_id: string;
-          end_date: string;
+          end_date: string | null;
           is_paid: boolean;
           property_boosting_id: string;
           property_id: string;
-          start_date: string;
+          start_date: string | null;
           status: Database["public"]["Enums"]["boosting_status"];
         };
         Insert: {
           boosting_plan_id: string;
-          end_date: string;
+          end_date?: string | null;
           is_paid?: boolean;
           property_boosting_id?: string;
           property_id: string;
-          start_date: string;
+          start_date?: string | null;
           status?: Database["public"]["Enums"]["boosting_status"];
         };
         Update: {
           boosting_plan_id?: string;
-          end_date?: string;
+          end_date?: string | null;
           is_paid?: boolean;
           property_boosting_id?: string;
           property_id?: string;
-          start_date?: string;
+          start_date?: string | null;
           status?: Database["public"]["Enums"]["boosting_status"];
         };
         Relationships: [
@@ -231,7 +234,7 @@ export type Database = {
           {
             foreignKeyName: "fk_property_boosting_property";
             columns: ["property_id"];
-            isOneToOne: true;
+            isOneToOne: false;
             referencedRelation: "property";
             referencedColumns: ["property_id"];
           },
@@ -298,6 +301,7 @@ export type Database = {
           firstname: string;
           lastname: string;
           phone: string;
+          role: Database["public"]["Enums"]["user_role"];
           user_id: string;
         };
         Insert: {
@@ -306,6 +310,7 @@ export type Database = {
           firstname: string;
           lastname: string;
           phone: string;
+          role?: Database["public"]["Enums"]["user_role"];
           user_id?: string;
         };
         Update: {
@@ -314,6 +319,7 @@ export type Database = {
           firstname?: string;
           lastname?: string;
           phone?: string;
+          role?: Database["public"]["Enums"]["user_role"];
           user_id?: string;
         };
         Relationships: [];
@@ -323,15 +329,58 @@ export type Database = {
       [_ in never]: never;
     };
     Functions: {
-      [_ in never]: never;
+      approve_property: {
+        Args: { p_property_id: string };
+        Returns: undefined;
+      };
+      get_current_property_boost: {
+        Args: { p_property_id: string };
+        Returns: Database["public"]["Tables"]["property_boosting"]["Row"][];
+        SetofOptions: {
+          from: "*";
+          to: "property_boosting";
+          isOneToOne: false;
+          isSetofReturn: true;
+        };
+      };
+      get_moderation_property: {
+        Args: { p_property_id: string };
+        Returns: Json;
+      };
+      is_property_effectively_live: {
+        Args: { p_property_id: string };
+        Returns: boolean;
+      };
+      list_moderation_properties: {
+        Args: {
+          p_status: Database["public"]["Enums"]["property_approval_status"];
+        };
+        Returns: Json;
+      };
+      reject_property: {
+        Args: { p_property_id: string };
+        Returns: undefined;
+      };
+      request_property_boost: {
+        Args: { p_boosting_plan_id: string; p_property_id: string };
+        Returns: Database["public"]["Tables"]["property_boosting"]["Row"];
+        SetofOptions: {
+          from: "*";
+          to: "property_boosting";
+          isOneToOne: true;
+          isSetofReturn: false;
+        };
+      };
     };
     Enums: {
       bathroom_type: "private" | "shared";
-      boosting_status: "active" | "expired";
+      boosting_status: "pending" | "active" | "expired";
       gender: "boys" | "girls" | "mixed";
       kitchen_type: "private" | "shared";
       media_type: "image" | "video";
+      property_approval_status: "pending" | "approved" | "rejected";
       property_type: "dorm" | "studio" | "apartment";
+      user_role: "user" | "admin";
     };
     CompositeTypes: {
       [_ in never]: never;
@@ -466,11 +515,13 @@ export const Constants = {
   public: {
     Enums: {
       bathroom_type: ["private", "shared"],
-      boosting_status: ["active", "expired"],
+      boosting_status: ["active", "expired", "pending"],
       gender: ["boys", "girls", "mixed"],
       kitchen_type: ["private", "shared"],
       media_type: ["image", "video"],
+      property_approval_status: ["pending", "approved", "rejected"],
       property_type: ["dorm", "studio", "apartment"],
+      user_role: ["user", "admin"],
     },
   },
 } as const;

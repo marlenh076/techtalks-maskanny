@@ -1,5 +1,5 @@
 import { University } from "@/src/features/universities/models/university.model";
-import { supabase } from "@/src/lib/supabase/client";
+import { createAuthenticatedClient, supabase } from "@/src/lib/supabase/client";
 import { Property } from "../models/property.model";
 
 export interface IPropertyUniversityRepository {
@@ -8,8 +8,14 @@ export interface IPropertyUniversityRepository {
 }
 
 export class PropertyUniversityRepository implements IPropertyUniversityRepository {
+  private readonly client;
+
+  constructor(accessToken?: string) {
+    this.client = accessToken ? createAuthenticatedClient(accessToken) : supabase;
+  }
+
   async getUniversitiesByPropertyId(propertyId: string): Promise<University[]> {
-    const { data, error } = await supabase
+    const { data, error } = await this.client
       .from("property_university")
       .select("university(*)")
       .eq("property_id", propertyId);
@@ -22,7 +28,7 @@ export class PropertyUniversityRepository implements IPropertyUniversityReposito
   }
 
   async getPropertiesByUniversityId(universityId: string): Promise<Property[]> {
-    const { data, error } = await supabase
+    const { data, error } = await this.client
       .from("property_university")
       .select("property(*)")
       .eq("university_id", universityId);

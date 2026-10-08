@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
 
-import { MediaService } from "@/src/features/properties/service/media";
+import { MediaLimitError, MediaService } from "@/src/features/properties/service/media";
 import {
   MediaRepository,
   MediaUnavailableError,
@@ -9,29 +9,8 @@ import {
 import { PropertyRepository } from "@/src/features/properties/repository/property.repository";
 import { HostRepository } from "@/src/features/users/repository/host.repository";
 
-import { BoostingPlanService } from "@/src/features/boosting/service/boosting_plan";
-import { BoostingPlanRepository } from "@/src/features/boosting/repository/boosting_plan.repository";
-import { PropertyBoostingService } from "@/src/features/boosting/service/property_boosting";
-import { PropertyBoostingRepository } from "@/src/features/boosting/repository/property_boosting.repository";
-
 import { StorageService } from "@/src/lib/supabase/storage";
 import { getAccessToken, getCurrentUser } from "@/src/lib/supabase/auth";
-
-const mediaRepository = new MediaRepository();
-
-const propertyBoostingRepository = new PropertyBoostingRepository();
-const propertyBoostingService = new PropertyBoostingService(
-  propertyBoostingRepository,
-);
-
-const boostingPlanRepository = new BoostingPlanRepository();
-const boostingPlanService = new BoostingPlanService(boostingPlanRepository);
-
-const mediaService = new MediaService(
-  mediaRepository,
-  propertyBoostingService,
-  boostingPlanService,
-);
 
 export async function GET(
   request: NextRequest,
@@ -44,7 +23,17 @@ export async function GET(
       return NextResponse.json({ error: "Invalid media ID" }, { status: 400 });
     }
 
-    const media = await mediaService.getById(id);
+    let token: string | null = null;
+    if (request.headers.has("authorization")) {
+      token = getAccessToken(request);
+      if (!token || !(await getCurrentUser(request))) {
+        return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+      }
+    }
+
+    const media = await new MediaService(
+      new MediaRepository(token ?? undefined),
+    ).getById(id);
 
     if (!media) {
       return NextResponse.json({ error: "Media not found" }, { status: 404 });
@@ -84,19 +73,7 @@ export async function PUT(
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    const mediaRepository = new MediaRepository(token);
-
-    const propertyBoostingRepository = new PropertyBoostingRepository(token);
-
-    const propertyBoostingService = new PropertyBoostingService(
-      propertyBoostingRepository,
-    );
-
-    const mediaService = new MediaService(
-      mediaRepository,
-      propertyBoostingService,
-      boostingPlanService,
-    );
+    const mediaService = new MediaService(new MediaRepository(token));
 
     const existingMedia = await mediaService.getById(id);
 
@@ -115,6 +92,10 @@ export async function PUT(
     const host = await new HostRepository(token).getByUserId(user.id);
 
     if (!host || property.host_id !== host.host_id) {
+      return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+    }
+
+    if (property.approval_status === "rejected") {
       return NextResponse.json({ error: "Forbidden" }, { status: 403 });
     }
 
@@ -158,13 +139,14 @@ export async function PUT(
     const fileName = `${crypto.randomUUID()}.${fileExtension}`;
     const newFilePath = `${existingMedia.property_id}/${fileName}`;
 
+    const newType = file.type.startsWith("image/") ? "image" : "video";
+    await mediaService.assertWithinLimit(existingMedia.property_id, newType, id);
+
     const storageService = new StorageService();
 
     await storageService.upload(token, "properties-media", newFilePath, file);
 
     const newUrl = storageService.getPublicUrl("properties-media", newFilePath);
-
-    const newType = file.type.startsWith("image/") ? "image" : "video";
 
     let updatedMedia;
 
@@ -199,6 +181,10 @@ export async function PUT(
       return NextResponse.json({ error: "Media not found" }, { status: 404 });
     }
 
+    if (error instanceof MediaLimitError) {
+      return NextResponse.json({ error: error.message }, { status: 409 });
+    }
+
     console.error(error);
 
     return NextResponse.json(
@@ -229,19 +215,7 @@ export async function DELETE(
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    const mediaRepository = new MediaRepository(token);
-
-    const propertyBoostingRepository = new PropertyBoostingRepository(token);
-
-    const propertyBoostingService = new PropertyBoostingService(
-      propertyBoostingRepository,
-    );
-
-    const mediaService = new MediaService(
-      mediaRepository,
-      propertyBoostingService,
-      boostingPlanService,
-    );
+    const mediaService = new MediaService(new MediaRepository(token));
 
     const existingMedia = await mediaService.getById(id);
 

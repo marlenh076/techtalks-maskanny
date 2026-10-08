@@ -1,4 +1,4 @@
-import { User } from "../models/user.model";
+import { User, UserProfileUpdate } from "../models/user.model";
 import { UserRepository } from "../repository/user.repository";
 
 export class UserService {
@@ -12,7 +12,7 @@ export class UserService {
     return this.userRepository.getAll();
   }
 
-  async update(id: string, data: Partial<User>): Promise<User> {
+  async update(id: string, data: UserProfileUpdate): Promise<User> {
     return this.userRepository.update(id, data);
   }
 }

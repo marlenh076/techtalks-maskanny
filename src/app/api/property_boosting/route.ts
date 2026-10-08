@@ -3,7 +3,7 @@ import { z } from "zod";
 
 import { PropertyBoostingService } from "@/src/features/boosting/service/property_boosting";
 import {
-  PropertyBoostingConflictError,
+  PropertyBoostingRequestError,
   PropertyBoostingRepository,
 } from "@/src/features/boosting/repository/property_boosting.repository";
 import { propertyBoostingSchema } from "@/src/features/boosting/validation/property_boosting.schema";
@@ -70,6 +70,10 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    if (property.approval_status === "rejected") {
+      return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+    }
+
     const propertyBoostingRepository = new PropertyBoostingRepository(token);
 
     const propertyBoostingService = new PropertyBoostingService(
@@ -80,10 +84,10 @@ export async function POST(request: NextRequest) {
 
     return NextResponse.json(propertyBoosting, { status: 201 });
   } catch (error) {
-    if (error instanceof PropertyBoostingConflictError) {
+    if (error instanceof PropertyBoostingRequestError) {
       return NextResponse.json(
-        { error: "Property already has a boost" },
-        { status: 409 },
+        { error: error.message },
+        { status: error.status },
       );
     }
 
