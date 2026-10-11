@@ -80,6 +80,14 @@ a {
   text-decoration: none;
 }
 
+.auth-switch-link {
+  color: #2563EB;
+}
+
+.auth-switch-link:hover {
+  color: #1D4ED8;
+}
+
 /* TYPOGRAPHY */
 
 .text-display {

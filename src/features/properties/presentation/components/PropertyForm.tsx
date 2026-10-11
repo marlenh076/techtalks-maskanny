@@ -2,20 +2,31 @@
 
 import { useEffect, useRef, useState } from "react";
 import type { ChangeEvent, FormEvent, ReactNode } from "react";
+import { propertySchema } from "@/src/features/properties/validation/property.schema";
+import type {
+  Property,
+  PropertyCreate,
+} from "@/src/features/properties/models/property.model";
+import { supabase } from "@/src/lib/supabase/client";
+
+type PropertyFormPayload = Omit<PropertyCreate, "host_id">;
+
+type SelectedLocation = Pick<Property, "address" | "latitude" | "longitude">;
 
 type FormValues = {
   propertyType: string;
-  name: string;
+  title: string;
   description: string;
+  address: string;
   price: string;
-  location: string;
-  university: string;
-  roomType: string;
+  bedrooms: string;
+  bathrooms: string;
+  bedCount: string;
   gender: string;
   furnished: string;
-  rules: string;
-  availability: string;
-  otherAmenities: string;
+  electricityIncluded: string;
+  kitchenType: string;
+  bathroomType: string;
 };
 
 type Option = {
@@ -30,100 +41,23 @@ type Feedback = {
 
 const INITIAL_VALUES: FormValues = {
   propertyType: "",
-  name: "",
+  title: "",
   description: "",
+  address: "",
   price: "",
-  location: "",
-  university: "",
-  roomType: "",
+  bedrooms: "",
+  bathrooms: "",
+  bedCount: "",
   gender: "",
   furnished: "",
-  rules: "",
-  availability: "",
-  otherAmenities: "",
+  electricityIncluded: "",
+  kitchenType: "",
+  bathroomType: "",
 };
 
-const AMENITY_OPTIONS: Option[] = [
-  { value: "wifi", label: "Wi-Fi" },
-  { value: "electricity", label: "Electricity" },
-  { value: "generator", label: "Generator" },
-  { value: "private-kitchen", label: "Private Kitchen" },
-  { value: "shared-kitchen", label: "Shared Kitchen" },
-  { value: "private-bathroom", label: "Private Bathroom" },
-  { value: "shared-bathroom", label: "Shared Bathroom" },
-  { value: "washing-machine", label: "Washing Machine" },
-  { value: "parking", label: "Parking" },
-  { value: "air-conditioning", label: "Air Conditioning" },
-  { value: "heating", label: "Heating" },
-  { value: "elevator", label: "Elevator" },
-  { value: "balcony", label: "Balcony" },
-];
-
-const ACCOMMODATION_FIELDS: {
-  id: keyof FormValues;
-  label: string;
-  placeholder: string;
-  options: Option[];
-}[] = [
-  {
-    id: "propertyType",
-    label: "Property type",
-    placeholder: "Select property type",
-    options: [
-      { value: "dorm", label: "Dorm" },
-      { value: "apartment", label: "Apartment" },
-      { value: "studio", label: "Studio" },
-      { value: "room", label: "Room" },
-    ],
-  },
-  {
-    id: "roomType",
-    label: "Room type",
-    placeholder: "Select room type",
-    options: [
-      { value: "single", label: "Single" },
-      { value: "shared", label: "Shared" },
-    ],
-  },
-  {
-    id: "gender",
-    label: "Gender",
-    placeholder: "Select gender",
-    options: [
-      { value: "male", label: "Male" },
-      { value: "female", label: "Female" },
-      { value: "mixed", label: "Mixed" },
-    ],
-  },
-  {
-    id: "furnished",
-    label: "Furnished",
-    placeholder: "Select",
-    options: [
-      { value: "yes", label: "Yes" },
-      { value: "no", label: "No" },
-    ],
-  },
-];
-
-const REQUIRED_FIELDS: {
-  field: keyof FormValues;
-  message: string;
-}[] = [
-  { field: "propertyType", message: "Please select a property type." },
-  { field: "name", message: "Property name is required." },
-  { field: "description", message: "Description is required." },
-  { field: "price", message: "Price must be greater than 0." },
-  { field: "location", message: "Location is required." },
-  { field: "university", message: "Nearby university is required." },
-  { field: "roomType", message: "Please select a room type." },
-  { field: "gender", message: "Please select a gender." },
-  {
-    field: "furnished",
-    message: "Please select whether the property is furnished.",
-  },
-  { field: "availability", message: "Please select availability." },
-];
+const MAX_IMAGES = 6;
+const MAX_FILE_SIZE = 50 * 1024 * 1024;
+const IMAGE_TYPES = ["image/jpeg", "image/png", "image/webp"];
 
 const GRID_CLASSES =
   "grid grid-cols-2 gap-x-[24px] gap-y-[26px] [@media(width<=700px)]:grid-cols-1";
@@ -141,21 +75,79 @@ const INPUT_CLASSES = `
   focus:outline-none
 `;
 
-function validateForm(values: FormValues): string | null {
-  for (const { field, message } of REQUIRED_FIELDS) {
-    const value = values[field].trim();
-
-    if (!value) return message;
-
-    if (
-      field === "price" &&
-      (!Number.isFinite(Number(value)) || Number(value) <= 0)
-    ) {
-      return message;
-    }
+function buildPayload(
+  values: FormValues,
+  location: SelectedLocation | null,
+): PropertyFormPayload {
+  if (!values.propertyType) throw new Error("Select a property type.");
+  if (!values.title.trim()) throw new Error("Property title is required.");
+  if (!values.address.trim()) throw new Error("Property address is required.");
+  if (!location || location.address !== values.address.trim()) {
+    throw new Error("Confirm the property location before submitting.");
+  }
+  if (
+    !Number.isFinite(location.latitude) ||
+    !Number.isFinite(location.longitude) ||
+    Math.abs(location.latitude) > 90 ||
+    Math.abs(location.longitude) > 180 ||
+    (location.latitude === 0 && location.longitude === 0)
+  ) {
+    throw new Error("Select a valid property location.");
   }
 
-  return null;
+  for (const [field, label] of [
+    ["price", "Monthly price"],
+    ["bedrooms", "Bedrooms"],
+    ["bathrooms", "Bathrooms"],
+    ["bedCount", "Bed count"],
+  ] as const) {
+    if (!values[field].trim()) throw new Error(`${label} is required.`);
+  }
+
+  if (
+    !["true", "false"].includes(values.furnished) ||
+    !["true", "false"].includes(values.electricityIncluded)
+  ) {
+    throw new Error("Select the furnished and electricity options.");
+  }
+  if (!values.kitchenType || !values.bathroomType || !values.gender) {
+    throw new Error("Complete the kitchen, bathroom, and gender options.");
+  }
+
+  const result = propertySchema.safeParse({
+    property_type: values.propertyType,
+    title: values.title.trim(),
+    description: values.description.trim() || null,
+    address: location.address,
+    latitude: location.latitude,
+    longitude: location.longitude,
+    price: Number(values.price),
+    bedrooms: Number(values.bedrooms),
+    bathrooms: Number(values.bathrooms),
+    bed_count: Number(values.bedCount),
+    furnished: values.furnished === "true",
+    electricity_included: values.electricityIncluded === "true",
+    kitchen_type: values.kitchenType,
+    bathroom_type: values.bathroomType,
+    gender: values.gender,
+  });
+
+  if (!result.success) {
+    throw new Error(
+      result.error.issues[0]?.message ?? "Check the property details.",
+    );
+  }
+
+  return result.data;
+}
+
+async function readApiError(response: Response): Promise<string> {
+  const body: unknown = await response.json().catch(() => null);
+  if (body && typeof body === "object" && "error" in body) {
+    const error = body.error;
+    if (typeof error === "string") return error;
+  }
+  return `Request failed (${response.status}).`;
 }
 
 function FormSection({
@@ -223,7 +215,9 @@ type FormFieldProps = {
   options?: Option[];
   multiline?: boolean;
   fullWidth?: boolean;
-  hint?: string;
+  min?: string;
+  step?: string;
+  disabled?: boolean;
 };
 
 function FormField({
@@ -236,11 +230,14 @@ function FormField({
   options,
   multiline = false,
   fullWidth = false,
-  hint,
+  min,
+  step,
+  disabled = false,
 }: FormFieldProps) {
   const fieldProps = {
     id,
     value,
+    disabled,
     onChange: (
       event: ChangeEvent<
         HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement
@@ -281,13 +278,13 @@ function FormField({
         <input
           {...fieldProps}
           type={type}
-          min={type === "number" ? "0" : undefined}
+          min={min ?? (type === "number" ? "0" : undefined)}
+          step={step}
           placeholder={placeholder}
           className={INPUT_CLASSES}
         />
       )}
 
-      {hint && <p>{hint}</p>}
     </div>
   );
 }
@@ -296,10 +293,12 @@ function PhotoPreview({
   photo,
   index,
   onRemove,
+  disabled,
 }: {
   photo: File;
   index: number;
   onRemove: () => void;
+  disabled: boolean;
 }) {
   const imageRef = useRef<HTMLImageElement>(null);
 
@@ -346,6 +345,7 @@ function PhotoPreview({
       <button
         type="button"
         onClick={onRemove}
+        disabled={disabled}
         aria-label={`Remove ${photo.name}`}
         className="
           absolute top-[12px] right-[12px]
@@ -367,26 +367,37 @@ function PhotoPreview({
 /* eslint-enable @next/next/no-img-element */
 export default function PropertyForm() {
   const [values, setValues] = useState<FormValues>(INITIAL_VALUES);
-  const [amenities, setAmenities] = useState<string[]>([]);
+  const [selectedLocation, setSelectedLocation] =
+    useState<SelectedLocation | null>(null);
   const [photos, setPhotos] = useState<File[]>([]);
   const [feedback, setFeedback] = useState<Feedback | null>(null);
+  const [isLocating, setIsLocating] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [createdPropertyId, setCreatedPropertyId] = useState<string | null>(null);
+  const [uploadedPhotoCount, setUploadedPhotoCount] = useState(0);
+  const [isComplete, setIsComplete] = useState(false);
+
+  const fieldsLocked = isSubmitting || createdPropertyId !== null;
 
   function updateField(id: keyof FormValues, value: string) {
     setValues((current) => ({ ...current, [id]: value }));
-  }
-
-  function toggleAmenity(value: string) {
-    setAmenities((current) =>
-      current.includes(value)
-        ? current.filter((item) => item !== value)
-        : [...current, value],
-    );
+    if (id === "address") setSelectedLocation(null);
+    setFeedback(null);
   }
 
   function handlePhotoChange(event: ChangeEvent<HTMLInputElement>) {
     const selected = Array.from(event.target.files ?? []);
 
-    setPhotos((current) => [...current, ...selected]);
+    if (selected.some((file) => !IMAGE_TYPES.includes(file.type))) {
+      setFeedback({ type: "error", message: "Choose JPG, PNG, or WEBP images only." });
+    } else if (selected.some((file) => file.size > MAX_FILE_SIZE)) {
+      setFeedback({ type: "error", message: "Each photo must be 50 MB or smaller." });
+    } else if (photos.length + selected.length > MAX_IMAGES) {
+      setFeedback({ type: "error", message: "You can upload up to 6 photos." });
+    } else {
+      setPhotos((current) => [...current, ...selected]);
+      setFeedback(null);
+    }
     event.target.value = "";
   }
 
@@ -396,24 +407,141 @@ export default function PropertyForm() {
     );
   }
 
-  function handleSubmit(event: FormEvent<HTMLFormElement>) {
-    event.preventDefault();
+  function confirmLocation(
+    address: string,
+    latitude: number,
+    longitude: number,
+  ) {
+    setSelectedLocation({ address, latitude, longitude });
+    setFeedback(null);
+  }
 
-    const error = validateForm(values);
-
-    if (error) {
-      setFeedback({ type: "error", message: error });
+  function useCurrentLocation() {
+    const address = values.address.trim();
+    if (!address) {
+      setFeedback({
+        type: "error",
+        message: "Enter the property address first.",
+      });
+      return;
+    }
+    if (!navigator.geolocation) {
+      setFeedback({
+        type: "error",
+        message: "Browser location is unavailable.",
+      });
       return;
     }
 
-    // Add the backend request here when the API is ready.
-    setFeedback({
-      type: "success",
-      message: "Listing is ready to be submitted.",
-    });
+    setIsLocating(true);
+    navigator.geolocation.getCurrentPosition(
+      ({ coords }) => {
+        setIsLocating(false);
+        confirmLocation(address, coords.latitude, coords.longitude);
+      },
+      () => {
+        setIsLocating(false);
+        setFeedback({
+          type: "error",
+          message: "Could not get your location. Allow location access and try again.",
+        });
+      },
+      { enableHighAccuracy: true, timeout: 15000, maximumAge: 0 },
+    );
   }
 
-  const fieldProps = { onChange: updateField };
+  async function handleSubmit(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    if (isSubmitting || isComplete) return;
+
+    let payload: PropertyFormPayload | null = null;
+    if (!createdPropertyId) {
+      try {
+        payload = buildPayload(values, selectedLocation);
+      } catch (error) {
+        setFeedback({
+          type: "error",
+          message:
+            error instanceof Error ? error.message : "Check the property details.",
+        });
+        return;
+      }
+    }
+
+    setIsSubmitting(true);
+    setFeedback(null);
+    try {
+      const {
+        data: { session },
+        error: sessionError,
+      } = await supabase.auth.getSession();
+      if (sessionError || !session?.access_token) {
+        throw new Error("Sign in as a Host before creating a listing.");
+      }
+
+      const headers = { Authorization: `Bearer ${session.access_token}` };
+      let propertyId = createdPropertyId;
+
+      if (!propertyId && payload) {
+        const response = await fetch("/api/properties", {
+          method: "POST",
+          headers: { ...headers, "Content-Type": "application/json" },
+          body: JSON.stringify(payload),
+        });
+        if (!response.ok) throw new Error(await readApiError(response));
+
+        const created: unknown = await response.json();
+        if (
+          !created ||
+          typeof created !== "object" ||
+          !("property_id" in created) ||
+          typeof created.property_id !== "string"
+        ) {
+          throw new Error(
+            "Property was created, but its ID was missing from the response. Check your listings before trying again.",
+          );
+        }
+        propertyId = created.property_id;
+        setCreatedPropertyId(propertyId);
+      }
+
+      if (!propertyId) throw new Error("The property could not be created.");
+
+      for (let index = uploadedPhotoCount; index < photos.length; index += 1) {
+        const formData = new FormData();
+        formData.append("file", photos[index]);
+        const response = await fetch(`/api/properties/${propertyId}/media`, {
+          method: "POST",
+          headers,
+          body: formData,
+        });
+        if (!response.ok) {
+          throw new Error(
+            `Property ${propertyId} was created, but photo ${index + 1} failed: ${await readApiError(response)} Retry to upload the remaining photos.`,
+          );
+        }
+        setUploadedPhotoCount(index + 1);
+      }
+
+      setIsComplete(true);
+      setFeedback({
+        type: "success",
+        message: `Property ${propertyId} was created with ${photos.length} ${photos.length === 1 ? "photo" : "photos"}. It is pending Admin review.`,
+      });
+    } catch (error) {
+      setFeedback({
+        type: "error",
+        message:
+          error instanceof Error
+            ? error.message
+            : "Could not create the listing. Please try again.",
+      });
+    } finally {
+      setIsSubmitting(false);
+    }
+  }
+
+  const fieldProps = { onChange: updateField, disabled: fieldsLocked };
 
   return (
     <form
@@ -433,25 +561,29 @@ export default function PropertyForm() {
         <div className={GRID_CLASSES}>
           <FormField
             {...fieldProps}
-            id="name"
-            label="Property name"
-            value={values.name}
+            id="title"
+            label="Property title"
+            value={values.title}
             placeholder="e.g. Hamra Student Residence"
           />
           <FormField
             {...fieldProps}
-            id="price"
-            label="Monthly price ($)"
-            value={values.price}
-            type="number"
-            placeholder="e.g. 250"
+            id="propertyType"
+            label="Property type"
+            value={values.propertyType}
+            placeholder="Select property type"
+            options={[
+              { value: "dorm", label: "Dorm" },
+              { value: "studio", label: "Studio" },
+              { value: "apartment", label: "Apartment" },
+            ]}
           />
           <FormField
             {...fieldProps}
             id="description"
-            label="Description"
+            label="Description (optional)"
             value={values.description}
-            placeholder="Describe the property, room and what makes it a good fit for students..."
+            placeholder="Describe the property and what makes it a good fit for students..."
             multiline
             fullWidth
           />
@@ -466,40 +598,143 @@ export default function PropertyForm() {
         <div className={GRID_CLASSES}>
           <FormField
             {...fieldProps}
-            id="location"
-            label="Location"
-            value={values.location}
-            placeholder="e.g. Hamra, Beirut"
+            id="address"
+            label="Property address"
+            value={values.address}
+            placeholder="e.g. Hamra Street, Beirut"
+            fullWidth
           />
-          <FormField
-            {...fieldProps}
-            id="university"
-            label="Nearby university"
-            value={values.university}
-            placeholder="e.g. Lebanese American University"
-          />
+        </div>
+        <div className="mt-[18px] flex flex-wrap items-center gap-[14px]">
+          <button
+            type="button"
+            onClick={useCurrentLocation}
+            disabled={fieldsLocked || isLocating}
+            className="cursor-pointer rounded-(--radius-full) border border-(--line-strong) bg-(--surface) px-[18px] py-[10px] text-[13px] font-medium text-(--ink) hover:border-(--ink) disabled:cursor-not-allowed disabled:opacity-50"
+          >
+            {isLocating ? "Locating..." : "I am at the property — use my location"}
+          </button>
+          <p className="m-0 text-[13px] text-(--soft)">
+            {selectedLocation && selectedLocation.address === values.address.trim()
+              ? "Device coordinates captured. Check that the address describes this property."
+              : "Location coordinates are required. Use device location only while at the property; a map picker for remote properties is not connected yet."}
+          </p>
         </div>
       </FormSection>
 
       <FormSection
         number="03"
-        title="Accommodation details"
-        description="Add the details students commonly use when comparing listings."
+        title="Pricing & accommodation"
+        description="Add the price and accommodation details students compare."
       >
         <div className={GRID_CLASSES}>
-          {ACCOMMODATION_FIELDS.map((field) => (
-            <FormField
-              key={field.id}
-              {...fieldProps}
-              {...field}
-              value={values[field.id]}
-            />
-          ))}
+          <FormField
+            {...fieldProps}
+            id="price"
+            label="Monthly price ($)"
+            value={values.price}
+            type="number"
+            min="0.01"
+            step="any"
+            placeholder="e.g. 250"
+          />
+          <FormField
+            {...fieldProps}
+            id="bedrooms"
+            label="Bedrooms"
+            value={values.bedrooms}
+            type="number"
+            step="1"
+            placeholder="e.g. 2"
+          />
+          <FormField
+            {...fieldProps}
+            id="bathrooms"
+            label="Bathrooms"
+            value={values.bathrooms}
+            type="number"
+            step="1"
+            placeholder="e.g. 1"
+          />
+          <FormField
+            {...fieldProps}
+            id="bedCount"
+            label="Beds"
+            value={values.bedCount}
+            type="number"
+            step="1"
+            placeholder="e.g. 3"
+          />
         </div>
       </FormSection>
 
       <FormSection
         number="04"
+        title="Property details"
+        description="Describe the facilities and who the property is suitable for."
+      >
+        <div className={GRID_CLASSES}>
+          <FormField
+            {...fieldProps}
+            id="furnished"
+            label="Furnished"
+            value={values.furnished}
+            placeholder="Select"
+            options={[
+              { value: "true", label: "Yes" },
+              { value: "false", label: "No" },
+            ]}
+          />
+          <FormField
+            {...fieldProps}
+            id="electricityIncluded"
+            label="Electricity included"
+            value={values.electricityIncluded}
+            placeholder="Select"
+            options={[
+              { value: "true", label: "Yes" },
+              { value: "false", label: "No" },
+            ]}
+          />
+          <FormField
+            {...fieldProps}
+            id="kitchenType"
+            label="Kitchen type"
+            value={values.kitchenType}
+            placeholder="Select kitchen type"
+            options={[
+              { value: "private", label: "Private" },
+              { value: "shared", label: "Shared" },
+            ]}
+          />
+          <FormField
+            {...fieldProps}
+            id="bathroomType"
+            label="Bathroom type"
+            value={values.bathroomType}
+            placeholder="Select bathroom type"
+            options={[
+              { value: "private", label: "Private" },
+              { value: "shared", label: "Shared" },
+            ]}
+          />
+          <FormField
+            {...fieldProps}
+            id="gender"
+            label="Suitable for"
+            value={values.gender}
+            placeholder="Select"
+            options={[
+              { value: "boys", label: "Boys" },
+              { value: "girls", label: "Girls" },
+              { value: "mixed", label: "Mixed" },
+            ]}
+          />
+        </div>
+      </FormSection>
+
+      <FormSection
+        number="05"
         title="Property photos"
         description="Add clear photos to help students get a better feel for the property."
       >
@@ -510,6 +745,7 @@ export default function PropertyForm() {
             type="file"
             accept="image/png,image/jpeg,image/webp"
             multiple
+            disabled={fieldsLocked}
             onChange={handlePhotoChange}
           />
 
@@ -582,109 +818,17 @@ export default function PropertyForm() {
                   photo={photo}
                   index={index}
                   onRemove={() => removePhoto(index)}
+                  disabled={fieldsLocked}
                 />
               ))}
             </div>
 
             <p className="mx-[2px] mt-[12px] mb-0 text-[12px] text-(--soft)">
               {photos.length} {photos.length === 1 ? "photo" : "photos"}{" "}
-              selected
+              selected (maximum 6)
             </p>
           </>
         )}
-      </FormSection>
-
-      <FormSection
-        number="05"
-        title="Amenities"
-        description="Select everything that is available at this property."
-      >
-        <fieldset>
-          <legend className="sr-only">Available amenities</legend>
-
-          <div
-            className="
-              grid grid-cols-4 gap-[12px]
-              [@media(480px<width<=900px)]:grid-cols-2
-              [@media(width<=480px)]:grid-cols-1
-            "
-          >
-            {AMENITY_OPTIONS.map((amenity) => {
-              const selected = amenities.includes(amenity.value);
-
-              return (
-                <label
-                  key={amenity.value}
-                  className={`
-                    relative flex! min-h-[62px] cursor-pointer items-center
-                    rounded-(--radius-sm) border px-[20px] py-0
-                    transition-[background,color,border-color,transform]
-                    duration-(--duration-fast) ease-[ease]
-                    hover:[transform:translateY(-1px)]
-                    focus-within:outline-2 focus-within:outline-solid
-                    focus-within:outline-(--ink) focus-within:outline-offset-[3px]
-                    motion-reduce:transition-none motion-reduce:transform-none
-                    ${
-                      selected
-                        ? "border-(--ink) bg-(--ink) text-white!"
-                        : "border-transparent bg-(--bg) text-(--ink-2)! hover:border-(--line-strong) hover:bg-(--chip)"
-                    }
-                  `}
-                >
-                  <input
-                    className="sr-only pointer-events-none opacity-0"
-                    type="checkbox"
-                    checked={selected}
-                    onChange={() => toggleAmenity(amenity.value)}
-                  />
-
-                  <span aria-hidden="true">{selected ? "✓" : "+"}</span>
-                  <span>{amenity.label}</span>
-                </label>
-              );
-            })}
-          </div>
-
-          <FormField
-            {...fieldProps}
-            id="otherAmenities"
-            label="Other amenities"
-            value={values.otherAmenities}
-            placeholder="e.g. Rooftop access, gym, study room"
-            hint="Add any additional amenities not listed above."
-            fullWidth
-          />
-        </fieldset>
-      </FormSection>
-
-      <FormSection
-        number="06"
-        title="Availability & rules"
-        description="Finish with availability and any rules students should know."
-      >
-        <div className={GRID_CLASSES}>
-          <FormField
-            {...fieldProps}
-            id="availability"
-            label="Availability"
-            value={values.availability}
-            placeholder="Select availability"
-            options={[
-              { value: "available", label: "Available" },
-              { value: "unavailable", label: "Unavailable" },
-            ]}
-          />
-
-          <FormField
-            {...fieldProps}
-            id="rules"
-            label="House rules"
-            value={values.rules}
-            placeholder="e.g. No smoking, quiet hours after 11 PM..."
-            multiline
-            fullWidth
-          />
-        </div>
       </FormSection>
 
       {feedback && (
@@ -725,14 +869,15 @@ export default function PropertyForm() {
         "
       >
         <div>
-          <p>Ready to publish?</p>
+          <p>Ready to submit for review?</p>
           <p className="text-[13px] leading-[1.5] text-(--soft)">
-            You can review and update your listing later.
+            Your property will remain pending until Admin approval.
           </p>
         </div>
 
         <button
           type="submit"
+          disabled={isSubmitting || isComplete || isLocating}
           className="
             inline-flex min-w-[160px] cursor-pointer
             items-center justify-center gap-[12px]
@@ -747,9 +892,16 @@ export default function PropertyForm() {
             focus-visible:outline-(--ink) focus-visible:outline-offset-[3px]
             [@media(width<=700px)]:w-full
             motion-reduce:transition-none motion-reduce:transform-none
+            disabled:cursor-not-allowed disabled:opacity-50
           "
         >
-          Create listing
+          {isComplete
+            ? "Submitted"
+            : isSubmitting
+              ? "Submitting..."
+              : createdPropertyId
+                ? "Retry photo uploads"
+                : "Create listing"}
           <span aria-hidden="true">→</span>
         </button>
       </div>
