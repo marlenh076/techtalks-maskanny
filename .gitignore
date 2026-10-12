@@ -42,3 +42,7 @@ next-env.d.ts
 
 #supabase
 supabase/.temp/
+
+# Private local merge/recovery archives must never be pushed.
+/.admin-merge-recovery-*/
+docs

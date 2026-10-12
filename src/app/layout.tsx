@@ -1,25 +1,25 @@
 import type { Metadata } from "next";
-import { Geist, Geist_Mono } from "next/font/google";
+import { Inter, Plus_Jakarta_Sans } from "next/font/google";
 import "./globals.css";
 import "./app.css";
 
 const inter = Inter({
-  subsets: ['latin'],
-  variable: '--font-inter',
-  display: 'swap',
+  subsets: ["latin"],
+  variable: "--font-inter",
+  display: "swap",
 });
 
 const plusJakartaSans = Plus_Jakarta_Sans({
-  subsets: ['latin'],
-  variable: '--font-plus-jakarta',
-  display: 'swap',
+  subsets: ["latin"],
+  variable: "--font-plus-jakarta",
+  display: "swap",
 });
 
 export const metadata: Metadata = {
-  title: 'Maskanny',
-  description: 'Student housing search and management platform',
+  title: "Maskanny",
+  description: "Student housing search and management platform",
   icons: {
-    icon: '/Maskanny.svg',
+    icon: "/Maskanny.svg",
   },
 };
 

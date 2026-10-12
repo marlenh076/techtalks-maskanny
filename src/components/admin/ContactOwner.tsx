@@ -1,6 +1,7 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useId, useState } from 'react';
+import { useModalFocus } from './AdminUI';
 import { Mail, Phone, User, X, Copy, Check, MessageSquare, ExternalLink } from 'lucide-react';
 
 export interface OwnerContact {
@@ -17,11 +18,17 @@ interface ContactOwnerButtonProps {
 export default function ContactOwnerButton({ owner, listingId }: ContactOwnerButtonProps) {
   const [isOpen, setIsOpen] = useState(false);
   const [copiedField, setCopiedField] = useState<'phone' | 'email' | null>(null);
+  const [copyError, setCopyError] = useState('');
+  const titleId = useId();
+  const focus = useModalFocus(isOpen, () => setIsOpen(false));
 
-  const handleCopy = (text: string, field: 'phone' | 'email') => {
-    navigator.clipboard.writeText(text);
-    setCopiedField(field);
-    setTimeout(() => setCopiedField(null), 2000);
+  const handleCopy = async (text: string, field: 'phone' | 'email') => {
+    try {
+      await navigator.clipboard.writeText(text);
+      setCopyError('');
+      setCopiedField(field);
+      setTimeout(() => setCopiedField(null), 2000);
+    } catch { setCopyError('Unable to copy. Please copy the contact manually.'); }
   };
 
   const formatWhatsAppNumber = (phone: string) => {
@@ -47,10 +54,11 @@ export default function ContactOwnerButton({ owner, listingId }: ContactOwnerBut
       {isOpen && (
         <div 
           className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-brand-navy/40 backdrop-blur-xs animate-in fade-in duration-200"
-          onClick={() => setIsOpen(false)}
+          onClick={event => { event.stopPropagation(); setIsOpen(false); }}
         >
           <div 
-            className="bg-white rounded-2xl border border-brand-slate/15 shadow-2xl w-full max-w-md overflow-hidden animate-in zoom-in-95 duration-200"
+            {...focus} role="dialog" aria-modal="true" aria-labelledby={titleId} tabIndex={-1}
+            className="bg-white rounded-2xl border border-brand-slate/15 shadow-2xl w-full max-w-md max-h-[90vh] overflow-y-auto animate-in zoom-in-95 duration-200"
             onClick={(e) => e.stopPropagation()}
           >
           
@@ -60,7 +68,7 @@ export default function ContactOwnerButton({ owner, listingId }: ContactOwnerBut
                   <User className="w-4 h-4" />
                 </div>
                 <div>
-                  <h3 className="text-sm font-bold text-brand-navy tracking-tight">Host Contact Information</h3>
+                  <h3 id={titleId} className="text-sm font-bold text-brand-navy tracking-tight">Host Contact Information</h3>
                   {listingId && <p className="text-[11px] text-brand-slate font-mono">Ref: {listingId}</p>}
                 </div>
               </div>
@@ -184,6 +192,7 @@ export default function ContactOwnerButton({ owner, listingId }: ContactOwnerBut
             </div>
 
             
+            {copyError && <p role="alert" className="px-6 text-xs text-rose-700">{copyError}</p>}
             <div className="px-6 py-3.5 bg-brand-light/40 border-t border-brand-slate/10 flex justify-end">
               <button
                 type="button"

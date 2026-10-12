@@ -1,0 +1,10 @@
+{
+  "extends": "./tsconfig.json",
+  "compilerOptions": { "incremental": false },
+  "include": [
+    "src/app/(dashboard)/admin/**/*.tsx",
+    "src/components/admin/**/*.tsx",
+    "src/features/admin/**/*.ts"
+  ],
+  "exclude": ["node_modules", ".next", "student_side"]
+}

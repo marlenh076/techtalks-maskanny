@@ -3,7 +3,7 @@
 import { useState, useMemo } from 'react';
 import { OwnerSidebar } from '@/src/components/owner/OwnerSidebar';
 import { MetricCard } from '@/src/components/admin/MetricCard';
-import { RecentSubmissions, Submission, } from '@/src/components/admin/RecentSubmissions';
+import { RecentSubmissions, type Submission } from '@/src/components/owner/RecentSubmissions';
 import { AnalyticsChart } from '@/src/components/owner/AnalyticsChart';
 import { CategoryDonuts } from '@/src/components/owner/CategoryDonuts';
 
@@ -398,14 +398,6 @@ export default function OwnerDashboardPage() {
     setTimeout(() => {
       setSuccessMessage(null);
     }, 3000);
-  };
-
-  const handleAccept = (id: string) => { };
-
-  const handleReject = (id: string) => {
-    setSubmissions((prev) =>
-      prev.filter((item) => item.id !== id)
-    );
   };
 
   const handleAddListing = (newListing: OwnerSubmission) => {
@@ -803,9 +795,6 @@ export default function OwnerDashboardPage() {
                   activeStatus="ALL"
                   activeCategory="ALL"
                   submissions={dateFilteredSubmissions}
-                  isReadOnly={true}
-                  onAccept={handleAccept}
-                  onReject={handleReject}
                 />
 
               </div>

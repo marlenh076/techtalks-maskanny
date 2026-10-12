@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { OwnerSubmission } from '@/src/app/(dashboard)/owner/page;
+import type { OwnerSubmission } from '@/src/app/(dashboard)/owner/page';
 import { Building2, DollarSign, Tag, Edit3, X, Check, Trash2, } from 'lucide-react';
 
 interface MyListingsSidebarProps {

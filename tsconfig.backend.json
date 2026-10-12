@@ -1,0 +1,14 @@
+{
+  "extends": "./tsconfig.json",
+  "compilerOptions": { "incremental": false },
+  "include": [
+    "src/app/api/**/*.ts",
+    "src/features/**/models/**/*.ts",
+    "src/features/**/repository/**/*.ts",
+    "src/features/**/service/**/*.ts",
+    "src/features/**/validation/**/*.ts",
+    "src/features/admin/**/*.ts",
+    "src/lib/**/*.ts"
+  ],
+  "exclude": ["node_modules", ".next", "student_side"]
+}

@@ -39,8 +39,21 @@ export type Database = {
   };
   public: {
     Tables: {
+      boost_payment: {
+        Row: { payment_id: string; property_boosting_id: string; submitted_by: string; reference: string; amount: number; currency: string; status: "pending" | "verified" | "rejected"; submitted_at: string; reviewed_at: string | null; reviewed_by: string | null; rejection_reason: string | null };
+        Insert: never; Update: never; Relationships: [];
+      };
+      admin_activity: {
+        Row: { activity_id: string; actor_id: string; action: string; entity_type: string; entity_id: string; reason: string | null; details: Json; created_at: string };
+        Insert: never; Update: never; Relationships: [];
+      };
+      admin_profile: {
+        Row: { user_id: string; avatar_path: string | null };
+        Insert: never; Update: never; Relationships: [];
+      };
       boosting_plan: {
         Row: {
+          currency: string | null;
           boosting_plan_id: string;
           duration_days: number;
           max_images: number;
@@ -50,6 +63,7 @@ export type Database = {
           video_enabled: boolean;
         };
         Insert: {
+          currency?: string | null;
           boosting_plan_id?: string;
           duration_days: number;
           max_images: number;
@@ -59,6 +73,7 @@ export type Database = {
           video_enabled?: boolean;
         };
         Update: {
+          currency?: string | null;
           boosting_plan_id?: string;
           duration_days?: number;
           max_images?: number;
@@ -71,14 +86,17 @@ export type Database = {
       };
       host: {
         Row: {
+          created_at: string | null;
           host_id: string;
           user_id: string;
         };
         Insert: {
+          created_at?: string | null;
           host_id?: string;
           user_id: string;
         };
         Update: {
+          created_at?: string | null;
           host_id?: string;
           user_id?: string;
         };
@@ -197,6 +215,12 @@ export type Database = {
       };
       property_boosting: {
         Row: {
+          created_at: string | null;
+          review_status: "pending" | "approved" | "rejected";
+          amount_due: number | null;
+          currency: string | null;
+          duration_days: number | null;
+          legacy_payment: boolean;
           boosting_plan_id: string;
           end_date: string | null;
           is_paid: boolean;
@@ -206,6 +230,12 @@ export type Database = {
           status: Database["public"]["Enums"]["boosting_status"];
         };
         Insert: {
+          created_at?: string | null;
+          review_status?: "pending" | "approved" | "rejected";
+          amount_due?: number | null;
+          currency?: string | null;
+          duration_days?: number | null;
+          legacy_payment?: boolean;
           boosting_plan_id: string;
           end_date?: string | null;
           is_paid?: boolean;
@@ -215,6 +245,12 @@ export type Database = {
           status?: Database["public"]["Enums"]["boosting_status"];
         };
         Update: {
+          created_at?: string | null;
+          review_status?: "pending" | "approved" | "rejected";
+          amount_due?: number | null;
+          currency?: string | null;
+          duration_days?: number | null;
+          legacy_payment?: boolean;
           boosting_plan_id?: string;
           end_date?: string | null;
           is_paid?: boolean;
@@ -329,6 +365,21 @@ export type Database = {
       [_ in never]: never;
     };
     Functions: {
+      admin_directory_list: { Args: { p_kind: string; p_filters?: Json }; Returns: Json };
+      admin_directory_detail: { Args: { p_id: string; p_kind: string }; Returns: Json };
+      admin_boost_queue: { Args: { p_filters?: Json }; Returns: Json };
+      admin_boost_detail: { Args: { p_id: string }; Returns: Json };
+      admin_list: { Args: { p_kind: string; p_filters?: Json }; Returns: Json };
+      admin_account_detail: { Args: { p_id: string; p_host?: boolean }; Returns: Json };
+      admin_statistics: { Args: { p_from: string; p_to: string }; Returns: Json };
+      admin_edit_property: { Args: { p_property_id: string; p_changes: Json; p_reason: string }; Returns: Database["public"]["Tables"]["property"]["Row"] };
+      admin_get_profile: { Args: Record<string, never>; Returns: Json };
+      admin_update_profile: { Args: { p_changes: Json }; Returns: Json };
+      moderate_property: { Args: { p_property_id: string; p_decision: string; p_reason?: string }; Returns: undefined };
+      decide_boost: { Args: { p_boost_id: string; p_decision: string; p_reason?: string }; Returns: Json };
+      submit_boost_payment: { Args: { p_boost_id: string; p_reference: string; p_amount: number; p_currency: string }; Returns: Json };
+      review_boost_payment: { Args: { p_payment_id: string; p_decision: string; p_reason?: string }; Returns: Json };
+      activate_property_boost: { Args: { p_boost_id: string }; Returns: Json };
       approve_property: {
         Args: { p_property_id: string };
         Returns: undefined;
@@ -374,7 +425,7 @@ export type Database = {
     };
     Enums: {
       bathroom_type: "private" | "shared";
-      boosting_status: "pending" | "active" | "expired";
+      boosting_status: "pending" | "active" | "expired" | "rejected";
       gender: "boys" | "girls" | "mixed";
       kitchen_type: "private" | "shared";
       media_type: "image" | "video";
@@ -515,7 +566,7 @@ export const Constants = {
   public: {
     Enums: {
       bathroom_type: ["private", "shared"],
-      boosting_status: ["active", "expired", "pending"],
+      boosting_status: ["active", "expired", "pending", "rejected"],
       gender: ["boys", "girls", "mixed"],
       kitchen_type: ["private", "shared"],
       media_type: ["image", "video"],

@@ -13,6 +13,13 @@ export const supabase = createBrowserClient<Database>(supabaseUrl, supabaseKey, 
 
 export function createAuthenticatedClient(accessToken: string) {
   return createClient<Database>(supabaseUrl, supabaseKey, {
+    // This client uses one request's bearer token. It must never replace the
+    // browser's cookie-backed Auth session when a server API uses it.
+    auth: {
+      persistSession: false,
+      autoRefreshToken: false,
+      detectSessionInUrl: false,
+    },
     global: {
       headers: {
         Authorization: `Bearer ${accessToken}`,

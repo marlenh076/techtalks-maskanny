@@ -1,4 +1,5 @@
 import { createAuthenticatedClient } from "@/src/lib/supabase/client";
+import { databaseError } from "@/src/features/admin/service/errors";
 
 import {
   ModerationPropertyDetails,
@@ -19,7 +20,7 @@ export class PropertyModerationReadRepository {
       { p_status: status },
     );
 
-    if (error) throw new Error(error.message);
+    if (error) databaseError(error);
     if (!Array.isArray(data)) throw new Error("Invalid moderation list response");
 
     return data as unknown as ModerationPropertySummary[];
@@ -31,7 +32,7 @@ export class PropertyModerationReadRepository {
       { p_property_id: propertyId },
     );
 
-    if (error) throw new Error(error.message);
+    if (error) databaseError(error);
     if (data === null) return null;
     if (typeof data !== "object" || Array.isArray(data)) {
       throw new Error("Invalid moderation details response");
