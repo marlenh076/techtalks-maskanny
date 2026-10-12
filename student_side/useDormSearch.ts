@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useRef, useState } from "react";
+import { toast } from "sonner"; // NEW
 import { searchDorms } from "./dorms";
 import { EMPTY_FILTERS, type Dorm, type DormFilters } from "./types";
 import { USE_DEMO_DORMS, filterDemoDorms } from "./dormSamples";
@@ -15,6 +16,7 @@ export function useDormSearch(initialFilters: Partial<DormFilters> = {}) {
   const [status, setStatus] = useState<SearchStatus>("idle");
   const [attempt, setAttempt] = useState(0);
   const controllerRef = useRef<AbortController | null>(null);
+  const retriedRef = useRef(false); // NEW: true after the student presses "Try again"
 
   useEffect(() => {
     const timer = setTimeout(() => {
@@ -37,6 +39,7 @@ export function useDormSearch(initialFilters: Partial<DormFilters> = {}) {
           if (controller.signal.aborted) return;
           setDorms(results);
           setStatus("success");
+          retriedRef.current = false; // NEW
         })
         .catch((error: unknown) => {
           if (error instanceof DOMException && error.name === "AbortError") return;
@@ -44,6 +47,14 @@ export function useDormSearch(initialFilters: Partial<DormFilters> = {}) {
           console.error("Dorm search failed:", error);
           setDorms([]);
           setStatus("error");
+          // NEW: the page already shows an inline error, so only toast when a retry
+          // fails too (otherwise the screen would look unchanged). Fixed id = no stacking.
+          if (retriedRef.current) {
+            toast.error("Still couldn't load the dorms", {
+              id: "dorm-search-error",
+              description: "Check your connection and try again.",
+            });
+          }
         });
     }, DEBOUNCE_MS);
 
@@ -60,7 +71,11 @@ export function useDormSearch(initialFilters: Partial<DormFilters> = {}) {
   );
 
   const resetFilters = useCallback(() => setFilters(EMPTY_FILTERS), []);
-  const retry = useCallback(() => setAttempt((n) => n + 1), []);
+
+  const retry = useCallback(() => {
+    retriedRef.current = true; // NEW
+    setAttempt((n) => n + 1);
+  }, []);
 
   return { filters, setFilter, resetFilters, dorms, status, retry };
 }
