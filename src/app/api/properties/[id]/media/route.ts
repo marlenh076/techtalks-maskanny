@@ -1,33 +1,13 @@
 import { NextRequest, NextResponse } from "next/server";
 
-import { MediaService } from "@/src/features/properties/service/media";
+import { MediaLimitError, MediaService } from "@/src/features/properties/service/media";
 import { MediaRepository } from "@/src/features/properties/repository/media.repository";
 import { PropertyRepository } from "@/src/features/properties/repository/property.repository";
 import { HostRepository } from "@/src/features/users/repository/host.repository";
 import { StorageService } from "@/src/lib/supabase/storage";
 
-import { BoostingPlanService } from "@/src/features/boosting/service/boosting_plan";
-import { BoostingPlanRepository } from "@/src/features/boosting/repository/boosting_plan.repository";
-import { PropertyBoostingService } from "@/src/features/boosting/service/property_boosting";
-import { PropertyBoostingRepository } from "@/src/features/boosting/repository/property_boosting.repository";
 import { getAccessToken, getCurrentUser } from "@/src/lib/supabase/auth";
 import { z } from "zod";
-
-const mediaRepository = new MediaRepository();
-
-const propertyBoostingRepository = new PropertyBoostingRepository();
-const propertyBoostingService = new PropertyBoostingService(
-  propertyBoostingRepository,
-);
-
-const boostingPlanRepository = new BoostingPlanRepository();
-const boostingPlanService = new BoostingPlanService(boostingPlanRepository);
-
-const mediaService = new MediaService(
-  mediaRepository,
-  propertyBoostingService,
-  boostingPlanService,
-);
 
 async function cleanupUploadedFile(
   storageService: StorageService,
@@ -55,7 +35,22 @@ export async function GET(
       );
     }
 
-    const media = await mediaService.getByPropertyId(id);
+    let token: string | null = null;
+    if (request.headers.has("authorization")) {
+      token = getAccessToken(request);
+      if (!token || !(await getCurrentUser(request))) {
+        return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+      }
+    }
+
+    const property = await new PropertyRepository(token ?? undefined).getById(id);
+    if (!property) {
+      return NextResponse.json({ error: "Property not found" }, { status: 404 });
+    }
+
+    const media = await new MediaService(
+      new MediaRepository(token ?? undefined),
+    ).getByPropertyId(id);
 
     return NextResponse.json(media);
   } catch (error) {
@@ -110,6 +105,10 @@ export async function POST(
       return NextResponse.json({ error: "Forbidden" }, { status: 403 });
     }
 
+    if (property.approval_status === "rejected") {
+      return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+    }
+
     const formData = await request.formData().catch(() => null);
 
     if (!formData) {
@@ -151,6 +150,9 @@ export async function POST(
     const fileName = `${crypto.randomUUID()}.${fileExtension}`;
 
     const filePath = `${id}/${fileName}`;
+    const type = file.type.startsWith("image/") ? "image" : "video";
+    const mediaService = new MediaService(new MediaRepository(token));
+    await mediaService.assertWithinLimit(id, type);
 
     storageService = new StorageService();
 
@@ -160,22 +162,6 @@ export async function POST(
     uploadedFilePath = filePath;
 
     const url = storageService.getPublicUrl("properties-media", filePath);
-
-    const type = file.type.startsWith("image/") ? "image" : "video";
-
-    const mediaRepository = new MediaRepository(token);
-
-    const propertyBoostingRepository = new PropertyBoostingRepository(token);
-
-    const propertyBoostingService = new PropertyBoostingService(
-      propertyBoostingRepository,
-    );
-
-    const mediaService = new MediaService(
-      mediaRepository,
-      propertyBoostingService,
-      boostingPlanService,
-    );
 
     const media = await mediaService.create({
       property_id: id,
@@ -190,6 +176,10 @@ export async function POST(
   } catch (error) {
     if (uploadedFilePath && token && storageService) {
       await cleanupUploadedFile(storageService, token, uploadedFilePath);
+    }
+
+    if (error instanceof MediaLimitError) {
+      return NextResponse.json({ error: error.message }, { status: 409 });
     }
 
     console.error(error);

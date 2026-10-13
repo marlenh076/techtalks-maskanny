@@ -2,7 +2,10 @@ import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
 
 import { PropertyBoostingService } from "@/src/features/boosting/service/property_boosting";
-import { PropertyBoostingRepository } from "@/src/features/boosting/repository/property_boosting.repository";
+import {
+  PropertyBoostingRepository,
+  PropertyBoostingRequestError,
+} from "@/src/features/boosting/repository/property_boosting.repository";
 import { getAccessToken, getCurrentUser } from "@/src/lib/supabase/auth";
 
 export async function GET(
@@ -94,12 +97,26 @@ export async function DELETE(
       );
     }
 
+    if (existingPropertyBoosting.status !== "pending") {
+      return NextResponse.json(
+        { error: "Only pending boosting requests can be deleted" },
+        { status: 409 },
+      );
+    }
+
     await propertyBoostingService.delete(id);
 
     return NextResponse.json({
       message: "Property boosting deleted successfully",
     });
   } catch (error) {
+    if (error instanceof PropertyBoostingRequestError) {
+      return NextResponse.json(
+        { error: error.message },
+        { status: error.status },
+      );
+    }
+
     console.error(error);
 
     return NextResponse.json(

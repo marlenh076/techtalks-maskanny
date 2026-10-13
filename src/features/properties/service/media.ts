@@ -1,60 +1,36 @@
-import { BoostingPlanService } from "../../boosting/service/boosting_plan";
-import { PropertyBoostingService } from "../../boosting/service/property_boosting";
 import { Media } from "../models/media.model";
 import { IMediaRepository } from "../repository/IMedia.repository";
+import { MediaLimitError, MediaUnavailableError } from "../repository/media.repository";
+
+export { MediaLimitError } from "../repository/media.repository";
+
+const MAX_IMAGES = 6;
+const MAX_VIDEOS = 1;
 
 export class MediaService {
-  constructor(
-    private mediaRepository: IMediaRepository,
-    private propertyBoostingService: PropertyBoostingService,
-    private boostingPlanService: BoostingPlanService,
-  ) {}
+  constructor(private mediaRepository: IMediaRepository) {}
+
+  async assertWithinLimit(
+    propertyId: string,
+    type: Media["type"],
+    excludeMediaId?: string,
+  ): Promise<void> {
+    const existingMedia = await this.mediaRepository.getByPropertyId(propertyId);
+    const count = existingMedia.filter(
+      (media) => media.type === type && media.media_id !== excludeMediaId,
+    ).length;
+
+    if (type === "image" && count >= MAX_IMAGES) {
+      throw new MediaLimitError("Maximum number of images reached");
+    }
+
+    if (type === "video" && count >= MAX_VIDEOS) {
+      throw new MediaLimitError("Only one video is allowed per property");
+    }
+  }
 
   async create(data: Omit<Media, "media_id" | "created_at">): Promise<Media> {
-    const boosting = await this.propertyBoostingService.getByPropertyId(
-      data.property_id,
-    );
-
-    if (!boosting || boosting.status !== "active") {
-      throw new Error("Property does not have an active boosting plan");
-    }
-
-    const plan = await this.boostingPlanService.getById(
-      boosting.boosting_plan_id,
-    );
-
-    if (!plan) {
-      throw new Error("Boosting plan not found");
-    }
-
-    const existingMedia = await this.mediaRepository.getByPropertyId(
-      data.property_id,
-    );
-
-    if (data.type === "image") {
-      const imageCount = existingMedia.filter(
-        (media) => media.type === "image",
-      ).length;
-
-      if (imageCount >= plan.max_images) {
-        throw new Error("Maximum number of images reached");
-      }
-    }
-
-    if (data.type === "video") {
-      if (!plan.video_enabled) {
-        throw new Error("Video is not allowed with this boosting plan");
-      }
-
-      const videoCount = existingMedia.filter(
-        (media) => media.type === "video",
-      ).length;
-
-      if (videoCount >= 1) {
-        throw new Error("Only one video is allowed per property");
-      }
-    }
-
+    await this.assertWithinLimit(data.property_id, data.type);
     return this.mediaRepository.create(data);
   }
 
@@ -71,6 +47,12 @@ export class MediaService {
   }
 
   async update(id: string, data: Partial<Media>): Promise<Media> {
+    if (data.type) {
+      const existingMedia = await this.mediaRepository.getById(id);
+      if (!existingMedia) throw new MediaUnavailableError();
+      await this.assertWithinLimit(existingMedia.property_id, data.type, id);
+    }
+
     return this.mediaRepository.update(id, data);
   }
 

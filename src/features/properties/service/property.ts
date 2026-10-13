@@ -1,4 +1,4 @@
-import { Property } from "../models/property.model";
+import { Property, PropertyCreate } from "../models/property.model";
 import {
   IPropertyRepository,
   PropertyFilters,
@@ -7,9 +7,7 @@ import {
 export class PropertyService {
   constructor(private propertyRepository: IPropertyRepository) {}
 
-  async create(
-    data: Omit<Property, "property_id" | "created_at">,
-  ): Promise<Property> {
+  async create(data: PropertyCreate): Promise<Property> {
     return this.propertyRepository.create(data);
   }
 
@@ -19,6 +17,10 @@ export class PropertyService {
 
   async getAll(): Promise<Property[]> {
     return this.propertyRepository.getAll();
+  }
+
+  async getByHostId(hostId: string): Promise<Property[]> {
+    return this.propertyRepository.getByHostId(hostId);
   }
 
   async update(id: string, data: Partial<Property>): Promise<Property> {

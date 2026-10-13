@@ -101,6 +101,14 @@ a {
   text-decoration: none;
 }
 
+.auth-switch-link {
+  color: #2563EB;
+}
+
+.auth-switch-link:hover {
+  color: #1D4ED8;
+}
+
 /* TYPOGRAPHY */
 
 .text-display {
@@ -826,58 +834,6 @@ textarea.field {
 
   :is(#propertyType, #roomType, #gender, #furnished, #availability)
     option::checkmark {
-    order: 1;
-    margin-left: auto;
-  }
-}
-
-/* Match the discovery filter dropdowns to the property form picker. */
-@supports (appearance: base-select) {
-  select.student-filter-select,
-  select.student-filter-select::picker(select) {
-    appearance: base-select;
-  }
-
-  select.student-filter-select::picker-icon {
-    color: var(--soft);
-    transition: rotate var(--duration-fast);
-  }
-
-  select.student-filter-select:open::picker-icon {
-    rotate: 180deg;
-  }
-
-  select.student-filter-select::picker(select) {
-    position-area: block-end;
-    position-try-fallbacks: none;
-    margin-top: 8px;
-    padding: 6px;
-    border: 1px solid var(--line-strong);
-    border-radius: var(--radius-sm);
-    background: var(--surface);
-    box-shadow: 0 18px 48px -24px rgba(22, 23, 26, 0.28);
-  }
-
-  select.student-filter-select option {
-    min-height: 42px;
-    padding: 11px 14px;
-    border-radius: 10px;
-    color: var(--ink-2);
-    font-size: 14px;
-  }
-
-  select.student-filter-select option:hover,
-  select.student-filter-select option:focus-visible {
-    background: var(--chip);
-    color: var(--ink);
-  }
-
-  select.student-filter-select option:checked {
-    background: var(--ink);
-    color: #fff;
-  }
-
-  select.student-filter-select option::checkmark {
     order: 1;
     margin-left: auto;
   }

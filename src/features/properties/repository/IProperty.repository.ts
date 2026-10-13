@@ -1,4 +1,4 @@
-import { Property } from "../models/property.model";
+import { Property, PropertyCreate } from "../models/property.model";
 import { ICreateRepository } from "@/src/shared/repositories/create.repository";
 import { IReadRepository } from "@/src/shared/repositories/read.repository";
 import { IUpdateRepository } from "@/src/shared/repositories/update.repository";
@@ -19,8 +19,10 @@ export interface PropertyFilters {
 
 export interface IPropertyRepository
   extends
-    ICreateRepository<Property, Omit<Property, "property_id" | "created_at">>,
+    ICreateRepository<Property, PropertyCreate>,
     IReadRepository<Property>,
     IUpdateRepository<Property>,
     IDeleteRepository,
-    ISearchRepository<Property, PropertyFilters> {}
+    ISearchRepository<Property, PropertyFilters> {
+  getByHostId(hostId: string): Promise<Property[]>;
+}

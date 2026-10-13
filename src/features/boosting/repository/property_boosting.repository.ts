@@ -3,12 +3,15 @@ import {
   supabase,
   createAuthenticatedClient,
 } from "../../../lib/supabase/client";
-import { PropertyBoosting } from "../models/property_boosting.model";
+import {
+  PropertyBoosting,
+  PropertyBoostingCreate,
+} from "../models/property_boosting.model";
 import { IPropertyBoostingRepository } from "./IPropertyBoosting.repository";
 
-export class PropertyBoostingConflictError extends Error {
-  constructor() {
-    super("Property already has a boost");
+export class PropertyBoostingRequestError extends Error {
+  constructor(message: string, readonly status: 403 | 404 | 409) {
+    super(message);
   }
 }
 
@@ -21,21 +24,31 @@ export class PropertyBoostingRepository implements IPropertyBoostingRepository {
       : supabase;
   }
 
-  async create(
-    data: Omit<PropertyBoosting, "property_boosting_id">,
-  ): Promise<PropertyBoosting> {
+  async create(data: PropertyBoostingCreate): Promise<PropertyBoosting> {
     const { data: propertyBoosting, error } = await this.supabase
-      .from("property_boosting")
-      .insert(data)
-      .select()
-      .single();
+      .rpc("request_property_boost", {
+        p_property_id: data.property_id,
+        p_boosting_plan_id: data.boosting_plan_id,
+      });
 
     if (error) {
-      if (
-        error.code === "23505" &&
-        error.message.includes("property_boosting_property_id_key")
-      ) {
-        throw new PropertyBoostingConflictError();
+      switch (error.code) {
+        case "42501":
+        case "M4030":
+          throw new PropertyBoostingRequestError("Forbidden", 403);
+        case "M4040":
+          throw new PropertyBoostingRequestError("Property not found", 404);
+        case "M4041":
+          throw new PropertyBoostingRequestError("Boosting plan not found", 404);
+        case "M4090":
+          throw new PropertyBoostingRequestError("Property already has a current boost", 409);
+        case "M4091":
+          throw new PropertyBoostingRequestError("Expired boost required for reactivation", 409);
+      }
+
+      if (error.code === "23505" &&
+        error.message.includes("property_boosting_one_current_per_property_idx")) {
+        throw new PropertyBoostingRequestError("Property already has a current boost", 409);
       }
 
       throw new Error(error.message);
@@ -70,46 +83,31 @@ export class PropertyBoostingRepository implements IPropertyBoostingRepository {
     return propertyBoostings;
   }
 
-  async getByPropertyId(propertyId: string): Promise<PropertyBoosting | null> {
+  async getCurrentByPropertyId(propertyId: string): Promise<PropertyBoosting | null> {
+    const { data, error } = await this.supabase
+      .rpc("get_current_property_boost", { p_property_id: propertyId });
+
+    if (error) {
+      throw new Error(error.message);
+    }
+
+    return data?.[0] ?? null;
+  }
+
+  async delete(id: string): Promise<void> {
     const { data, error } = await this.supabase
       .from("property_boosting")
-      .select("*")
-      .eq("property_id", propertyId)
+      .delete()
+      .eq("property_boosting_id", id)
+      .select("property_boosting_id")
       .maybeSingle();
 
     if (error) {
       throw new Error(error.message);
     }
 
-    return data;
-  }
-
-  async update(
-    id: string,
-    data: Partial<PropertyBoosting>,
-  ): Promise<PropertyBoosting> {
-    const { data: propertyBoosting, error } = await this.supabase
-      .from("property_boosting")
-      .update(data)
-      .eq("property_boosting_id", id)
-      .select()
-      .single();
-
-    if (error) {
-      throw new Error(error.message);
-    }
-
-    return propertyBoosting;
-  }
-
-  async delete(id: string): Promise<void> {
-    const { error } = await this.supabase
-      .from("property_boosting")
-      .delete()
-      .eq("property_boosting_id", id);
-
-    if (error) {
-      throw new Error(error.message);
+    if (!data) {
+      throw new PropertyBoostingRequestError("Property boosting not found", 404);
     }
   }
 }

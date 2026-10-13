@@ -1,6 +1,6 @@
 import { supabase, createAuthenticatedClient } from "@/src/lib/supabase/client";
 
-import { User } from "../models/user.model";
+import { User, UserProfileUpdate } from "../models/user.model";
 import { IUserRepository } from "./IUser.repository";
 
 export class UserRepository implements IUserRepository {
@@ -36,7 +36,7 @@ export class UserRepository implements IUserRepository {
     return users;
   }
 
-  async update(id: string, data: Partial<User>): Promise<User> {
+  async update(id: string, data: UserProfileUpdate): Promise<User> {
     const { data: user, error } = await this.supabase
       .from("user")
       .update(data)
