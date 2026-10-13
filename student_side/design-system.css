@@ -16,6 +16,11 @@
 /* ============================================================
    1. DESIGN TOKENS
    ============================================================ */
+   html,
+body {
+  max-width: 100%;
+  overflow-x: hidden;
+}
 :root {
   /* Palette */
   --bg: #F4F2ED;          /* page background, warm off-white */
