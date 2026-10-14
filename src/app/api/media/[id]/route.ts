@@ -11,6 +11,7 @@ import { HostRepository } from "@/src/features/users/repository/host.repository"
 
 import { StorageService } from "@/src/lib/supabase/storage";
 import { getAccessToken, getCurrentUser } from "@/src/lib/supabase/auth";
+import { MAX_MEDIA_FILE_SIZE, PROPERTY_MEDIA_TYPES } from "@/src/features/properties/validation/media-limits";
 
 export async function GET(
   request: NextRequest,
@@ -111,24 +112,14 @@ export async function PUT(
       return NextResponse.json({ error: "File is required" }, { status: 400 });
     }
 
-    const allowedTypes = [
-      "image/jpeg",
-      "image/png",
-      "image/webp",
-      "video/mp4",
-      "video/webm",
-    ];
-
-    if (!allowedTypes.includes(file.type)) {
+    if (!PROPERTY_MEDIA_TYPES.includes(file.type)) {
       return NextResponse.json(
         { error: "Unsupported file type" },
         { status: 400 },
       );
     }
 
-    const maxFileSize = 50 * 1024 * 1024;
-
-    if (file.size > maxFileSize) {
+    if (file.size > MAX_MEDIA_FILE_SIZE) {
       return NextResponse.json(
         { error: "File size must not exceed 50 MB" },
         { status: 400 },

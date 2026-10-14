@@ -1,12 +1,18 @@
 import { supabase, createAuthenticatedClient } from "./client";
 
 export class StorageService {
-  async upload(accessToken: string, bucket: string, path: string, file: File) {
+  async upload(
+    accessToken: string,
+    bucket: string,
+    path: string,
+    file: File,
+    upsert = false,
+  ) {
     const authenticatedSupabase = createAuthenticatedClient(accessToken);
 
     const { error } = await authenticatedSupabase.storage
       .from(bucket)
-      .upload(path, file);
+      .upload(path, file, { upsert });
 
     if (error) {
       throw new Error(error.message);

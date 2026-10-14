@@ -3,4 +3,5 @@ export interface Media {
   property_id: string;
   url: string;
   type: "image" | "video";
+  sort_order?: number;
 }

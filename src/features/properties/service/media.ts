@@ -4,7 +4,7 @@ import { MediaLimitError, MediaUnavailableError } from "../repository/media.repo
 
 export { MediaLimitError } from "../repository/media.repository";
 
-const MAX_IMAGES = 6;
+import { MAX_PROPERTY_IMAGES } from "../validation/media-limits";
 const MAX_VIDEOS = 1;
 
 export class MediaService {
@@ -20,7 +20,7 @@ export class MediaService {
       (media) => media.type === type && media.media_id !== excludeMediaId,
     ).length;
 
-    if (type === "image" && count >= MAX_IMAGES) {
+    if (type === "image" && count >= MAX_PROPERTY_IMAGES) {
       throw new MediaLimitError("Maximum number of images reached");
     }
 
@@ -29,7 +29,7 @@ export class MediaService {
     }
   }
 
-  async create(data: Omit<Media, "media_id" | "created_at">): Promise<Media> {
+  async create(data: Omit<Media, "media_id" | "created_at"> & { media_id?: string }): Promise<Media> {
     await this.assertWithinLimit(data.property_id, data.type);
     return this.mediaRepository.create(data);
   }

@@ -22,7 +22,7 @@ export class MediaRepository implements IMediaRepository {
       : supabase;
   }
 
-  async create(data: Omit<Media, "media_id" | "created_at">): Promise<Media> {
+  async create(data: Omit<Media, "media_id" | "created_at"> & { media_id?: string }): Promise<Media> {
     const { data: media, error } = await this.supabase
       .from("media")
       .insert(data)
@@ -88,6 +88,7 @@ export class MediaRepository implements IMediaRepository {
       .from("media")
       .select("*")
       .eq("property_id", propertyId)
+      .order("sort_order", { ascending: true })
       .order("media_id", { ascending: true });
 
     if (error) {
@@ -105,6 +106,7 @@ export class MediaRepository implements IMediaRepository {
       .select("property_id,url")
       .in("property_id", propertyIds)
       .eq("type", "image")
+      .order("sort_order", { ascending: true })
       .order("media_id", { ascending: true });
 
     if (error) throw new Error(error.message);

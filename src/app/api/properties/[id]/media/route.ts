@@ -8,6 +8,7 @@ import { StorageService } from "@/src/lib/supabase/storage";
 
 import { getAccessToken, getCurrentUser } from "@/src/lib/supabase/auth";
 import { z } from "zod";
+import { MAX_MEDIA_FILE_SIZE, MAX_PROPERTY_IMAGE_FILE_SIZE, PROPERTY_MEDIA_TYPES } from "@/src/features/properties/validation/media-limits";
 
 async function cleanupUploadedFile(
   storageService: StorageService,
@@ -121,58 +122,74 @@ export async function POST(
       return NextResponse.json({ error: "File is required" }, { status: 400 });
     }
 
-    const allowedTypes = [
-      "image/jpeg",
-      "image/png",
-      "image/webp",
-      "video/mp4",
-      "video/webm",
-    ];
-
-    if (!allowedTypes.includes(file.type)) {
+    if (!PROPERTY_MEDIA_TYPES.includes(file.type)) {
       return NextResponse.json(
         { error: "Unsupported file type" },
         { status: 400 },
       );
     }
 
-    const maxFileSize = 50 * 1024 * 1024;
-
-    if (file.size > maxFileSize) {
+    const type = file.type.startsWith("image/") ? "image" : "video";
+    const maxSize = type === "image" ? MAX_PROPERTY_IMAGE_FILE_SIZE : MAX_MEDIA_FILE_SIZE;
+    if (file.size === 0 || file.size > maxSize) {
       return NextResponse.json(
-        { error: "File size must not exceed 50 MB" },
+        { error: type === "image"
+          ? "Each photo must be nonempty and 5 MB or smaller. Choose a smaller image or reduce its resolution."
+          : "File must be nonempty and must not exceed 50 MB" },
         { status: 400 },
       );
     }
 
-    const fileExtension = file.name.split(".").pop();
-
-    const fileName = `${crypto.randomUUID()}.${fileExtension}`;
-
-    const filePath = `${id}/${fileName}`;
-    const type = file.type.startsWith("image/") ? "image" : "video";
     const mediaService = new MediaService(new MediaRepository(token));
-    await mediaService.assertWithinLimit(id, type);
-
+    const requestId = request.headers.get("Idempotency-Key");
+    if (requestId && !z.uuid().safeParse(requestId).success) {
+      return NextResponse.json({ error: "Invalid idempotency key" }, { status: 400 });
+    }
+    const orderInput = formData.get("sort_order");
+    const order = z.coerce.number().int().min(0).max(type === "image" ? 5 : 6)
+      .safeParse(orderInput ?? 0);
+    if (!order.success) {
+      return NextResponse.json({ error: "Invalid photo order" }, { status: 400 });
+    }
+    // Filename extensions come from the validated MIME type, never user paths.
+    const extension = file.type === "image/jpeg" ? "jpg" : file.type.split("/")[1];
+    const filePath = `${id}/${requestId ?? crypto.randomUUID()}.${extension}`;
     storageService = new StorageService();
-
-    await storageService.upload(token, "properties-media", filePath, file);
-
-    // From this point onward, cleanup is required if something fails.
-    uploadedFilePath = filePath;
-
     const url = storageService.getPublicUrl("properties-media", filePath);
-
-    const media = await mediaService.create({
-      property_id: id,
-      url,
-      type,
-    });
-
-    // DB creation succeeded, so this file should no longer be rolled back.
-    uploadedFilePath = null;
-
-    return NextResponse.json(media, { status: 201 });
+    if (requestId) {
+      const existing = await mediaService.getById(requestId);
+      if (existing?.property_id === id && existing.url === url) return NextResponse.json(existing);
+      if (existing) return NextResponse.json({ error: "Upload key unavailable" }, { status: 409 });
+    }
+    try {
+      // Include the limit read in retry reconciliation: another same-key
+      // request may have filled the sixth slot since the first lookup.
+      await mediaService.assertWithinLimit(id, type);
+      // A retry can replace its own deterministic path if the storage response
+      // was lost before the media row was saved. Normal uploads remain inserts.
+      await storageService.upload(token, "properties-media", filePath, file, Boolean(requestId));
+      // A keyed path may belong to another in-flight retry or a committed row
+      // whose acknowledgement was lost. Keep it available for the same-key
+      // retry; deleting it here could leave a successful media row without a
+      // file. Legacy uploads retain the existing rollback cleanup behavior.
+      uploadedFilePath = requestId ? null : filePath;
+      const media = await mediaService.create({
+        property_id: id, url, type, sort_order: order.data,
+        ...(requestId ? { media_id: requestId } : {}),
+      });
+      uploadedFilePath = null;
+      return NextResponse.json(media, { status: 201 });
+    } catch (error) {
+      if (requestId) {
+        const existing = await mediaService.getById(requestId);
+        if (existing?.property_id === id && existing.url === url) {
+          // Another request already completed; its file must not be removed.
+          uploadedFilePath = null;
+          return NextResponse.json(existing);
+        }
+      }
+      throw error;
+    }
   } catch (error) {
     if (uploadedFilePath && token && storageService) {
       await cleanupUploadedFile(storageService, token, uploadedFilePath);

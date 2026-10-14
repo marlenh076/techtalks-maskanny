@@ -20,7 +20,7 @@ export class PropertyRepository implements IPropertyRepository {
       : supabase;
   }
 
-  async create(data: PropertyCreate): Promise<Property> {
+  async create(data: PropertyCreate & { property_id?: string }): Promise<Property> {
     const { data: property, error } = await this.supabase
       .from("property")
       .insert(data)

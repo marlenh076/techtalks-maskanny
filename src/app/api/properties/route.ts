@@ -9,6 +9,7 @@ import { HostRepository } from "@/src/features/users/repository/host.repository"
 import { getAccessToken, getCurrentUser } from "@/src/lib/supabase/auth";
 import { MediaRepository } from "@/src/features/properties/repository/media.repository";
 import { PropertyDiscoveryService } from "@/src/features/properties/service/discovery";
+import { z } from "zod";
 
 const propertyRepository = new PropertyRepository();
 
@@ -77,10 +78,34 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: result.error.issues }, { status: 400 });
     }
 
-    const property = await propertyService.create({
-      ...result.data,
-      host_id: host.host_id,
-    });
+    // A stable request UUID uses the existing primary key to make retries safe,
+    // including when creation succeeds but the response is lost. Never accept
+    // ownership or moderation fields from the request body.
+    const requestId = request.headers.get("Idempotency-Key");
+    if (requestId && !z.uuid().safeParse(requestId).success) {
+      return NextResponse.json({ error: "Invalid idempotency key" }, { status: 400 });
+    }
+    if (requestId) {
+      const existing = await propertyRepository.getById(requestId);
+      if (existing?.host_id === host.host_id) return NextResponse.json(existing);
+      if (existing) return NextResponse.json({ error: "Request key unavailable" }, { status: 409 });
+    }
+
+    let property;
+    try {
+      property = await propertyService.create({
+        ...result.data,
+        host_id: host.host_id,
+        ...(requestId ? { property_id: requestId } : {}),
+      });
+    } catch (error) {
+      // Concurrent retries may both pass the read; the unique PK still wins.
+      if (requestId) {
+        const existing = await propertyRepository.getById(requestId);
+        if (existing?.host_id === host.host_id) return NextResponse.json(existing);
+      }
+      throw error;
+    }
 
     return NextResponse.json(property, { status: 201 });
   } catch (error) {

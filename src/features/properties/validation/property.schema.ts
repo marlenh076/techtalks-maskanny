@@ -3,23 +3,23 @@ import { z } from "zod";
 export const propertySchema = z.object({
   property_type: z.enum(["dorm", "studio", "apartment"]),
 
-  title: z.string().min(1, "Title is required"),
+  title: z.string().trim().min(1, "Title is required"),
 
   description: z.string().nullable(),
 
-  address: z.string().min(1, "Address is required"),
+  address: z.string().trim().min(1, "Address is required"),
 
-  latitude: z.number(),
+  latitude: z.number().min(-90, "Latitude must be between -90 and 90").max(90, "Latitude must be between -90 and 90"),
 
-  longitude: z.number(),
+  longitude: z.number().min(-180, "Longitude must be between -180 and 180").max(180, "Longitude must be between -180 and 180"),
 
-  price: z.number().positive(),
+  price: z.number().positive("Monthly price must be greater than zero"),
 
-  bedrooms: z.number().int().nonnegative(),
+  bedrooms: z.number().int("Bedrooms must be a whole number").nonnegative("Bedrooms cannot be negative"),
 
-  bathrooms: z.number().int().nonnegative(),
+  bathrooms: z.number().int("Bathrooms must be a whole number").nonnegative("Bathrooms cannot be negative"),
 
-  bed_count: z.number().int().nonnegative(),
+  bed_count: z.number().int("Beds must be a whole number").nonnegative("Beds cannot be negative"),
 
   furnished: z.boolean(),
 

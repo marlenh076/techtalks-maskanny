@@ -7,7 +7,7 @@ import {
 export class PropertyService {
   constructor(private propertyRepository: IPropertyRepository) {}
 
-  async create(data: PropertyCreate): Promise<Property> {
+  async create(data: PropertyCreate & { property_id?: string }): Promise<Property> {
     return this.propertyRepository.create(data);
   }
 

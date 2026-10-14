@@ -94,18 +94,21 @@ export type Database = {
       };
       media: {
         Row: {
+          sort_order: number;
           media_id: string;
           property_id: string;
           type: Database["public"]["Enums"]["media_type"];
           url: string;
         };
         Insert: {
+          sort_order?: number;
           media_id?: string;
           property_id: string;
           type: Database["public"]["Enums"]["media_type"];
           url: string;
         };
         Update: {
+          sort_order?: number;
           media_id?: string;
           property_id?: string;
           type?: Database["public"]["Enums"]["media_type"];
