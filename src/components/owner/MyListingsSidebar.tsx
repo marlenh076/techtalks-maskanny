@@ -1,8 +1,8 @@
-'use client';
+"use client";
 
-import { useState } from 'react';
-import type { OwnerSubmission } from '@/src/app/(dashboard)/owner/page';
-import { Building2, DollarSign, Tag, Edit3, X, Check, Trash2, } from 'lucide-react';
+import { useState } from "react";
+import type { OwnerSubmission } from "@/src/app/(dashboard)/owner/page";
+import { Building2, DollarSign, Tag, Edit3, X, Check } from "lucide-react";
 
 interface MyListingsSidebarProps {
   listings: OwnerSubmission[];
@@ -10,30 +10,56 @@ interface MyListingsSidebarProps {
   onDeleteListing: (id: string) => void;
 }
 
-export function MyListingsSidebar({ listings, onUpdateListing }: MyListingsSidebarProps) {
+export function MyListingsSidebar({
+  listings,
+  onUpdateListing,
+}: MyListingsSidebarProps) {
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editForm, setEditForm] = useState<Partial<OwnerSubmission>>({});
+  const [originalListing, setOriginalListing] =
+    useState<OwnerSubmission | null>(null);
 
   const handleEditClick = (item: OwnerSubmission) => {
     setEditingId(item.id);
-    setEditForm(item);
+    setOriginalListing({ ...item });
+    setEditForm({ ...item });
   };
 
   const handleSave = (id: string) => {
-    if (!editForm.property || !editForm.price) return;
+    const currentListing = listings.find((item) => item.id === id);
+    if (
+      !editForm.property?.trim() ||
+      editForm.price == null ||
+      !Number.isFinite(editForm.price) ||
+      editForm.price <= 0 ||
+      !originalListing ||
+      originalListing.id !== id ||
+      editingId !== id ||
+      !currentListing
+    )
+      return;
+
+    const changes: Partial<
+      Pick<OwnerSubmission, "property" | "price" | "category">
+    > = {};
+    if (editForm.property.trim() !== originalListing.property)
+      changes.property = editForm.property.trim();
+    if (editForm.price !== originalListing.price)
+      changes.price = editForm.price;
+    if (
+      editForm.category != null &&
+      editForm.category !== originalListing.category
+    )
+      changes.category = editForm.category;
 
     onUpdateListing({
-      id,
-      property: editForm.property,
-      price: Number(editForm.price),
-      category: editForm.category || 'DORM',
-      host: editForm.host || 'You',
-      status: editForm.status || 'Active',
-      createdAt: editForm.createdAt || new Date().toISOString().split('T')[0],
-      imageUrl: editForm.imageUrl || 'https://images.unsplash.com/photo-1555854877-bab0e564b8d5?w=150&auto=format&fit=crop&q=80',
+      ...currentListing,
+      ...changes,
     });
 
     setEditingId(null);
+    setOriginalListing(null);
+    setEditForm({});
   };
 
   return (
@@ -44,19 +70,24 @@ export function MyListingsSidebar({ listings, onUpdateListing }: MyListingsSideb
           Manage Your Dorms & Properties ({listings.length})
         </h3>
         <p className="text-xs text-brand-slate mt-0.5">
-          Review your student housing units and click edit to update titles, prices, or categories.
+          Review your student housing units and click edit to update titles,
+          prices, or categories.
         </p>
       </div>
 
       {listings.length === 0 ? (
         <div className="bg-white rounded-2xl border border-brand-slate/15 p-8 text-center shadow-sm">
-          <p className="text-xs text-brand-slate">No properties found. Add a listing to get started.</p>
+          <p className="text-xs text-brand-slate">
+            No properties found. Add a listing to get started.
+          </p>
         </div>
       ) : (
         listings.map((item) => (
-          <div key={item.id} className="bg-white rounded-2xl border border-brand-slate/15 p-5 shadow-sm transition-all">
+          <div
+            key={item.id}
+            className="bg-white rounded-2xl border border-brand-slate/15 p-5 shadow-sm transition-all"
+          >
             {editingId === item.id ? (
-
               <div className="space-y-4">
                 <div className="flex items-center justify-between border-b border-brand-slate/10 pb-3">
                   <span className="text-xs font-bold text-brand-navy uppercase tracking-wide">
@@ -77,8 +108,10 @@ export function MyListingsSidebar({ listings, onUpdateListing }: MyListingsSideb
                     </label>
                     <input
                       type="text"
-                      value={editForm.property || ''}
-                      onChange={(e) => setEditForm({ ...editForm, property: e.target.value })}
+                      value={editForm.property || ""}
+                      onChange={(e) =>
+                        setEditForm({ ...editForm, property: e.target.value })
+                      }
                       className="w-full px-3 py-2 rounded-xl border border-brand-slate/30 text-xs font-medium text-brand-navy focus:outline-none focus:ring-2 focus:ring-brand-navy/20"
                     />
                   </div>
@@ -89,8 +122,18 @@ export function MyListingsSidebar({ listings, onUpdateListing }: MyListingsSideb
                     </label>
                     <input
                       type="number"
-                      value={editForm.price || ''}
-                      onChange={(e) => setEditForm({ ...editForm, price: Number(e.target.value) })}
+                      min="1"
+                      step="any"
+                      value={editForm.price ?? ""}
+                      onChange={(e) =>
+                        setEditForm({
+                          ...editForm,
+                          price:
+                            e.target.value === ""
+                              ? undefined
+                              : Number(e.target.value),
+                        })
+                      }
                       className="w-full px-3 py-2 rounded-xl border border-brand-slate/30 text-xs font-medium text-brand-navy focus:outline-none focus:ring-2 focus:ring-brand-navy/20"
                     />
                   </div>
@@ -102,13 +145,19 @@ export function MyListingsSidebar({ listings, onUpdateListing }: MyListingsSideb
                       <Tag className="w-3 h-3" /> Housing Category
                     </label>
                     <select
-                      value={editForm.category || 'DORM'}
-                      onChange={(e) => setEditForm({ ...editForm, category: e.target.value })}
+                      value={editForm.category ?? "DORM"}
+                      onChange={(e) =>
+                        setEditForm({
+                          ...editForm,
+                          category: e.target
+                            .value as OwnerSubmission["category"],
+                        })
+                      }
                       className="w-full px-3 py-2 rounded-xl border border-brand-slate/30 text-xs font-medium text-brand-navy focus:outline-none focus:ring-2 focus:ring-brand-navy/20 bg-white"
                     >
                       <option value="DORM">DORM</option>
                       <option value="STUDIO">STUDIO</option>
-                      <option value="APARTMENT">APARTMENT</option>
+                      <option value="SHARED">SHARED</option>
                     </select>
                   </div>
 
@@ -119,7 +168,7 @@ export function MyListingsSidebar({ listings, onUpdateListing }: MyListingsSideb
                     <input
                       type="text"
                       disabled
-                      value={editForm.status || 'Active'}
+                      value={editForm.status || "Active"}
                       className="w-full px-3 py-2 rounded-xl border border-brand-slate/20 bg-brand-light text-xs text-brand-slate cursor-not-allowed"
                     />
                   </div>
@@ -142,7 +191,6 @@ export function MyListingsSidebar({ listings, onUpdateListing }: MyListingsSideb
                 </div>
               </div>
             ) : (
-
               <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
                 <div className="flex items-center gap-4">
                   <img
@@ -155,13 +203,22 @@ export function MyListingsSidebar({ listings, onUpdateListing }: MyListingsSideb
                       <span className="text-[10px] font-bold px-2 py-0.5 bg-brand-navy/10 text-brand-navy rounded-full uppercase">
                         {item.category}
                       </span>
-                      <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${item.status === 'Active' ? 'bg-emerald-50 text-emerald-600' : 'bg-amber-50 text-amber-600'
-                        }`}>
+                      <span
+                        className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${
+                          item.status === "Active"
+                            ? "bg-emerald-50 text-emerald-600"
+                            : "bg-amber-50 text-amber-600"
+                        }`}
+                      >
                         {item.status}
                       </span>
                     </div>
-                    <h4 className="text-sm font-bold text-brand-navy mt-1">{item.property}</h4>
-                    <p className="text-xs text-brand-slate">${item.price} / month • Added {item.createdAt}</p>
+                    <h4 className="text-sm font-bold text-brand-navy mt-1">
+                      {item.property}
+                    </h4>
+                    <p className="text-xs text-brand-slate">
+                      ${item.price} / month • Added {item.createdAt}
+                    </p>
                   </div>
                 </div>
 
