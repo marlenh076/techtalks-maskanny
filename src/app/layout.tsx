@@ -3,7 +3,7 @@ import { Inter, Plus_Jakarta_Sans } from "next/font/google";
 import StudentNav from "../../student_side/StudentNav";
 import { Toaster } from 'sonner';
 import "./globals.css";
-import "./app.css"
+import "./app.css";
 
 
 const inter = Inter({
