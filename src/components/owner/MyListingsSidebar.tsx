@@ -62,13 +62,6 @@ export function MyListingsSidebar({
     setEditForm({});
   };
 
-  onUpdateListing(updatedListing);
-
-  setEditingId(null);
-  setOriginalListing(null);
-  setEditForm({});
-};
-
   return (
     <div className="space-y-4 max-w-4xl mx-auto w-full">
       <div className="mb-4">
