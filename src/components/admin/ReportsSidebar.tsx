@@ -129,7 +129,7 @@ export default function ReportsSidebar() {
                 <Users className="w-4 h-4 text-blue-500" />
               </div>
               <div className="flex items-baseline justify-between">
-                <div className="text-2xl font-black text-brand-navy">1,424</div>
+                <div className="text-2xl font-bold text-brand-navy">1,424</div>
                 <div className="flex items-center gap-1 text-[11px] font-bold text-blue-700 bg-blue-50 px-2 py-0.5 rounded-md border border-blue-100/50">
                   <ArrowUpRight className="w-3 h-3" /> +12.4%
                 </div>
@@ -143,7 +143,7 @@ export default function ReportsSidebar() {
                 <Building2 className="w-4 h-4 text-amber-700" />
               </div>
               <div className="flex items-baseline justify-between">
-                <div className="text-2xl font-black text-brand-navy">310</div>
+                <div className="text-2xl font-bold text-brand-navy">310</div>
                 <div className="flex items-center gap-1 text-[11px] font-bold text-amber-800 bg-amber-50 px-2 py-0.5 rounded-md border border-amber-200/50">
                   <ArrowUpRight className="w-3 h-3" /> +8 new
                 </div>
@@ -157,7 +157,7 @@ export default function ReportsSidebar() {
                 <Home className="w-4 h-4 text-blue-500" />
               </div>
               <div className="flex items-baseline justify-between">
-                <div className="text-2xl font-black text-brand-navy">245</div>
+                <div className="text-2xl font-bold text-brand-navy">245</div>
                 <div className="flex items-center gap-1 text-[11px] font-bold text-blue-700 bg-blue-50 px-2 py-0.5 rounded-md border border-blue-100/50">
                   79% active ratio
                 </div>
@@ -171,7 +171,7 @@ export default function ReportsSidebar() {
                 <AlertTriangle className="w-4 h-4 text-amber-700" />
               </div>
               <div className="flex items-baseline justify-between">
-                <div className="text-2xl font-black text-brand-navy">65</div>
+                <div className="text-2xl font-bold text-brand-navy">65</div>
                 <span className="text-[11px] font-semibold text-brand-slate">52 pending, 13 rejected</span>
               </div>
             </div>
@@ -183,7 +183,7 @@ export default function ReportsSidebar() {
                 <Star className="w-4 h-4 text-amber-700 fill-amber-700/10" />
               </div>
               <div className="flex items-baseline justify-between">
-                <div className="text-2xl font-black text-brand-navy">312</div>
+                <div className="text-2xl font-bold text-brand-navy">312</div>
                 <span className="text-[11px] font-bold text-amber-800 bg-amber-50 px-2 py-0.5 rounded-md border border-amber-200/50">4.8 / 5.0 avg</span>
               </div>
             </div>
@@ -195,7 +195,7 @@ export default function ReportsSidebar() {
                 <AlertTriangle className="w-4 h-4 text-blue-500" />
               </div>
               <div className="flex items-baseline justify-between">
-                <div className="text-2xl font-black text-brand-navy">4</div>
+                <div className="text-2xl font-bold text-brand-navy">4</div>
                 <div className="flex items-center gap-1 text-[11px] font-bold text-blue-700 bg-blue-50 px-2 py-0.5 rounded-md border border-blue-100/50">
                   Action pending
                 </div>
@@ -214,7 +214,7 @@ export default function ReportsSidebar() {
                 <Users className="w-4 h-4 text-blue-500" />
               </div>
               <div>
-                <div className="text-2xl font-black text-brand-navy">1,240</div>
+                <div className="text-2xl font-bold text-brand-navy">1,240</div>
                 <div className="text-xs text-brand-slate mt-0.5">Active university candidates</div>
               </div>
             </div>
@@ -224,7 +224,7 @@ export default function ReportsSidebar() {
                 <Building2 className="w-4 h-4 text-amber-700" />
               </div>
               <div>
-                <div className="text-2xl font-black text-brand-navy">184</div>
+                <div className="text-2xl font-bold text-brand-navy">184</div>
                 <div className="text-xs text-brand-slate mt-0.5">Verified accommodation hosts</div>
               </div>
             </div>
@@ -234,7 +234,7 @@ export default function ReportsSidebar() {
                 <Activity className="w-4 h-4 text-blue-500" />
               </div>
               <div>
-                <div className="text-2xl font-black text-brand-navy">1,380 / 44</div>
+                <div className="text-2xl font-bold text-brand-navy">1,380 / 44</div>
                 <div className="text-xs text-brand-slate mt-0.5">High platform engagement</div>
               </div>
             </div>
@@ -244,7 +244,7 @@ export default function ReportsSidebar() {
                 <AlertTriangle className="w-4 h-4 text-amber-700" />
               </div>
               <div>
-                <div className="text-2xl font-black text-brand-navy">12</div>
+                <div className="text-2xl font-bold text-brand-navy">12</div>
                 <div className="text-xs text-brand-slate mt-0.5">Policy violation blocks</div>
               </div>
             </div>
@@ -461,11 +461,11 @@ export default function ReportsSidebar() {
             <div className="grid grid-cols-2 gap-4">
               <div className="p-4 rounded-xl bg-brand-light/50 border border-brand-slate/10 space-y-1">
                 <div className="text-xs text-brand-slate font-semibold">Total Reviews</div>
-                <div className="text-2xl font-black text-brand-navy">312</div>
+                <div className="text-2xl font-bold text-brand-navy">312</div>
               </div>
               <div className="p-4 rounded-xl bg-brand-light/50 border border-brand-slate/10 space-y-1">
                 <div className="text-xs text-brand-slate font-semibold">Average Rating</div>
-                <div className="text-2xl font-black text-amber-700">4.8 / 5.0</div>
+                <div className="text-2xl font-bold text-amber-700">4.8 / 5.0</div>
               </div>
             </div>
           </div>
@@ -495,7 +495,7 @@ export default function ReportsSidebar() {
                 <Search className="w-4 h-4 text-blue-500" />
               </div>
               <div>
-                <div className="text-2xl font-black text-brand-navy">14,820</div>
+                <div className="text-2xl font-bold text-brand-navy">14,820</div>
                 <div className="text-xs text-brand-slate mt-0.5">Queries executed this term</div>
               </div>
             </div>
@@ -506,7 +506,7 @@ export default function ReportsSidebar() {
                 <Heart className="w-4 h-4 text-amber-700 fill-amber-700/10" />
               </div>
               <div>
-                <div className="text-2xl font-black text-brand-navy">3,410</div>
+                <div className="text-2xl font-bold text-brand-navy">3,410</div>
                 <div className="text-xs text-brand-slate mt-0.5">Wishlist items bookmarked</div>
               </div>
             </div>
@@ -517,7 +517,7 @@ export default function ReportsSidebar() {
                 <MessageCircle className="w-4 h-4 text-blue-500" />
               </div>
               <div>
-                <div className="text-2xl font-black text-brand-navy">840</div>
+                <div className="text-2xl font-bold text-brand-navy">840</div>
                 <div className="text-xs text-brand-slate mt-0.5">Direct inquiries sent</div>
               </div>
             </div>
@@ -528,7 +528,7 @@ export default function ReportsSidebar() {
                 <Eye className="w-4 h-4 text-amber-700" />
               </div>
               <div>
-                <div className="text-2xl font-black text-brand-navy">32,500</div>
+                <div className="text-2xl font-bold text-brand-navy">32,500</div>
                 <div className="text-xs text-brand-slate mt-0.5">Cumulative page hits</div>
               </div>
             </div>

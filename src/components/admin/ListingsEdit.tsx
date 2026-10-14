@@ -4,16 +4,23 @@ import React, { useState } from 'react';
 import { X, Edit3, Save, Building, GraduationCap, Home } from 'lucide-react';
 import { Submission } from '@/src/components/admin/RecentSubmissions';
 
-interface EditListingModalProps {
-  listing: Submission;
+
+interface EditListingModalProps<T extends Submission> {
+  listing: T;
   isOpen: boolean;
   onClose: () => void;
-  onSave: (updatedListing: Submission) => void;
+  onSave: (updatedListing: T) => void;
 }
 
-export default function EditListingModal({ listing, isOpen, onClose, onSave }: EditListingModalProps) {
-  const [formData, setFormData] = useState<Submission>({ ...listing });
+export default function EditListingModal<T extends Submission>({
+  listing,
+  isOpen,
+  onClose,
+  onSave,
+}: EditListingModalProps<T>) {
+  const [formData, setFormData] = useState<T>({ ...listing });
   const [isSubmitting, setIsSubmitting] = useState(false);
+
 
   if (!isOpen) return null;
 

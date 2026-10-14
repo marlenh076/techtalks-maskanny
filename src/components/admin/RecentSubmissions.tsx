@@ -20,17 +20,18 @@ export interface Submission {
   };
 }
 
-interface RecentSubmissionsProps {
+
+interface RecentSubmissionsProps<T extends Submission> {
   activeStatus?: 'ALL' | 'ACTIVE' | 'REJECTED' | 'PENDING REVIEW';
   activeCategory?: 'ALL' | 'SHARED' | 'STUDIO' | 'DORM';
-  submissions?: Submission[];
+  submissions?: T[];
   onAccept?: (id: string) => void;
   onReject?: (id: string) => void;
-  onUpdate?: (updatedListing: Submission) => void; 
+  onUpdate?: (updatedListing: T) => void;
   isReadOnly?: boolean;
 }
 
-export function RecentSubmissions({
+export function RecentSubmissions<T extends Submission>({
   activeStatus = 'ALL',
   activeCategory = 'ALL',
   submissions = [],
@@ -38,9 +39,10 @@ export function RecentSubmissions({
   onReject,
   onUpdate,
   isReadOnly = false,
-}: RecentSubmissionsProps) {
+}: RecentSubmissionsProps<T>) {
   const [showAll, setShowAll] = useState(false);
-  const [editingListing, setEditingListing] = useState<Submission | null>(null);
+  const [editingListing, setEditingListing] = useState<T | null>(null);
+
 
   const filteredSubmissions = submissions.filter((item) => {
     const matchesStatus =
@@ -242,16 +244,16 @@ export function RecentSubmissions({
       </div>
 
       {editingListing && (
-        <EditListingModal
-          listing={editingListing}
-          isOpen={!!editingListing}
-          onClose={() => setEditingListing(null)}
-          onSave={(updated) => {
-            onUpdate?.(updated);
-            setEditingListing(null);
-          }}
-        />
-      )}
+  <EditListingModal
+    listing={editingListing}
+    isOpen={!!editingListing}
+    onClose={() => setEditingListing(null)}
+    onSave={(updated) => {
+      onUpdate?.(updated);
+      setEditingListing(null);
+    }}
+  />
+)}
     </div>
   );
 }
