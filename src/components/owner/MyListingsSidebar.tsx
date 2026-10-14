@@ -62,6 +62,13 @@ export function MyListingsSidebar({
     setEditForm({});
   };
 
+  onUpdateListing(updatedListing);
+
+  setEditingId(null);
+  setOriginalListing(null);
+  setEditForm({});
+};
+
   return (
     <div className="space-y-4 max-w-4xl mx-auto w-full">
       <div className="mb-4">
@@ -120,6 +127,7 @@ export function MyListingsSidebar({
                     <label className="block text-[10px] font-bold text-brand-slate uppercase mb-1 flex items-center gap-1">
                       <DollarSign className="w-3 h-3" /> Price per Month ($)
                     </label>
+
                     <input
                       type="number"
                       min="1"
@@ -136,6 +144,7 @@ export function MyListingsSidebar({
                       }
                       className="w-full px-3 py-2 rounded-xl border border-brand-slate/30 text-xs font-medium text-brand-navy focus:outline-none focus:ring-2 focus:ring-brand-navy/20"
                     />
+
                   </div>
                 </div>
 
@@ -144,6 +153,7 @@ export function MyListingsSidebar({
                     <label className="block text-[10px] font-bold text-brand-slate uppercase mb-1 flex items-center gap-1">
                       <Tag className="w-3 h-3" /> Housing Category
                     </label>
+
                     <select
                       value={editForm.category ?? "DORM"}
                       onChange={(e) =>

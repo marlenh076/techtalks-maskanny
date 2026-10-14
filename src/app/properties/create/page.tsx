@@ -27,11 +27,15 @@ export default async function CreatePropertyPage() {
         <header className="create-listing-header">
           <span className="create-listing-eyebrow">PROPERTY LISTING</span>
 
-          <h1>Create a place students<br />will want to call home.</h1>
+          <h1>
+            Create a place students
+            <br />
+            will want to call home.
+          </h1>
 
           <p>
-            Add your property details, amenities and availability.
-            You can review everything before your listing goes live.
+            Add your property details, amenities and availability. You can
+            review everything before your listing goes live.
           </p>
         </header>
 
@@ -45,7 +49,6 @@ export default async function CreatePropertyPage() {
           <span>Maskanny</span>
           <p>Student housing, made simpler.</p>
         </footer>
-
       </div>
     </main>
   );

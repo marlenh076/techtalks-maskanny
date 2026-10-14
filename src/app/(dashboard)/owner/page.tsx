@@ -6,6 +6,7 @@ import { MetricCard } from '@/src/components/admin/MetricCard';
 import { RecentSubmissions, type Submission } from '@/src/components/owner/RecentSubmissions';
 import { AnalyticsChart } from '@/src/components/owner/AnalyticsChart';
 import { CategoryDonuts } from '@/src/components/owner/CategoryDonuts';
+import { useRouter } from 'next/navigation';
 
 import {
   Plus,
@@ -46,7 +47,8 @@ import {
   Maximize,
   ChevronDown,
   ChevronUp,
-  Save
+  Save,
+  Rocket
 } from 'lucide-react';
 
 
@@ -277,6 +279,7 @@ const MOCK_FEEDBACKS: StudentFeedback[] = [
 type DateFilterPreset = 'TODAY' | 'WEEK' | 'MONTH' | 'ALL';
 
 export default function OwnerDashboardPage() {
+  const router = useRouter();
   const [submissions, setSubmissions] =
     useState<OwnerSubmission[]>(MOCK_OWNER_SUBMISSIONS);
 
@@ -633,6 +636,19 @@ export default function OwnerDashboardPage() {
 
 
             <div className="flex items-center gap-3 self-start sm:self-auto">
+
+              <button
+                type="button"
+                onClick={() => { router.push("/owner/BoostingPlan") }
+                }
+                className="inline-flex items-center justify-center gap-2
+      bg-brand-gold text-brand-navy px-4 py-2.5 rounded-xl
+      text-sm font-bold hover:bg-brand-gold/90
+      transition-all shadow-sm"
+              >
+                <Rocket className="w-4 h-4" />
+                Boost Now
+              </button>
 
               {!activeTab.startsWith('Settings') &&
                 activeTab !== 'Add Listing' && (

@@ -10,7 +10,6 @@ interface OwnerSettingsSidebarProps {
 export function SettingsSidebar({ activeTab, setActiveTab }: OwnerSettingsSidebarProps) {
   return (
     <aside className="w-60 bg-white border-r border-brand-slate/15 flex flex-col shrink-0 min-h-screen">
-      {/* Back to Dashboard */}
       <div className="p-4 border-b border-brand-slate/10">
         <button
           onClick={() => setActiveTab('Overview')}

@@ -1,378 +1,205 @@
-import type { ReactNode } from "react";
+"use client";
 
-type PropertyDetailsProps = {
-  name: string;
-  description: string;
-  price: number;
-  location: string;
-  university: string;
-  roomType: string;
-  gender: string;
-  furnished: string;
-  rules: string;
-  availability: string;
-  amenities: string[];
-};
+import { useEffect, useState } from "react";
+import Link from "next/link";
+import { ArrowLeft, MapPin } from "lucide-react";
+import type { Property } from "../../models/property.model";
+import type { Media } from "../../models/media.model";
+import type { University } from "@/src/features/universities/models/university.model";
+import { PropertyGallery } from "./PropertyGallery";
+import { PropertyAmenities } from "./PropertyAmenities";
+import { PropertyUniversities } from "./PropertyUniversities";
+import { ContactHost } from "./ContactHost";
 
-type PropertySectionProps = {
-  eyebrow: string;
-  title: string;
-  children: ReactNode;
-};
-
-function PropertySection({ eyebrow, title, children }: PropertySectionProps) {
-  return (
-    <section className="mb-[56px] border-b border-(--line) pb-[56px] last:mb-0 last:border-b-0">
-      <span className="mb-[14px] block text-[11px] font-semibold tracking-[0.13em] text-(--soft) uppercase">
-        {eyebrow}
-      </span>
-
-      <h2
-        className="
-          mt-0 mb-[22px] text-[30px] font-medium
-          tracking-[-0.03em] text-(--ink)
-          [@media(width<=520px)]:text-[26px]
-        "
-      >
-        {title}
-      </h2>
-
-      {children}
-    </section>
-  );
-}
+type DetailsState =
+  | { status: "loading" }
+  | { status: "not-found" }
+  | { status: "error" }
+  | {
+      status: "ready";
+      property: Property;
+      media: Media[];
+      universities: University[];
+      mediaError: boolean;
+      universityError: boolean;
+    };
 
 export default function PropertyDetails({
-  name,
-  description,
-  price,
-  location,
-  university,
-  roomType,
-  gender,
-  furnished,
-  rules,
-  availability,
-  amenities,
-}: PropertyDetailsProps) {
-  const isAvailable = availability.toLowerCase() === "available";
+  propertyId,
+}: {
+  propertyId: string;
+}) {
+  const [state, setState] = useState<DetailsState>({ status: "loading" });
 
-  const quickFacts = [
-    { label: "Room type", value: roomType },
-    { label: "Gender", value: gender },
-    { label: "Furnished", value: furnished },
-    { label: "Availability", value: availability },
-  ];
+  useEffect(() => {
+    const controller = new AbortController();
+    async function load() {
+      try {
+        const response = await fetch(`/api/properties/${propertyId}`, {
+          signal: controller.signal,
+        });
+        if (response.status === 404 || response.status === 400) {
+          setState({ status: "not-found" });
+          return;
+        }
+        if (!response.ok) throw new Error("Property request failed");
+        const property = (await response.json()) as Property;
+        if (property.approval_status !== "approved") {
+          setState({ status: "not-found" });
+          return;
+        }
 
-  const contactDetails = [
-    { label: "Location", value: location },
-    { label: "University", value: university },
-    { label: "Status", value: availability },
-  ];
+        const [mediaResult, universityResult] = await Promise.allSettled([
+          fetch(`/api/properties/${propertyId}/media`, {
+            signal: controller.signal,
+          }).then(async (res) => {
+            if (!res.ok) throw new Error("Media request failed");
+            return res.json() as Promise<Media[]>;
+          }),
+          fetch(`/api/properties/${propertyId}/universities`, {
+            signal: controller.signal,
+          }).then(async (res) => {
+            if (!res.ok) throw new Error("University request failed");
+            return res.json() as Promise<University[]>;
+          }),
+        ]);
+        if (controller.signal.aborted) return;
+        setState({
+          status: "ready",
+          property,
+          media: mediaResult.status === "fulfilled" ? mediaResult.value : [],
+          universities:
+            universityResult.status === "fulfilled"
+              ? universityResult.value
+              : [],
+          mediaError: mediaResult.status === "rejected",
+          universityError: universityResult.status === "rejected",
+        });
+      } catch {
+        if (!controller.signal.aborted) setState({ status: "error" });
+      }
+    }
+    load();
+    return () => controller.abort();
+  }, [propertyId]);
 
+  if (state.status === "loading")
+    return (
+      <main className="student-marketplace min-h-screen bg-[var(--bg)] px-5 py-10 text-[var(--ink)] sm:px-8">
+        <div className="mx-auto max-w-7xl animate-pulse">
+          <div className="h-8 w-60 rounded-[12px] bg-[var(--placeholder-bg)]" />
+          <div className="mt-7 h-96 rounded-3xl bg-[var(--surface)]" />
+          <div className="mt-7 h-60 rounded-3xl bg-[var(--surface)]" />
+        </div>
+      </main>
+    );
+
+  if (state.status === "not-found" || state.status === "error")
+    return (
+      <main className="student-marketplace min-h-screen bg-[var(--bg)] px-5 py-24 text-center text-[var(--ink)]">
+        <div className="mx-auto max-w-3xl">
+        <h1 className="text-3xl font-bold">
+          {state.status === "not-found"
+            ? "Property not found"
+            : "We couldn't load this property"}
+        </h1>
+        <p className="mt-3 text-[var(--soft)]">
+          {state.status === "not-found"
+            ? "This listing may have been removed or is not available yet."
+            : "Please try again in a moment."}
+        </p>
+        <Link
+          href="/properties"
+          className="mt-7 inline-block rounded-[12px] bg-[var(--btn-bg)] px-6 py-3 text-sm font-semibold text-[var(--btn-ink)] hover:bg-[var(--btn-bg-hover)]"
+        >
+          Browse properties
+        </Link>
+        </div>
+      </main>
+    );
+
+  const { property, media, universities, mediaError, universityError } = state;
   return (
-    <article className="mx-auto my-0 w-full max-w-[1180px] text-(--ink)">
-      {/* Header */}
-      <header
-        className="
-          mb-[38px] flex items-end justify-between gap-[40px]
-          [@media(width<=760px)]:flex-col
-          [@media(width<=760px)]:items-start
-          [@media(width<=760px)]:gap-[24px]
-        "
-      >
-        <div className="min-w-0">
-          <div className="mb-[18px] flex items-center gap-[7px] text-[13px] text-(--soft)">
-            <span
-              aria-hidden="true"
-              className="
-                grid size-[24px] place-items-center
-                rounded-(--radius-full) bg-(--chip)
-                text-[14px] text-(--ink)
-              "
-            >
-              ⌖
-            </span>
-            <span>{location}</span>
-          </div>
-
-          <h1
-            className="
-              m-0 max-w-[780px] text-[clamp(40px,5vw,64px)]
-              leading-[0.98] font-medium tracking-[-0.045em] text-(--ink)
-              [@media(width<=520px)]:text-[40px]
-            "
-          >
-            {name}
-          </h1>
-
-          <p className="mt-[18px] mb-0 text-[15px] leading-[1.5] text-(--soft)">
-            Near {university}
-          </p>
-        </div>
-
-        <div className="flex flex-none items-baseline gap-[6px] pb-[5px]">
-          <span className="text-[34px] font-medium tracking-[-0.035em] text-(--ink)">
-            ${price}
-          </span>
-          <span className="text-[14px] text-(--soft)">/ month</span>
-        </div>
-      </header>
-
-      {/* Gallery */}
-      <section
-        aria-label="Property photos"
-        className="
-          grid h-[530px]
-          grid-cols-[minmax(0,2fr)_minmax(240px,0.8fr)]
-          gap-[10px] overflow-hidden
-          rounded-(--radius-xl) bg-(--placeholder-bg)
-          [@media(760px<width<=1000px)]:h-[450px]
-          [@media(width<=760px)]:h-auto
-          [@media(width<=760px)]:grid-cols-1
-        "
-      >
-        <div
-          className="
-            relative min-h-0 min-w-0
-            [@media(520px<width<=760px)]:min-h-[380px]
-            [@media(width<=520px)]:min-h-[300px]
-          "
-        >
-          <div
-            className="
-              flex h-full w-full flex-col items-center justify-center
-              gap-[12px] bg-[linear-gradient(145deg,#e9e6df,#dedbd3)]
-              text-[13px] text-(--soft)
-            "
-          >
-            <span
-              aria-hidden="true"
-              className="
-                grid size-[52px] place-items-center
-                rounded-(--radius-full)
-                border border-[rgba(22,23,26,0.12)]
-                bg-white/55 text-[20px] text-(--ink)
-              "
-            >
-              ◇
-            </span>
-            <span>Property photos will appear here</span>
-          </div>
-
-          <span
-            className="
-              absolute top-[20px] left-[20px]
-              inline-flex items-center gap-[8px]
-              rounded-(--radius-full) bg-white/92 px-[13px] py-[8px]
-              text-[12px] font-medium text-(--ink) backdrop-blur-[8px]
-            "
-          >
-            <span
-              className={`size-[7px] rounded-(--radius-full) ${
-                isAvailable ? "bg-[#54705a]" : "bg-(--danger)"
-              }`}
-            />
-            {availability}
-          </span>
-        </div>
-
-        <div
-          className="
-            grid min-h-0 min-w-0 grid-rows-[1fr_1fr] gap-[10px]
-            [@media(width<=760px)]:h-[180px]
-            [@media(width<=760px)]:grid-cols-[1fr_1fr]
-            [@media(width<=760px)]:grid-rows-none
-            [@media(width<=520px)]:hidden
-          "
-        >
-          {[0, 1].map((index) => (
-            <div
-              key={index}
-              className="
-                flex h-full w-full flex-col items-center justify-center
-                gap-[12px] bg-[linear-gradient(145deg,#e9e6df,#dedbd3)]
-                text-[12px] text-(--soft)
-              "
-            >
-              <span>Photo</span>
-            </div>
-          ))}
-        </div>
-      </section>
-
-      {/* Quick facts */}
-      <section
-        aria-label="Property highlights"
-        className="
-          mt-[18px] grid grid-cols-4 overflow-hidden
-          rounded-(--radius-md) border border-(--line) bg-(--surface)
-          [@media(520px<width<=760px)]:grid-cols-[repeat(2,1fr)]
-          [@media(width<=520px)]:grid-cols-1
-        "
-      >
-        {quickFacts.map(({ label, value }) => (
-          <div
-            key={label}
-            className="
-              border-r border-(--line) px-[24px] py-[22px]
-              last:border-r-0
-              [@media(520px<width<=760px)]:nth-2:border-r-0
-              [@media(520px<width<=760px)]:[&:nth-child(-n+2)]:border-b
-              [@media(width<=520px)]:border-r-0
-              [@media(width<=520px)]:border-b
-              [@media(width<=520px)]:last:border-b-0
-            "
-          >
-            <span className="mb-[7px] block text-[12px] text-(--soft)">
-              {label}
-            </span>
-            <strong className="text-[14px] font-medium text-(--ink) capitalize">
-              {value}
-            </strong>
-          </div>
-        ))}
-      </section>
-
-      {/* Content and sidebar */}
-      <div
-        className="
-          mt-[76px] grid grid-cols-[minmax(0,1fr)_350px]
-          items-start gap-[72px]
-          [@media(width<=1000px)]:grid-cols-1
-          [@media(width<=1000px)]:gap-[48px]
-          [@media(width<=760px)]:mt-[52px]
-        "
-      >
-        <div className="min-w-0">
-          <PropertySection eyebrow="About" title="About this property">
-            <p className="m-0 max-w-[680px] text-[16px] leading-[1.75] text-(--ink-2)">
-              {description}
-            </p>
-          </PropertySection>
-
-          <PropertySection eyebrow="What's included" title="Amenities">
-            {amenities.length > 0 ? (
-              <div className="grid grid-cols-2 gap-[12px] [@media(width<=520px)]:grid-cols-1">
-                {amenities.map((amenity) => (
-                  <div
-                    key={amenity}
-                    className="
-                      flex min-h-[58px] items-center gap-[12px]
-                      rounded-(--radius-sm) bg-(--surface)
-                      px-[16px] py-[14px] text-[14px] text-(--ink-2)
-                      shadow-[0_0_0_1px_var(--line)]
-                    "
-                  >
-                    <span
-                      aria-hidden="true"
-                      className="
-                        grid size-[28px] flex-none place-items-center
-                        rounded-(--radius-full) bg-(--chip)
-                        text-[11px] font-semibold text-(--ink)
-                      "
-                    >
-                      ✓
-                    </span>
-                    <span>{amenity}</span>
-                  </div>
-                ))}
+    <main className="student-marketplace min-h-screen bg-[var(--bg)] text-[var(--ink)]">
+      <div className="mx-auto w-[calc(100%-48px)] max-w-[1180px] pt-8 pb-24 max-[760px]:w-[calc(100%-32px)]">
+        <Link href="/properties" className="inline-flex items-center gap-2 text-sm font-semibold text-[var(--soft)] hover:text-[var(--ink)]">
+          <ArrowLeft size={17} /> All properties
+        </Link>
+        <article className="mt-8">
+          <header className="mb-[38px] flex items-end justify-between gap-10 max-[760px]:flex-col max-[760px]:items-start max-[760px]:gap-6">
+            <div className="min-w-0">
+              <div className="mb-[18px] flex items-center gap-[7px] text-[13px] text-[var(--soft)]">
+                <span className="grid h-6 w-6 shrink-0 place-items-center rounded-full bg-[var(--chip)] text-[var(--ink)]"><MapPin size={15} /></span>
+                <span>{property.address}</span>
               </div>
-            ) : (
-              <p className="m-0 text-[14px] text-(--soft)">
-                No amenities have been added yet.
-              </p>
-            )}
-          </PropertySection>
-
-          <PropertySection eyebrow="Before you move in" title="House rules">
-            <div
-              className="
-                flex items-start gap-[14px]
-                rounded-(--radius-sm) bg-(--surface) p-[20px]
-                shadow-[0_0_0_1px_var(--line)]
-              "
-            >
-              <span
-                aria-hidden="true"
-                className="
-                  grid size-[28px] flex-none place-items-center
-                  rounded-(--radius-full) bg-(--ink)
-                  text-[12px] font-semibold text-white
-                "
-              >
-                i
-              </span>
-              <p className="mt-[3px] mb-0 text-[14px] leading-[1.65] text-(--ink-2)">
-                {rules.trim()
-                  ? rules
-                  : "No specific house rules have been provided."}
-              </p>
+              <h1 className="m-0 max-w-[780px] text-[clamp(40px,5vw,64px)] font-medium leading-[0.98] tracking-[-0.045em] max-[520px]:text-[40px]">{property.title}</h1>
+              {universities.length > 0 && !universityError && (
+                <p className="mt-[18px] text-[15px] leading-normal text-[var(--soft)]">Near {universities[0].name}</p>
+              )}
             </div>
-          </PropertySection>
-        </div>
-
-        <aside className="relative [@media(width<=1000px)]:order-first">
-          <div
-            className="
-              sticky top-[32px] rounded-(--radius-lg)
-              bg-(--surface) p-[28px]
-              shadow-[0_0_0_1px_var(--line),0_20px_60px_-42px_rgba(22,23,26,0.35)]
-              [@media(width<=1000px)]:static
-              [@media(width<=520px)]:p-[24px]
-            "
-          >
-            <span className="mb-[18px] block text-[13px] text-(--soft)">
-              Interested in this place?
-            </span>
-
-            <div className="flex items-baseline gap-[6px]">
-              <strong className="text-[32px] font-medium tracking-[-0.035em] text-(--ink)">
-                ${price}
-              </strong>
-              <span className="text-[13px] text-(--soft)">/ month</span>
-            </div>
-
-            <div className="my-[24px] h-px bg-(--line)" />
-
-            {contactDetails.map(({ label, value }) => (
-              <div
-                key={label}
-                className="flex justify-between gap-[20px] py-[10px] text-[13px]"
-              >
-                <span className="text-(--soft)">{label}</span>
-                <strong className="max-w-[180px] text-right font-medium text-(--ink)">
-                  {value}
-                </strong>
-              </div>
-            ))}
-
-            <button
-              type="button"
-              className="
-                mt-[24px] inline-flex min-h-[50px] w-full cursor-pointer
-                items-center justify-center gap-[8px]
-                rounded-(--radius-full) [border:0]
-                bg-(--btn-bg) p-[16px]
-                text-[14px]! font-medium! whitespace-nowrap text-(--btn-ink)
-                transition-[background,transform,border-color]
-                duration-(--duration-fast) ease-[ease]
-                hover:bg-(--btn-bg-hover)
-                active:[transform:scale(0.98)]
-                focus-visible:outline-2 focus-visible:outline-solid
-                focus-visible:outline-(--ink) focus-visible:outline-offset-[3px]
-              "
-            >
-              Contact owner
-              <span aria-hidden="true">→</span>
-            </button>
-
-            <p className="mx-[8px] mt-[14px] mb-0 text-center text-[11px] leading-[1.55] text-(--soft)">
-              Contact the property owner to ask questions or arrange a viewing.
+            <p className="flex shrink-0 items-baseline gap-1.5 whitespace-nowrap pb-[5px]">
+              <span className="text-[34px] font-medium tracking-[-0.035em]">${property.price.toLocaleString()}</span>
+              <span className="text-sm text-[var(--soft)]">/ month</span>
             </p>
+          </header>
+          {mediaError && (
+            <p role="alert" className="my-5 rounded-[var(--radius-sm)] bg-[var(--chip)] px-[18px] py-4 text-sm text-[var(--ink-2)]">
+              Photos could not be loaded right now.
+            </p>
+          )}
+          <PropertyGallery media={media} title={property.title} propertyType={property.property_type} />
+          <section className="mt-[18px] grid grid-cols-4 overflow-hidden rounded-[var(--radius-md)] border border-[var(--line)] bg-[var(--surface)] max-[760px]:grid-cols-2 max-[520px]:grid-cols-1" aria-label="Property highlights">
+            <div className="border-r border-[var(--line)] px-6 py-[22px] max-[760px]:border-b max-[520px]:border-r-0"><span className="mb-[7px] block text-xs text-[var(--soft)]">Property type</span><strong className="text-sm font-medium capitalize text-[var(--ink)]">{property.property_type}</strong></div>
+            <div className="border-r border-[var(--line)] px-6 py-[22px] max-[760px]:border-r-0 max-[760px]:border-b"><span className="mb-[7px] block text-xs text-[var(--soft)]">Gender</span><strong className="text-sm font-medium capitalize text-[var(--ink)]">{property.gender}</strong></div>
+            <div className="border-r border-[var(--line)] px-6 py-[22px] max-[520px]:border-r-0 max-[520px]:border-b"><span className="mb-[7px] block text-xs text-[var(--soft)]">Furnished</span><strong className="text-sm font-medium capitalize text-[var(--ink)]">{property.furnished ? "Yes" : "No"}</strong></div>
+            <div className="px-6 py-[22px]"><span className="mb-[7px] block text-xs text-[var(--soft)]">Availability</span><strong className="text-sm font-medium capitalize text-[var(--ink)]">Confirm with host</strong></div>
+          </section>
+          <div className="mt-[76px] grid grid-cols-[minmax(0,1fr)_350px] items-start gap-[72px] max-[1000px]:grid-cols-1 max-[1000px]:gap-12 max-[760px]:mt-[52px]">
+            <div className="min-w-0">
+              <section className="mb-14 border-b border-[var(--line)] pb-14 last:mb-0 last:border-b-0">
+                <span className="mb-3.5 block text-[11px] font-semibold uppercase tracking-[0.13em] text-[var(--soft)]">About</span>
+                <h2 className="mb-[22px] text-[30px] font-medium tracking-[-0.03em] text-[var(--ink)] max-[520px]:text-[26px]">About this property</h2>
+                <p className="max-w-[680px] whitespace-pre-line text-base leading-[1.75] text-[var(--ink-2)]">
+                  {property.description?.trim() || "The host has not added a description yet."}
+                </p>
+              </section>
+              <section className="mb-14 border-b border-[var(--line)] pb-14 last:mb-0 last:border-b-0">
+                <span className="mb-3.5 block text-[11px] font-semibold uppercase tracking-[0.13em] text-[var(--soft)]">What&apos;s included</span>
+                <h2 className="mb-[22px] text-[30px] font-medium tracking-[-0.03em] text-[var(--ink)] max-[520px]:text-[26px]">Property features</h2>
+                <PropertyAmenities property={property} />
+              </section>
+              {universityError ? (
+                <section role="alert" className="mb-14 rounded-[var(--radius-sm)] border-b border-[var(--line)] bg-[var(--chip)] px-[18px] py-4 text-sm text-[var(--ink-2)]">
+                  University information could not be loaded right now.
+                </section>
+              ) : (
+                <PropertyUniversities universities={universities} />
+              )}
+              <section className="mb-14 border-b border-[var(--line)] pb-14 last:mb-0 last:border-b-0">
+                <span className="mb-3.5 block text-[11px] font-semibold uppercase tracking-[0.13em] text-[var(--soft)]">Before you move in</span>
+                <h2 className="mb-[22px] text-[30px] font-medium tracking-[-0.03em] text-[var(--ink)] max-[520px]:text-[26px]">House rules</h2>
+                <div className="flex items-start gap-3.5 rounded-[var(--radius-sm)] bg-[var(--surface)] p-5 shadow-[0_0_0_1px_var(--line)]">
+                  <span className="grid h-7 w-7 shrink-0 place-items-center rounded-full bg-[var(--ink)] text-xs font-semibold text-[var(--surface)]" aria-hidden="true">i</span>
+                  <p className="mt-[3px] text-sm leading-[1.65] text-[var(--ink-2)]">Ask the host about house rules before arranging a viewing.</p>
+                </div>
+              </section>
+            </div>
+            <aside className="max-[1000px]:-order-1">
+              <div className="sticky top-8 rounded-[var(--radius-lg)] bg-[var(--surface)] p-7 shadow-[0_0_0_1px_var(--line),0_20px_60px_-42px_rgba(22,23,26,0.35)] max-[1000px]:static max-[520px]:p-6">
+                <span className="mb-[18px] block text-[13px] text-[var(--soft)]">Interested in this place?</span>
+                <div className="flex items-baseline gap-1.5 whitespace-nowrap">
+                  <strong className="text-[32px] font-medium tracking-[-0.035em]">${property.price.toLocaleString()}</strong><span className="text-sm text-[var(--soft)]">/ month</span>
+                </div>
+                <div className="my-6 h-px bg-[var(--line)]" />
+                <div className="flex justify-between gap-5 py-2.5 text-[13px]"><span className="shrink-0 text-[var(--soft)]">Location</span><strong className="max-w-[190px] text-right font-medium [overflow-wrap:anywhere]">{property.address}</strong></div>
+                <div className="flex justify-between gap-5 py-2.5 text-[13px]"><span className="shrink-0 text-[var(--soft)]">University</span><strong className="max-w-[190px] text-right font-medium [overflow-wrap:anywhere]">{universityError ? "Information unavailable" : universities.length ? universities.map((university) => university.name).join(", ") : "Not linked"}</strong></div>
+                <div className="flex justify-between gap-5 py-2.5 text-[13px]"><span className="shrink-0 text-[var(--soft)]">Availability</span><strong className="max-w-[190px] text-right font-medium [overflow-wrap:anywhere]">Confirm with host</strong></div>
+                <ContactHost propertyId={property.property_id} />
+              </div>
+            </aside>
           </div>
-        </aside>
+        </article>
       </div>
-    </article>
+    </main>
   );
 }

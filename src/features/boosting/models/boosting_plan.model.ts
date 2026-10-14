@@ -6,5 +6,4 @@ export interface BoostingPlan {
   max_images: number;
   video_enabled: boolean;
   top_placement: boolean;
-  currency: string | null;
 }
