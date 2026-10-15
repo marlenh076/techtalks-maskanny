@@ -31,7 +31,8 @@ export async function proxy(request: NextRequest) {
   if (
     request.nextUrl.pathname.startsWith("/admin") ||
     request.nextUrl.pathname.startsWith("/properties/create") ||
-    request.nextUrl.pathname.startsWith("/host/onboarding")
+    request.nextUrl.pathname.startsWith("/host/onboarding") ||
+    request.nextUrl.pathname === "/profile"
   ) {
     response.headers.set("Cache-Control", "private, no-store");
   }
@@ -43,6 +44,7 @@ export const config = {
     "/admin/:path*",
     "/properties/create/:path*",
     "/host/onboarding/:path*",
+    "/profile",
     "/verify-email",
     "/reset-password",
   ],

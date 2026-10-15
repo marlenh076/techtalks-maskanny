@@ -33,6 +33,8 @@ export const propertySchema = z.object({
 });
 
 export const propertyFiltersSchema = z.object({
+  university_id: z.uuid().optional(),
+
   query: z.string().optional(),
 
   property_type: z.enum(["dorm", "studio", "apartment"]).optional(),

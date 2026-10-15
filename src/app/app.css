@@ -59,6 +59,17 @@
   font-weight: revert-layer;
 }
 
+/* Keep numeric filter inputs free of native increment/decrement buttons. */
+#property-filters input[type="number"] {
+  appearance: textfield;
+}
+
+#property-filters input[type="number"]::-webkit-inner-spin-button,
+#property-filters input[type="number"]::-webkit-outer-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+
 /* BASE */
 
 * {
@@ -102,11 +113,11 @@ a {
 }
 
 .auth-switch-link {
-  color: #2563EB;
+  color: #2563eb;
 }
 
 .auth-switch-link:hover {
-  color: #1D4ED8;
+  color: #1d4ed8;
 }
 
 /* TYPOGRAPHY */
@@ -758,83 +769,4 @@ textarea.field {
 
 ::-webkit-scrollbar-thumb:hover {
   background: #aaa79f;
-}
-
-/* Property form dropdowns: native selects with a styled picker where supported. */
-@supports (appearance: base-select) {
-  :is(#propertyType, #roomType, #gender, #furnished, #availability),
-  :is(#propertyType, #roomType, #gender, #furnished, #availability)::picker(
-    select
-  ) {
-    appearance: base-select;
-  }
-
-  :is(#propertyType, #roomType, #gender, #furnished, #availability) {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    padding-right: 18px;
-  }
-
-  :is(
-    #propertyType,
-    #roomType,
-    #gender,
-    #furnished,
-    #availability
-  )::picker-icon {
-    color: var(--soft);
-    transition: rotate var(--duration-fast);
-  }
-
-  :is(
-      #propertyType,
-      #roomType,
-      #gender,
-      #furnished,
-      #availability
-    ):open::picker-icon {
-    rotate: 180deg;
-  }
-
-  :is(#propertyType, #roomType, #gender, #furnished, #availability)::picker(
-    select
-  ) {
-    position-area: block-end;
-    position-try-fallbacks: none;
-    margin-top: 8px;
-    padding: 6px;
-    border: 1px solid var(--line-strong);
-    border-radius: var(--radius-sm);
-    background: var(--surface);
-    box-shadow: 0 18px 48px -24px rgba(22, 23, 26, 0.28);
-  }
-
-  :is(#propertyType, #roomType, #gender, #furnished, #availability) option {
-    min-height: 42px;
-    padding: 11px 14px;
-    border-radius: 10px;
-    color: var(--ink-2);
-    font-size: 14px;
-  }
-
-  :is(#propertyType, #roomType, #gender, #furnished, #availability)
-    option:hover,
-  :is(#propertyType, #roomType, #gender, #furnished, #availability)
-    option:focus-visible {
-    background: var(--chip);
-    color: var(--ink);
-  }
-
-  :is(#propertyType, #roomType, #gender, #furnished, #availability)
-    option:checked {
-    background: var(--ink);
-    color: #fff;
-  }
-
-  :is(#propertyType, #roomType, #gender, #furnished, #availability)
-    option::checkmark {
-    order: 1;
-    margin-left: auto;
-  }
 }

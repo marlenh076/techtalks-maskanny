@@ -6,6 +6,7 @@ import { IDeleteRepository } from "@/src/shared/repositories/delete.repository";
 import { ISearchRepository } from "@/src/shared/repositories/search.repository";
 
 export interface PropertyFilters {
+  university_id?: string;
   query?: string;
   property_type?: "dorm" | "studio" | "apartment";
   min_price?: number;

@@ -7,6 +7,6 @@ export default async function PropertiesPage({
 }) {
   const filters = await searchParams;
   return (
-    <ListingsBrowser key={JSON.stringify(filters)} searchParams={filters} />
+    <ListingsBrowser searchParams={filters} />
   );
 }

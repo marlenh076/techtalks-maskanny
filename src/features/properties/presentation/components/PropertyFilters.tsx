@@ -1,229 +1,173 @@
-import { useEffect, useRef } from "react";
-import Link from "next/link";
-import { useRouter } from "next/navigation";
-import { X } from "lucide-react";
+import { useRef } from "react";
+import { ChevronDown, RotateCcw, Search, SlidersHorizontal } from "lucide-react";
+import { PropertySelect, PROPERTY_INPUT_CLASSES } from "./PropertySelect";
 
 const fields = [
-  {
-    name: "property_type",
-    label: "Property type",
-    options: [
-      ["dorm", "Dorm"],
-      ["studio", "Studio"],
-      ["apartment", "Apartment"],
-    ],
-  },
-  {
-    name: "furnished",
-    label: "Furnished",
-    options: [
-      ["true", "Yes"],
-      ["false", "No"],
-    ],
-  },
-  {
-    name: "electricity_included",
-    label: "Electricity included",
-    options: [
-      ["true", "Yes"],
-      ["false", "No"],
-    ],
-  },
-  {
-    name: "gender",
-    label: "Gender",
-    options: [
-      ["boys", "Boys"],
-      ["girls", "Girls"],
-      ["mixed", "Mixed"],
-    ],
-  },
+  { name: "property_type", label: "Property type", options: [["dorm", "Dorm"], ["studio", "Studio"], ["apartment", "Apartment"]] },
+  { name: "furnished", label: "Furnished", options: [["true", "Yes"], ["false", "No"]] },
+  { name: "electricity_included", label: "Electricity included", options: [["true", "Yes"], ["false", "No"]] },
+  { name: "gender", label: "Residents", options: [["boys", "Boys"], ["girls", "Girls"], ["mixed", "Mixed"]] },
 ] as const;
 
-export function PropertyFilters({
-  values,
-  mobileOpen,
-  onClose,
-}: {
-  values: Record<string, string>;
-  mobileOpen: boolean;
-  onClose: () => void;
-}) {
-  const router = useRouter();
-  const closeButton = useRef<HTMLButtonElement>(null);
+const numberFields = [
+  { name: "min_price", label: "Min price ($)", placeholder: "No minimum" },
+  { name: "max_price", label: "Max price ($)", placeholder: "No maximum" },
+  { name: "bedrooms", label: "Bedrooms", placeholder: "Any" },
+  { name: "bathrooms", label: "Bathrooms", placeholder: "Any" },
+] as const;
 
-  useEffect(() => {
-    if (!mobileOpen) return;
-    closeButton.current?.focus();
-    const onKeyDown = (event: KeyboardEvent) => {
-      if (event.key === "Escape") onClose();
-    };
-    window.addEventListener("keydown", onKeyDown);
-    return () => window.removeEventListener("keydown", onKeyDown);
-  }, [mobileOpen, onClose]);
+const labelClass = "block min-w-0 text-[13px] font-semibold text-[var(--ink-2)]";
+const focusClass = "focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-[var(--ink)]";
+
+export function PropertyFilters({ values, expanded, onExpandedChange, onChange, onSearch, onClear }: {
+  values: Record<string, string>;
+  expanded: boolean;
+  onExpandedChange: (expanded: boolean) => void;
+  onChange: (name: string, value: string) => void;
+  onSearch: (params: URLSearchParams) => void;
+  onClear: () => void;
+}) {
+  const searchInput = useRef<HTMLInputElement>(null);
+  const advancedFilters = useRef<HTMLDivElement>(null);
+  const activeCount = [...fields, ...numberFields].filter((field) => values[field.name]).length;
+
+  const renderSelect = (field: (typeof fields)[number]) => (
+    <label key={field.name} className={labelClass}>
+      {field.label}
+      <PropertySelect
+        className="mt-2 font-medium"
+        name={field.name}
+        value={values[field.name] ?? ""}
+        onChange={(event) => onChange(field.name, event.target.value)}
+      >
+        <option value="">Any</option>
+        {field.options.map(([value, label]) => <option value={value} key={value}>{label}</option>)}
+      </PropertySelect>
+    </label>
+  );
 
   return (
-    <>
-      {mobileOpen && (
-        <button
-          type="button"
-          aria-label="Close filters"
-          className="fixed inset-0 z-30 hidden w-full border-0 bg-[var(--filter-backdrop)] max-md:block"
-          onClick={onClose}
-        />
-      )}
-      <aside
-        className={`mb-[30px] rounded-3xl border border-[var(--line)] bg-[var(--surface)] p-6 shadow-[0_12px_36px_-32px_rgba(22,23,26,0.5)] max-md:fixed max-md:inset-x-0 max-md:bottom-0 max-md:z-40 max-md:mb-0 max-md:max-h-[90vh] max-md:overflow-y-auto max-md:rounded-b-none max-md:px-5 max-md:pt-[22px] max-md:pb-7 max-md:shadow-[0_-18px_48px_rgba(20,35,55,0.18)] ${mobileOpen ? "max-md:block" : "max-md:hidden"}`}
-        aria-label="Property filters"
-        role={mobileOpen ? "dialog" : undefined}
-        aria-modal={mobileOpen ? true : undefined}
-      >
-        <div className="mb-5 hidden items-center justify-between gap-4 max-md:flex">
-          <h2 className="m-0 text-[19px] font-[750]">Search & filters</h2>
-          <button
-            ref={closeButton}
-            type="button"
-            aria-label="Close filters"
-            onClick={onClose}
-            className="grid h-10 w-10 place-items-center rounded-full border-0 bg-[var(--bg)]"
-          >
-            <X size={20} />
-          </button>
-        </div>
-        <form
-          action="/properties"
-          method="get"
-          className="grid gap-[22px] max-md:gap-5"
-          onSubmit={(event) => {
+    <aside
+      id="property-filters"
+      aria-label="Property search and filters"
+      className="mb-8 rounded-[var(--radius-lg)] border border-[var(--line)] bg-[var(--surface)] p-3 shadow-[0_12px_40px_-28px_rgba(22,23,26,0.25)] sm:p-4 md:mb-10"
+    >
+      <form
+        action="/properties"
+        method="get"
+        onInvalidCapture={(event) => {
+          // Hidden advanced controls retain validation as well as their values.
+          if (!expanded && advancedFilters.current?.contains(event.target as Node)) {
             event.preventDefault();
-            const params = new URLSearchParams();
-            for (const [key, value] of new FormData(event.currentTarget)) {
-              if (typeof value === "string" && value.trim())
-                params.set(key, value.trim());
-            }
-            router.push(`/properties${params.size ? `?${params}` : ""}`);
-          }}
-        >
-          <label className="block min-w-0 text-[13px] font-bold text-[var(--ink)]">
-            Search
+            onExpandedChange(true);
+            const input = event.target;
+            requestAnimationFrame(() => {
+              if (input instanceof HTMLInputElement) input.focus({ preventScroll: true });
+            });
+          }
+        }}
+        onSubmit={(event) => {
+          event.preventDefault();
+          const params = new URLSearchParams();
+          for (const [key, value] of new FormData(event.currentTarget)) {
+            if (typeof value === "string" && value.trim()) params.set(key, value.trim());
+          }
+          // Enter from an advanced field must not leave focus in hidden content.
+          if (advancedFilters.current?.contains(document.activeElement)) {
+            searchInput.current?.focus({ preventScroll: true });
+          }
+          onSearch(params);
+        }}
+      >
+        {values.university_id && <input type="hidden" name="university_id" value={values.university_id} />}
+        <div className="grid grid-cols-[minmax(0,1fr)_48px_auto] items-center gap-2 sm:gap-3">
+          <label className="min-w-0">
+            <span className="sr-only">Search student properties</span>
             <input
-              className="mt-2 block min-h-[58px] w-full min-w-0 rounded-[12px] border border-[var(--line-strong)] bg-[var(--surface)] px-5 py-2.5 text-base font-medium text-[var(--ink)] outline-none transition-[border-color,box-shadow] duration-[180ms] placeholder:text-[var(--faint)] hover:border-[var(--soft)] focus:border-[var(--soft)] focus:shadow-[0_0_0_3px_rgba(22,23,26,0.08)]"
+              ref={searchInput}
+              className={`${PROPERTY_INPUT_CLASSES} rounded-full!`}
               name="query"
               type="search"
-              placeholder="City, address, or title"
-              defaultValue={values.query ?? ""}
-              key={`query-${values.query}`}
+              placeholder="City, university or property name"
+              value={values.query ?? ""}
+              onChange={(event) => onChange("query", event.target.value)}
             />
           </label>
-          <div className="grid grid-cols-2 gap-4 md:grid-cols-3 lg:grid-cols-4 max-md:gap-[15px]">
-            {fields.slice(0, 1).map((field) => (
-              <label
-                key={field.name}
-                className="block min-w-0 text-[13px] font-bold text-[var(--ink)] max-md:col-span-2"
-              >
-                {field.label}
-                <select
-                  className="student-filter-select mt-2 flex h-[52px] w-full min-w-0 items-center justify-between rounded-[var(--radius-sm)] border border-transparent bg-[var(--bg)] py-2.5 pr-[18px] pl-[13px] text-sm font-medium text-[var(--ink)] outline-none transition-[border-color,box-shadow] duration-[180ms] hover:border-[var(--line-strong)] focus:border-[var(--ink)] focus:bg-[var(--surface)] focus:shadow-[0_0_0_3px_rgba(22,23,26,0.08)]"
-                  name={field.name}
-                  defaultValue={values[field.name] ?? ""}
-                  key={`${field.name}-${values[field.name]}`}
-                >
-                  <option value="">Any</option>
-                  {field.options.map(([value, label]) => (
-                    <option value={value} key={value}>
-                      {label}
-                    </option>
+          <button
+            type="button"
+            aria-label={`Advanced filters${activeCount ? `, ${activeCount} active` : ""}`}
+            aria-expanded={expanded}
+            aria-controls="property-advanced-filters"
+            onClick={() => onExpandedChange(!expanded)}
+            className={`relative grid size-12 place-items-center rounded-full border border-[var(--line-strong)] bg-[var(--surface)] text-[var(--ink-2)] transition-colors hover:border-[var(--ink)] hover:bg-[var(--bg)] motion-reduce:transition-none ${focusClass}`}
+          >
+            <SlidersHorizontal size={19} aria-hidden="true" />
+            {activeCount > 0 && <span aria-hidden="true" className="absolute -top-1 -right-1 grid min-w-5 place-items-center rounded-full bg-[var(--ink)] px-1 text-[10px] leading-5 font-semibold text-[var(--btn-ink)]">{activeCount}</span>}
+          </button>
+          <button
+            type="submit"
+            className={`inline-flex min-h-12 items-center justify-center gap-2 rounded-full bg-[var(--btn-bg)] px-4 text-sm font-semibold text-[var(--btn-ink)] transition-[background,transform] hover:bg-[var(--btn-bg-hover)] active:scale-[0.98] motion-reduce:transform-none motion-reduce:transition-none sm:px-6 ${focusClass}`}
+          >
+            <Search size={17} aria-hidden="true" className="hidden sm:block" /> Search
+          </button>
+        </div>
+        <div className="mt-2 flex flex-wrap items-center justify-between gap-x-4 gap-y-1 px-1">
+          <p className="text-xs leading-relaxed text-[var(--soft)]">Find a place that feels like yours.</p>
+          <button
+            type="button"
+            aria-expanded={expanded}
+            aria-controls="property-advanced-filters"
+            onClick={() => onExpandedChange(!expanded)}
+            className={`-mr-1 inline-flex min-h-11 items-center gap-2 rounded-full px-2 text-xs font-semibold text-[var(--ink-2)] transition-colors hover:text-[var(--ink)] motion-reduce:transition-none ${focusClass}`}
+          >
+            Advanced filters
+            <ChevronDown size={14} aria-hidden="true" className={`transition-transform duration-200 motion-reduce:transition-none ${expanded ? "rotate-180" : ""}`} />
+          </button>
+        </div>
+        <div
+          ref={advancedFilters}
+          id="property-advanced-filters"
+          role="region"
+          aria-label="Advanced filters"
+          aria-hidden={!expanded}
+          inert={!expanded}
+          className={`grid transition-[grid-template-rows,opacity] duration-200 ease-out motion-reduce:transition-none ${expanded ? "grid-rows-[1fr] opacity-100" : "grid-rows-[0fr] opacity-0"}`}
+        >
+          <div className="min-h-0 overflow-hidden">
+            <div className="mt-3 grid gap-6 border-t border-[var(--line)] px-1 pt-6 pb-5 sm:px-2">
+              <div className="md:max-w-[360px]">{renderSelect(fields[0])}</div>
+              <fieldset className="min-w-0 border-0 border-t border-solid border-[var(--line)] p-0 pt-5">
+                <legend className="sr-only">Monthly budget and space</legend>
+                <div className="grid grid-cols-2 gap-4 lg:grid-cols-4">
+                  {numberFields.map((field) => (
+                    <label key={field.name} className={labelClass}>
+                      {field.label}
+                      <input className={`${PROPERTY_INPUT_CLASSES} mt-2`} name={field.name} type="number" min="0" step="1" placeholder={field.placeholder} value={values[field.name] ?? ""} onChange={(event) => onChange(field.name, event.target.value)} />
+                    </label>
                   ))}
-                </select>
-              </label>
-            ))}
-            <label className="block min-w-0 text-[13px] font-bold text-[var(--ink)]">
-              Min price
-              <input
-                className="mt-2 block h-[52px] w-full min-w-0 rounded-[var(--radius-sm)] border border-transparent bg-[var(--bg)] px-[13px] py-2.5 text-sm font-medium text-[var(--ink)] outline-none transition-[border-color,box-shadow] duration-[180ms] placeholder:text-[var(--faint)] hover:border-[var(--line-strong)] focus:border-[var(--ink)] focus:bg-[var(--surface)] focus:shadow-[0_0_0_3px_rgba(22,23,26,0.08)]"
-                name="min_price"
-                type="number"
-                min="0"
-                step="1"
-                placeholder="$0"
-                defaultValue={values.min_price ?? ""}
-                key={`min-${values.min_price}`}
-              />
-            </label>
-            <label className="block min-w-0 text-[13px] font-bold text-[var(--ink)]">
-              Max price
-              <input
-                className="mt-2 block h-[52px] w-full min-w-0 rounded-[var(--radius-sm)] border border-transparent bg-[var(--bg)] px-[13px] py-2.5 text-sm font-medium text-[var(--ink)] outline-none transition-[border-color,box-shadow] duration-[180ms] placeholder:text-[var(--faint)] hover:border-[var(--line-strong)] focus:border-[var(--ink)] focus:bg-[var(--surface)] focus:shadow-[0_0_0_3px_rgba(22,23,26,0.08)]"
-                name="max_price"
-                type="number"
-                min="0"
-                step="1"
-                placeholder="Any"
-                defaultValue={values.max_price ?? ""}
-                key={`max-${values.max_price}`}
-              />
-            </label>
-            <label className="block min-w-0 text-[13px] font-bold text-[var(--ink)]">
-              Bedrooms
-              <input
-                className="mt-2 block h-[52px] w-full min-w-0 rounded-[var(--radius-sm)] border border-transparent bg-[var(--bg)] px-[13px] py-2.5 text-sm font-medium text-[var(--ink)] outline-none transition-[border-color,box-shadow] duration-[180ms] placeholder:text-[var(--faint)] hover:border-[var(--line-strong)] focus:border-[var(--ink)] focus:bg-[var(--surface)] focus:shadow-[0_0_0_3px_rgba(22,23,26,0.08)]"
-                name="bedrooms"
-                type="number"
-                min="0"
-                step="1"
-                placeholder="Any"
-                defaultValue={values.bedrooms ?? ""}
-                key={`bed-${values.bedrooms}`}
-              />
-            </label>
-            <label className="block min-w-0 text-[13px] font-bold text-[var(--ink)]">
-              Bathrooms
-              <input
-                className="mt-2 block h-[52px] w-full min-w-0 rounded-[var(--radius-sm)] border border-transparent bg-[var(--bg)] px-[13px] py-2.5 text-sm font-medium text-[var(--ink)] outline-none transition-[border-color,box-shadow] duration-[180ms] placeholder:text-[var(--faint)] hover:border-[var(--line-strong)] focus:border-[var(--ink)] focus:bg-[var(--surface)] focus:shadow-[0_0_0_3px_rgba(22,23,26,0.08)]"
-                name="bathrooms"
-                type="number"
-                min="0"
-                step="1"
-                placeholder="Any"
-                defaultValue={values.bathrooms ?? ""}
-                key={`bath-${values.bathrooms}`}
-              />
-            </label>
-            {fields.slice(1).map((field) => (
-              <label
-                key={field.name}
-                className="block min-w-0 text-[13px] font-bold text-[var(--ink)] max-md:col-span-2"
+                </div>
+              </fieldset>
+              <fieldset className="min-w-0 border-0 p-0">
+                <legend className="sr-only">Living preferences</legend>
+                <div className="grid gap-4 sm:grid-cols-3">{fields.slice(1).map(renderSelect)}</div>
+              </fieldset>
+            </div>
+            <div className="flex flex-wrap items-center justify-between gap-3 border-t border-[var(--line)] px-1 pt-4 sm:px-2">
+              <p className="text-xs text-[var(--soft)]">Prices are per month in USD.</p>
+              <button
+                type="button"
+                onClick={() => {
+                  searchInput.current?.focus({ preventScroll: true });
+                  onClear();
+                }}
+                className={`inline-flex min-h-12 items-center justify-center gap-2 rounded-full border border-[var(--line-strong)] bg-[var(--surface)] px-5 text-sm font-semibold text-[var(--ink-2)] transition-colors hover:border-[var(--ink)] hover:bg-[var(--bg)] active:bg-[var(--chip)] motion-reduce:transition-none ${focusClass}`}
               >
-                {field.label}
-                <select
-                  className="student-filter-select mt-2 flex h-[52px] w-full min-w-0 items-center justify-between rounded-[var(--radius-sm)] border border-transparent bg-[var(--bg)] py-2.5 pr-[18px] pl-[13px] text-sm font-medium text-[var(--ink)] outline-none transition-[border-color,box-shadow] duration-[180ms] hover:border-[var(--line-strong)] focus:border-[var(--ink)] focus:bg-[var(--surface)] focus:shadow-[0_0_0_3px_rgba(22,23,26,0.08)]"
-                  name={field.name}
-                  defaultValue={values[field.name] ?? ""}
-                  key={`${field.name}-${values[field.name]}`}
-                >
-                  <option value="">Any</option>
-                  {field.options.map(([value, label]) => (
-                    <option value={value} key={value}>
-                      {label}
-                    </option>
-                  ))}
-                </select>
-              </label>
-            ))}
+                <RotateCcw size={15} aria-hidden="true" /> Clear filters
+              </button>
+            </div>
           </div>
-          <div className="flex justify-end gap-3 max-md:[&>*]:flex-1">
-            <Link
-              href="/properties"
-              className="inline-flex min-h-11 items-center justify-center rounded-[12px] border border-[var(--line-strong)] bg-[var(--surface)] px-[18px] py-2.5 text-sm font-bold text-[var(--ink)] hover:border-[var(--soft)] hover:bg-[var(--bg)]"
-            >
-              Clear
-            </Link>
-            <button className="inline-flex min-h-11 items-center justify-center rounded-[12px] border border-[var(--ink)] bg-[var(--ink)] px-[18px] py-2.5 text-sm font-bold text-[var(--btn-ink)] hover:bg-[var(--soft)]">
-              Show properties
-            </button>
-          </div>
-        </form>
-      </aside>
-    </>
+        </div>
+      </form>
+    </aside>
   );
 }

@@ -2,17 +2,15 @@
 
 import React from 'react';
 import Image from 'next/image';
+import { useLogout } from '@/src/lib/supabase/use-logout';
 import {
   LayoutDashboard,
   Building2,
-  Users,
   Settings,
   Mail,
-  FileBarChart,
   Star,
   LogOut,
-  HousePlus,
-  MessageSquare
+  HousePlus
 } from 'lucide-react';
 
 interface OnwerSidebarProps {
@@ -28,6 +26,7 @@ export function OwnerSidebar({
   userEmail = 'owner@maskanny.com',
   onLogout
 }: OnwerSidebarProps) {
+  const { logout, loggingOut, logoutError } = useLogout();
   const navItems = [
     { id: 'Dashboard', label: 'Overview', icon: LayoutDashboard },
     { id: 'My Listings', label: 'My Listings', icon: Building2 },
@@ -41,14 +40,14 @@ export function OwnerSidebar({
       onLogout();
     } else {
 
-      console.log('Logging out user...');
+      void logout();
 
     }
   };
 
   return (
-    <aside className="w-64 bg-white border-r border-brand-slate/15 flex flex-col justify-between shrink-0 self-stretch">
-      <div className="p-6 space-y-8">
+    <aside className="w-full md:w-64 bg-white border-b md:border-b-0 md:border-r border-brand-slate/15 flex flex-col justify-between shrink-0 self-stretch">
+      <div className="p-4 md:p-6 space-y-4 md:space-y-8">
         <div className="flex items-center gap-3">
           <div className="relative w-8 h-8 rounded-xl flex items-center justify-center text-white shrink-0 overflow-hidden p-1.5">
             <Image
@@ -65,7 +64,7 @@ export function OwnerSidebar({
           </div>
         </div>
 
-        <nav className="space-y-1.5">
+        <nav aria-label="Owner sections" className="grid grid-cols-2 sm:grid-cols-3 md:block gap-1.5 md:space-y-1.5">
           {navItems.map((item) => {
             const Icon = item.icon;
             const isActive = activeTab === item.id;
@@ -96,13 +95,16 @@ export function OwnerSidebar({
           </span>
         </div>
 
+        {!onLogout && logoutError && <p role="alert" className="text-xs leading-relaxed text-rose-700">{logoutError}</p>}
         <button
           type="button"
           onClick={handleLogoutClick}
-          className="w-full flex items-center justify-center gap-2 px-3 py-2.5 rounded-xl text-xs font-bold text-rose-600 bg-rose-50 hover:bg-rose-100 border border-rose-200 transition-all cursor-pointer"
+          disabled={!onLogout && loggingOut}
+          aria-busy={!onLogout && loggingOut}
+          className="w-full flex min-h-11 items-center justify-center gap-2 px-3 py-2.5 rounded-xl text-xs font-bold text-rose-600 bg-rose-50 hover:bg-rose-100 border border-rose-200 transition-all cursor-pointer focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-rose-600 disabled:cursor-wait disabled:opacity-60"
         >
           <LogOut className="w-3.5 h-3.5" />
-          <span>Log Out</span>
+          <span>{!onLogout && loggingOut ? 'Logging out…' : 'Log Out'}</span>
         </button>
       </div>
     </aside>

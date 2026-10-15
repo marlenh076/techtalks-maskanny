@@ -1,7 +1,6 @@
 import PropertyForm from "../../../features/properties/presentation/components/PropertyForm";
 import { redirect } from "next/navigation";
 import { createCookieClient } from "@/src/lib/supabase/cookie-client";
-import { AuthenticatedHeader } from "@/src/components/auth/AuthenticatedHeader";
 
 export const dynamic = "force-dynamic";
 
@@ -20,10 +19,6 @@ export default async function CreatePropertyPage() {
   return (
     <main className="create-listing-page">
       <div className="create-listing-container">
-        <div className="mb-12 sm:mb-16">
-          <AuthenticatedHeader email={user.email} />
-        </div>
-
         <header className="create-listing-header">
           <span className="create-listing-eyebrow">PROPERTY LISTING</span>
 

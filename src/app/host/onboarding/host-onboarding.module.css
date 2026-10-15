@@ -1,0 +1,30 @@
+.page { --success: #3d7659; min-height: calc(100dvh - 68px); background: var(--bg); color: var(--ink); }
+.layout { display: grid; width: calc(100% - 32px); max-width: 1184px; margin: 0 auto; padding: 28px 0 36px; }
+.content { min-width: 0; max-width: 560px; }
+.eyebrow { margin: 0 0 16px; color: var(--success); font-size: 11px; font-weight: 600; letter-spacing: 0.16em; text-transform: uppercase; }
+.content h1 { margin: 0; font-size: clamp(34px, 4.5vw, 58px); font-weight: 500; line-height: 1.08; letter-spacing: -0.045em; text-wrap: balance; }
+.description { max-width: 440px; margin: 18px 0 0; color: var(--soft); font-size: 15px; line-height: 1.75; }
+.benefits { display: grid; gap: 14px; margin: 26px 0; padding: 0; list-style: none; }
+.benefits li { display: flex; min-width: 0; align-items: center; gap: 12px; }
+.benefits li > span { display: grid; width: 38px; height: 38px; flex-shrink: 0; place-items: center; border: 1px solid rgb(61 118 89 / 10%); border-radius: 12px; background: var(--success-bg); color: var(--success); }
+.benefits p { margin: 0; color: var(--ink-2); font-size: 14px; line-height: 1.6; }
+.action { max-width: 440px; margin-top: 28px; }
+.startButton { display: inline-flex; min-height: 52px; width: 100%; align-items: center; justify-content: center; gap: 12px; padding: 14px 26px; border: 0; border-radius: 999px; background: var(--success); color: white; font-size: 14px; font-weight: 600; transition: background 180ms; }
+.startButton:not(:disabled):hover { background: #2d5c44; }
+.startButton:focus-visible { outline: 2px solid var(--success); outline-offset: 4px; }
+.startButton:disabled { cursor: wait; opacity: 0.75; }
+.support { margin: 12px 0 0; color: var(--soft); font-size: 12px; line-height: 1.7; }
+.error { margin: 0 0 16px; padding: 12px 14px; border: 1px solid rgb(138 59 50 / 12%); border-radius: 12px; background: var(--danger-bg); color: var(--danger); font-size: 13px; line-height: 1.6; }
+.status { margin: 0 0 12px; color: var(--success); font-size: 13px; line-height: 1.6; }
+.photograph { display: none; }
+@media (min-width: 768px) {
+  .layout { min-height: calc(100dvh - 68px); width: calc(100% - 48px); grid-template-columns: minmax(0, 1.05fr) minmax(0, 1fr); align-items: center; gap: 36px; padding: 44px 0; }
+  .description { margin-top: 22px; font-size: 16px; }
+  .benefits { gap: 18px; margin: 30px 0; }
+  .startButton { width: auto; min-width: 180px; }
+  .photograph { display: block; min-width: 0; margin: 0; }
+  .imageFrame { position: relative; min-height: 480px; height: min(660px, calc(100dvh - 180px)); overflow: hidden; border: 1px solid var(--line); border-radius: 28px; background: var(--placeholder-bg); }
+  .image { object-fit: cover; object-position: 52% center; }
+}
+@media (min-width: 1024px) { .layout { gap: 72px; padding: 52px 0; } }
+@media (prefers-reduced-motion: reduce) { .startButton { transition: none; } }

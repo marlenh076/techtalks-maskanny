@@ -565,7 +565,7 @@ export default function OwnerDashboardPage() {
   ).length;
 
   return (
-    <div className="flex min-h-screen bg-brand-light text-brand-navy w-full overflow-x-hidden relative">
+    <div className="flex flex-col md:flex-row min-h-screen bg-brand-light text-brand-navy w-full overflow-x-hidden relative">
 
 
       <OwnerSidebar

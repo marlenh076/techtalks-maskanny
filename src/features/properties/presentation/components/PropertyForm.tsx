@@ -9,6 +9,8 @@ import type {
 } from "@/src/features/properties/models/property.model";
 import { supabase } from "@/src/lib/supabase/client";
 
+import { PropertySelect, PROPERTY_INPUT_CLASSES as INPUT_CLASSES } from "./PropertySelect";
+
 type PropertyFormPayload = Omit<PropertyCreate, "host_id">;
 
 type SelectedLocation = Pick<Property, "address" | "latitude" | "longitude">;
@@ -61,19 +63,6 @@ const IMAGE_TYPES = ["image/jpeg", "image/png", "image/webp"];
 
 const GRID_CLASSES =
   "grid grid-cols-2 gap-x-[24px] gap-y-[26px] [@media(width<=700px)]:grid-cols-1";
-
-const INPUT_CLASSES = `
-  block w-full min-h-[52px] appearance-none
-  rounded-(--radius-sm) border border-transparent
-  bg-(--bg) px-[16px] py-[14px] text-[14px]! text-(--ink)
-  transition-[background,border-color,box-shadow]
-  duration-(--duration-fast) ease-[ease]
-  placeholder:text-(--faint)
-  hover:border-(--line-strong)
-  focus:border-(--ink) focus:bg-(--surface)
-  focus:shadow-[0_0_0_3px_rgba(22,23,26,0.045)]
-  focus:outline-none
-`;
 
 function buildPayload(
   values: FormValues,
@@ -261,7 +250,7 @@ function FormField({
       </label>
 
       {options ? (
-        <select {...fieldProps} className={`${INPUT_CLASSES} cursor-pointer`}>
+        <PropertySelect {...fieldProps}>
           <option value="">{placeholder}</option>
 
           {options.map((option) => (
@@ -269,7 +258,7 @@ function FormField({
               {option.label}
             </option>
           ))}
-        </select>
+        </PropertySelect>
       ) : multiline ? (
         <textarea
           {...fieldProps}

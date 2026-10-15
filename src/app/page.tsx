@@ -2,54 +2,49 @@
 
 /** This file goes at: src/app/page.tsx */
 
-import Image from "next/image";
 import Link from "next/link";
-import DormResults from "../../student_side/DormResults";
-import { useDormSearch } from "../../student_side/useDormSearch";
-import { useFavorites } from "../../student_side/useFavorites";
+import { ArrowUpRight } from "lucide-react";
+import { RecentProperties } from "../../student_side/RecentProperties";
+import { UniversityExplorer } from "@/src/features/universities/presentation/UniversityExplorer";
+import { useUniversities } from "@/src/features/universities/presentation/useUniversities";
+import { MarketplaceHero } from "../../student_side/MarketplaceHero";
+import { MarketplaceFooter } from "@/src/components/navigation/MarketplaceFooter";
 
 export default function HomePage() {
-  const { dorms, status, retry, resetFilters } = useDormSearch();
-  const { isSaved, toggle } = useFavorites();
-
+  const universities = useUniversities();
   return (
-    <main className="min-h-screen bg-[#F4F2ED]">
-      <section className="relative h-[540px] overflow-hidden rounded-b-[40px] lg:h-[620px] lg:rounded-b-[56px]">
-        <Image
-          src="https://images.unsplash.com/photo-1523217582562-09d0def993a6?auto=format&fit=crop&w=2000&q=70"
-          alt="Student housing in Beirut"
-          fill
-          priority
-          sizes="100vw"
-          className="object-cover"
-        />
-        <div className="absolute inset-0 bg-gradient-to-b from-[#16171A]/60 via-[#16171A]/25 to-[#16171A]/70" />
-        <div className="relative flex h-full items-end px-5 pb-20 sm:px-8 lg:pb-24">
-          <div className="mx-auto w-full max-w-6xl">
-           <h1 className="max-w-[20ch] text-[30px] font-medium leading-[1.05] tracking-[-0.03em] text-white sm:text-[44px] md:text-[62px] lg:text-[72px]">
-              Student housing, without the guesswork
-            </h1>
-            <p className="mt-6 max-w-[48ch] text-base leading-relaxed text-white/85">
-              Maskani lists dorms near Lebanese universities with real prices, real distances, and a direct line to the owner.
-            </p>
-            <Link href="/dorms" className="mt-9 inline-block rounded-full bg-white px-7 py-4 text-sm font-medium text-[#16171A] transition-colors duration-200 hover:bg-[#EFEDE7]">
-              Search dorms
-            </Link>
-          </div>
-        </div>
-      </section>
+    <>
+      <main className="student-marketplace min-h-screen bg-[#F4F2ED] text-[var(--ink)]">
+        <MarketplaceHero universities={universities} />
 
-      <section className="mx-auto w-full max-w-6xl px-5 py-20 sm:px-8">
-        <div className="flex flex-wrap items-baseline justify-between gap-4 border-b border-black/[0.08] pb-5">
-          <h2 className="text-[26px] font-medium tracking-[-0.025em] text-[#16171A]">Recently listed</h2>
-          <Link href="/dorms" className="text-sm text-[#6F7168] underline-offset-4 transition-colors duration-200 hover:text-[#16171A] hover:underline">
-            See all dorms
-          </Link>
+        <div className="mx-auto w-[calc(100%-32px)] max-w-[1184px] space-y-8 py-6 sm:w-[calc(100%-48px)] sm:space-y-12 sm:py-8">
+          <section aria-labelledby="recent-properties-title">
+            <div className="mb-5 flex flex-wrap items-end justify-between gap-x-8 gap-y-2 border-b border-[var(--line-strong)] pb-4">
+              <div className="max-w-xl">
+                <h2
+                  id="recent-properties-title"
+                  className="m-0 text-[clamp(24px,3.1vw,36px)] font-medium leading-[1.12] tracking-[-0.035em]"
+                >
+                  Recently added properties
+                </h2>
+                <p className="mt-2 text-[13px] leading-relaxed text-[var(--soft)] sm:text-sm">
+                  The latest student housing listings.
+                </p>
+              </div>
+              <Link
+                href="/properties"
+                className="inline-flex min-h-11 items-center gap-2 rounded-full text-sm font-semibold text-[var(--success)] underline-offset-4 hover:underline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-[var(--success)]"
+              >
+                View all
+                <ArrowUpRight size={17} aria-hidden="true" />
+              </Link>
+            </div>
+            <RecentProperties />
+          </section>
+          <UniversityExplorer resource={universities} />
         </div>
-        <div className="mt-10">
-          <DormResults status={status} dorms={dorms.slice(0, 3)} onRetry={retry} onReset={resetFilters} filtersApplied={false} isSaved={isSaved} onToggleSave={toggle} />
-        </div>
-      </section>
-    </main>
+      </main>
+      <MarketplaceFooter />
+    </>
   );
 }

@@ -110,6 +110,19 @@ export class PropertyRepository implements IPropertyRepository {
   async search(filters: PropertyFilters): Promise<Property[]> {
     let query = this.supabase.from("property").select("*");
 
+    if (filters.university_id) {
+      // Use the same client and RLS as the property search. An empty association
+      // must return no results, never fall back to unrelated properties.
+      const { data: associations, error } = await this.supabase
+        .from("property_university")
+        .select("property_id")
+        .eq("university_id", filters.university_id);
+      if (error) throw new Error(error.message);
+      const propertyIds = [...new Set(associations.map((item) => item.property_id))];
+      if (!propertyIds.length) return [];
+      query = query.in("property_id", propertyIds);
+    }
+
     if (filters.query) {
       const searchQuery = filters.query.replace(/[(),]/g, " ").trim();
 
@@ -152,7 +165,11 @@ export class PropertyRepository implements IPropertyRepository {
       query = query.eq("gender", filters.gender);
     }
 
-    const { data: properties, error } = await query;
+    // Order before Supabase applies its response row limit, so recent listings
+    // cannot be omitted from the result window. Keep ties deterministic too.
+    const { data: properties, error } = await query
+      .order("created_at", { ascending: false })
+      .order("property_id", { ascending: true });
 
     if (error) {
       throw new Error(error.message);

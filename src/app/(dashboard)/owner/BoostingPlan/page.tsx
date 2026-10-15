@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { ArrowLeft, Check, Copy, Rocket, Video, Wallet, X } from "lucide-react";
 import { useRouter } from "next/navigation";
+import { LogoutAction } from "@/src/components/auth/LogoutAction";
 
 const plans = [
     {
@@ -466,6 +467,7 @@ export default function BoostingPage() {
                 <p className="mt-6 text-center text-xs text-slate-500">
                     Your boost will be activated after the payment is verified.
                 </p>
+                <div className="mt-6 flex justify-end"><LogoutAction /></div>
             </div>
         </div>
     );
