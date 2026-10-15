@@ -19,7 +19,8 @@ import type { MarketplaceAccount } from "./useMarketplaceAccount";
 
 const focusClass =
   "focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--marketplace-focus,var(--success))]";
-const itemClass = `flex min-h-11 w-full items-center gap-3 rounded-[10px] px-3 py-2.5 text-left text-sm font-medium text-[var(--ink-2)] transition-colors hover:bg-[var(--chip)] focus-visible:bg-[var(--chip)] motion-reduce:transition-none ${focusClass}`;
+const itemLayout = `flex min-h-11 w-full items-center gap-3 rounded-[10px] px-3 py-2.5 text-left text-sm font-medium transition-colors motion-reduce:transition-none ${focusClass}`;
+const itemClass = `${itemLayout} text-[var(--ink-2)] hover:bg-[var(--chip)] focus-visible:bg-[var(--chip)]`;
 type AuthenticatedAccount = Extract<
   MarketplaceAccount,
   { status: "authenticated" }
@@ -57,18 +58,20 @@ function AuthenticatedMenu({
   return (
     <>
       <div role="presentation" className="px-3 pt-2 pb-4">
-        <p className="m-0 truncate text-sm font-semibold text-[var(--ink)]">
-          {account.name || account.email || "Your account"}
-        </p>
+        <div className="flex items-start justify-between gap-2">
+          <p className="m-0 min-w-0 flex-1 truncate text-sm font-semibold text-[var(--ink)]">
+            {account.name || account.email || "Your account"}
+          </p>
+          {account.role !== "student" && (
+            <span className="inline-flex shrink-0 rounded-full bg-[var(--success-bg)] px-2 py-1 text-[11px] leading-none font-semibold text-[var(--success)] capitalize">
+              {account.role}
+            </span>
+          )}
+        </div>
         {account.name && account.email && (
           <p className="mt-1 truncate text-xs text-[var(--soft)]">
             {account.email}
           </p>
-        )}
-        {account.role !== "student" && (
-          <span className="mt-2 inline-flex rounded-full bg-[var(--success-bg)] px-2 py-1 text-[11px] font-semibold text-[var(--success)] capitalize">
-            {account.role}
-          </span>
         )}
       </div>
       <div role="group" aria-label="Account actions">
@@ -113,7 +116,7 @@ function AuthenticatedMenu({
           onSelect();
           void logout();
         }}
-        className={`${itemClass} text-[var(--danger)] disabled:cursor-wait disabled:opacity-60`}
+        className={`${itemLayout} text-[#cf373d] hover:bg-[#fff1f1] focus-visible:bg-[#fff1f1] disabled:cursor-wait disabled:opacity-60`}
       >
         {loggingOut ? (
           <LoaderCircle

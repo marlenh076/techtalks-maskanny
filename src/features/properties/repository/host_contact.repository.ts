@@ -1,9 +1,7 @@
 import "server-only";
 import { createClient } from "@supabase/supabase-js";
 import { Database } from "@/src/lib/database/types";
-import { User } from "@/src/features/users/models/user.model";
-
-export type HostContact = Pick<User, "firstname" | "lastname" | "email" | "phone">;
+import type { HostContact } from "../models/host_contact.model";
 
 /** Server-only, limited to the public contact fields for an approved listing. */
 export class HostContactRepository {
@@ -26,7 +24,7 @@ export class HostContactRepository {
 
     const { data: user, error: userError } = await client
       .from("user")
-      .select("firstname,lastname,email,phone")
+      .select("firstname,lastname,phone")
       .eq("user_id", host.user_id)
       .maybeSingle();
     if (userError) throw new Error(userError.message);

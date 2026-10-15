@@ -8,8 +8,7 @@ import type {
   PropertyCreate,
 } from "@/src/features/properties/models/property.model";
 import { supabase } from "@/src/lib/supabase/client";
-
-import { PropertySelect, PROPERTY_INPUT_CLASSES as INPUT_CLASSES } from "./PropertySelect";
+import PropertyCreateSelect, { PROPERTY_INPUT_CLASSES as INPUT_CLASSES } from "./PropertySelect";
 
 type PropertyFormPayload = Omit<PropertyCreate, "host_id">;
 
@@ -243,6 +242,7 @@ function FormField({
       }`}
     >
       <label
+        id={`${id}-label`}
         htmlFor={id}
         className="mt-0! mb-[9px]! text-[14px]! text-(--ink-2)!"
       >
@@ -250,15 +250,15 @@ function FormField({
       </label>
 
       {options ? (
-        <PropertySelect {...fieldProps}>
-          <option value="">{placeholder}</option>
-
-          {options.map((option) => (
-            <option key={option.value} value={option.value}>
-              {option.label}
-            </option>
-          ))}
-        </PropertySelect>
+        <PropertyCreateSelect
+          id={id}
+          label={label}
+          value={value}
+          placeholder={placeholder}
+          options={options}
+          onValueChange={(nextValue) => onChange(id, nextValue)}
+          disabled={disabled}
+        />
       ) : multiline ? (
         <textarea
           {...fieldProps}

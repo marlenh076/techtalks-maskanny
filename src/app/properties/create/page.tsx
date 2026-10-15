@@ -1,6 +1,9 @@
 import PropertyForm from "../../../features/properties/presentation/components/PropertyForm";
 import { redirect } from "next/navigation";
 import { createCookieClient } from "@/src/lib/supabase/cookie-client";
+import type { Metadata } from "next";
+
+export const metadata: Metadata = { title: "Create a property | Maskanny" };
 
 export const dynamic = "force-dynamic";
 
@@ -18,7 +21,7 @@ export default async function CreatePropertyPage() {
 
   return (
     <main className="create-listing-page">
-      <div className="create-listing-container">
+      <div className="create-listing-container mx-auto w-full max-w-[1040px]">
         <header className="create-listing-header">
           <span className="create-listing-eyebrow">PROPERTY LISTING</span>
 
@@ -29,8 +32,8 @@ export default async function CreatePropertyPage() {
           </h1>
 
           <p>
-            Add your property details, amenities and availability. You can
-            review everything before your listing goes live.
+            Add your property details, location and photos, then submit your
+            listing for review.
           </p>
         </header>
 

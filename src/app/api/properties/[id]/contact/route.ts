@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { z } from "zod";
 import { PropertyRepository } from "@/src/features/properties/repository/property.repository";
 import { HostContactRepository } from "@/src/features/properties/repository/host_contact.repository";
+import { hostContactSchema } from "@/src/features/properties/models/host_contact.model";
 
 export async function GET(
   _request: Request,
@@ -13,6 +14,8 @@ export async function GET(
   }
 
   try {
+    // Public-key property reads enforce effective-live RLS before the server-only,
+    // narrowly scoped host contact lookup. Never resolve a caller-supplied host ID.
     const property = await new PropertyRepository().getById(id);
     if (!property || property.approval_status !== "approved") {
       return NextResponse.json({ error: "Property not found" }, { status: 404 });
@@ -23,7 +26,7 @@ export async function GET(
       return NextResponse.json({ error: "Host contact unavailable" }, { status: 404 });
     }
 
-    return NextResponse.json(contact, {
+    return NextResponse.json(hostContactSchema.parse(contact), {
       headers: { "Cache-Control": "no-store" },
     });
   } catch (error) {

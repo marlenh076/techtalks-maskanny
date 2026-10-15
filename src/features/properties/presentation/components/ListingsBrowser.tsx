@@ -4,6 +4,7 @@ import { useCallback, useMemo, useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { Search, Home, RotateCcw, GraduationCap, X } from "lucide-react";
 import { useUniversity } from "@/src/features/universities/presentation/useUniversities";
+import { useFavorites } from "@/student_side/useFavorites";
 import { PropertyCard } from "./PropertyCard";
 import { PropertyFilters } from "./PropertyFilters";
 import { usePropertyListings } from "./usePropertyListings";
@@ -14,6 +15,7 @@ const stateButtonClass = `mt-6 inline-flex min-h-12 items-center justify-center 
 
 export function ListingsBrowser({ searchParams }: { searchParams: Record<string, string | string[] | undefined> }) {
   const router = useRouter();
+  const { isSaved, toggle } = useFavorites();
   const [navigating, startNavigation] = useTransition();
   const [filtersOpen, setFiltersOpen] = useState(false);
   const closeFilters = useCallback(() => setFiltersOpen(false), []);
@@ -114,7 +116,7 @@ export function ListingsBrowser({ searchParams }: { searchParams: Record<string,
           )}
           {status === "ready" && properties.length > 0 && (
             <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3">
-              {properties.map((property) => <PropertyCard key={property.property_id} property={property} />)}
+              {properties.map((property) => <PropertyCard key={property.property_id} property={property} saved={isSaved(property.property_id)} onToggleSave={toggle} />)}
             </div>
           )}
         </section>
