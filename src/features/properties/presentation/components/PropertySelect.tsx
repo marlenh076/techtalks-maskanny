@@ -1,9 +1,9 @@
 "use client";
-
 import * as Select from "@radix-ui/react-select";
 import type { ComponentProps } from "react";
 import { Check, ChevronDown } from "lucide-react";
 import styles from "./PropertySelect.module.css";
+import "./property-select.css";
 
 export const PROPERTY_INPUT_CLASSES = `
   block w-full min-h-[52px] appearance-none
@@ -70,7 +70,7 @@ export default function PropertyCreateSelect({
         aria-required="true"
         aria-invalid={invalid}
         aria-describedby={describedBy}
-        className={`${PROPERTY_INPUT_CLASSES} flex cursor-pointer items-center justify-between gap-3 text-left focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--ink)] disabled:cursor-not-allowed disabled:opacity-60`}
+        className="property-create-select"
       >
         <Select.Value placeholder={placeholder} />
         <Select.Icon asChild>
@@ -85,18 +85,18 @@ export default function PropertyCreateSelect({
           collisionPadding={12}
           avoidCollisions
           hideWhenDetached
-          className="z-100 max-h-[min(320px,calc(100dvh-24px))] min-w-[var(--radix-select-trigger-width)] max-w-[calc(100vw-24px)] overflow-hidden rounded-[var(--radius-sm)] border border-[var(--line-strong)] bg-[var(--surface)] p-1 text-[var(--ink)] shadow-[0_18px_48px_-24px_rgba(22,23,26,0.28)]"
+          className="property-create-select-content"
         >
-          <Select.Viewport className="max-h-[min(310px,calc(100dvh-34px))] overflow-y-auto overscroll-contain">
+          <Select.Viewport className="property-create-select-viewport">
             {options.map((option) => (
               <Select.Item
                 key={option.value}
                 value={option.value}
                 disabled={option.disabled}
-                className="relative flex min-h-11 cursor-pointer items-center rounded-[10px] py-2.5 pr-10 pl-3.5 text-sm text-[var(--ink-2)] outline-none data-[highlighted]:bg-[var(--chip)] data-[highlighted]:text-[var(--ink)] data-[state=checked]:font-semibold data-[disabled]:cursor-not-allowed data-[disabled]:opacity-50"
+                className="property-create-select-option"
               >
                 <Select.ItemText>{option.label}</Select.ItemText>
-                <Select.ItemIndicator className="absolute right-3 text-[var(--success)]">
+                <Select.ItemIndicator className="property-create-select-check">
                   <Check aria-hidden="true" size={17} />
                 </Select.ItemIndicator>
               </Select.Item>

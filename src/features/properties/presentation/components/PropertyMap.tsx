@@ -11,13 +11,13 @@ import {
   useMapEvents,
 } from "react-leaflet";
 import "leaflet/dist/leaflet.css";
-
 import type { Coordinates } from "./property-location";
 export type { Coordinates } from "./property-location";
+import "./property-map.css";
 
 const markerIcon = divIcon({
-  className: "property-location-marker focus-visible:outline-2 focus-visible:outline-offset-3 focus-visible:outline-[var(--ink)]",
-  html: '<span aria-hidden="true" style="display:block;width:28px;height:28px;background:var(--ink);border:4px solid white;border-radius:50%;box-shadow:0 2px 8px rgb(0 0 0 / 35%)"></span>',
+  className: "property-location-marker",
+  html: '<span aria-hidden="true"></span>',
   iconSize: [28, 28],
   iconAnchor: [14, 14],
 });
@@ -127,7 +127,7 @@ export default function PropertyMap(props: PropertyMapProps) {
         touchZoom={interactive}
         doubleClickZoom={interactive}
         keyboard={interactive}
-        className="property-location-map relative z-0 h-[360px] w-full rounded-[var(--radius-sm)] border border-[var(--line-strong)] font-[inherit] focus-visible:outline-2 focus-visible:outline-offset-3 focus-visible:outline-[var(--ink)] max-[480px]:h-[280px] [&_.leaflet-control-attribution]:bg-white [&_.leaflet-control-attribution]:text-[10px] [&_.leaflet-bar_a]:h-11 [&_.leaflet-bar_a]:w-11 [&_.leaflet-bar_a]:leading-11 [&_.leaflet-bar_a]:focus-visible:outline-2 [&_.leaflet-bar_a]:focus-visible:outline-offset-3 [&_.leaflet-bar_a]:focus-visible:outline-[var(--ink)]"
+        className="property-location-map"
       >
         <TileLayer
           url="https://tile.openstreetmap.org/{z}/{x}/{y}.png"

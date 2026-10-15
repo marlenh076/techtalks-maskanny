@@ -9,7 +9,10 @@ export const dynamic = "force-dynamic";
 
 export default async function CreatePropertyPage() {
   const supabase = await createCookieClient();
-  const { data: { user }, error: authError } = await supabase.auth.getUser();
+  const {
+    data: { user },
+    error: authError,
+  } = await supabase.auth.getUser();
   if (authError || !user) redirect("/sign-in?next=%2Fproperties%2Fcreate");
 
   const { data: host, error: hostError } = await supabase
@@ -38,10 +41,16 @@ export default async function CreatePropertyPage() {
         </header>
 
         {hostError ? (
-          <p role="alert" className="rounded-xl bg-[var(--danger-bg)] p-4 text-[var(--danger)]">
-            We couldn&apos;t check your Host access. Please refresh and try again.
+          <p
+            role="alert"
+            className="rounded-xl bg-[var(--danger-bg)] p-4 text-[var(--danger)]"
+          >
+            We couldn&apos;t check your Host access. Please refresh and try
+            again.
           </p>
-        ) : <PropertyForm />}
+        ) : (
+          <PropertyForm searchEnabled={Boolean(process.env.GEOAPIFY_API_KEY)} />
+        )}
 
         <footer className="create-listing-footer">
           <span>Maskanny</span>
