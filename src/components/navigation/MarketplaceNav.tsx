@@ -94,7 +94,7 @@ function FullMarketplaceNav() {
   ];
 
   const linkClass = (href: string | null) =>
-    `inline-flex min-h-11 items-center rounded-full px-4 text-sm font-medium transition-colors motion-reduce:transition-none ${focusClass} ${transparent ? "text-white hover:bg-white/15" : pathname === href ? "text-[var(--success)] underline decoration-2 underline-offset-8 hover:bg-[var(--chip)]" : "text-[var(--ink-2)] hover:bg-[var(--chip)]"}`;
+    `inline-flex min-h-11 items-center rounded-full px-4 text-sm font-medium transition-colors motion-reduce:transition-none ${focusClass} ${transparent ? "text-white hover:bg-white/15" : pathname === href ? "text-[var(--color-brand-navy)] underline decoration-2 underline-offset-8 hover:bg-[var(--chip)]" : "text-[var(--ink-2)] hover:bg-[var(--chip)]"}`;
   const navItem = ({ href, label }: { href: string | null; label: string }) => (
     <li key={label}>
       {href ? (

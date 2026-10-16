@@ -57,21 +57,23 @@ function AuthenticatedMenu({
   return (
     <>
       <div role="presentation" className="px-3 pt-2 pb-4">
-        <div className="flex items-start justify-between gap-2">
-          <p className="m-0 min-w-0 flex-1 truncate text-sm font-semibold text-[var(--ink)]">
-            {account.name || account.email || "Your account"}
-          </p>
+        <div className="flex items-center justify-between gap-2">
+          <div className="min-w-0 flex-1">
+            <p className="m-0 truncate text-sm font-semibold text-[var(--ink)]">
+              {account.name || account.email || "Your account"}
+            </p>
+            {account.name && account.email && (
+              <p className="mt-1 truncate text-xs text-[var(--soft)]">
+                {account.email}
+              </p>
+            )}
+          </div>
           {account.role !== "student" && (
-            <span className="inline-flex shrink-0 rounded-full bg-[var(--success-bg)] px-2 py-1 text-[11px] leading-none font-semibold text-[var(--success)] capitalize">
+            <span className="inline-flex shrink-0 rounded-full bg-[var(--color-brand-navy)] px-2 py-1 text-[11px] leading-none font-semibold text-white capitalize">
               {account.role}
             </span>
           )}
         </div>
-        {account.name && account.email && (
-          <p className="mt-1 truncate text-xs text-[var(--soft)]">
-            {account.email}
-          </p>
-        )}
       </div>
       <div role="group" aria-label="Account actions">
         {accountLinks[account.role].map(({ label, href, icon: Icon }) => (
@@ -356,7 +358,7 @@ export function AccountDropdown({
             onOpenChange(true);
           }
         }}
-        className={`grid size-11 place-items-center rounded-full border transition-colors motion-reduce:transition-none ${focusClass} ${open ? "border-[var(--success)] bg-[var(--success-bg)] text-[var(--success)]" : transparent ? "border-white/40 text-white hover:bg-white/15" : "border-[var(--line-strong)] text-[var(--ink-2)] hover:bg-[var(--chip)]"}`}
+        className={`grid size-11 place-items-center rounded-full border transition-colors active:border-[var(--color-brand-navy)] active:bg-[var(--color-brand-navy)] active:text-white motion-reduce:transition-none ${focusClass} ${open ? "border-[var(--color-brand-navy)] bg-[var(--color-brand-navy)] text-white" : transparent ? "border-white/40 text-white hover:bg-white/15" : "border-[var(--line-strong)] text-[var(--ink-2)] hover:bg-[var(--chip)]"}`}
       >
         <UserRound size={20} aria-hidden="true" />
       </button>

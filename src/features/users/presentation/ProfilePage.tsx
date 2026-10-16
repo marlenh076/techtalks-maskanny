@@ -1,4 +1,3 @@
-
 "use client";
 
 import Link from "next/link";
@@ -29,8 +28,7 @@ type Account = Extract<MarketplaceAccount, { status: "authenticated" }>;
 const focusClass =
   "focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-[#385F71]";
 
-const buttonClass =
-  `inline-flex min-h-12 items-center justify-center gap-2 rounded-full bg-[#2B4162] px-6 text-sm font-semibold text-white transition-colors hover:bg-[#385F71] disabled:cursor-wait disabled:opacity-60 ${focusClass}`;
+const buttonClass = `inline-flex min-h-12 items-center justify-center gap-2 rounded-full bg-[#2B4162] px-6 text-sm font-semibold text-white transition-colors hover:bg-[#385F71] disabled:cursor-wait disabled:opacity-60 ${focusClass}`;
 
 const cardClass =
   "min-w-0 rounded-2xl border border-[#385F71]/15 bg-white p-5 shadow-sm sm:p-6";
@@ -38,8 +36,7 @@ const cardClass =
 const fieldClass =
   "mt-2 block min-h-[48px] w-full min-w-0 rounded-xl border border-[#385F71]/15 bg-[#F8F9FB] px-4 py-3 text-sm text-[#2B4162] placeholder:text-[#6F7F8D] transition-colors hover:border-[#385F71]/40 focus:border-[#385F71] focus:outline-2 focus:outline-offset-2 focus:outline-[#385F71] aria-invalid:border-red-500 read-only:bg-[#F5F0F6] read-only:text-[#6F7F8D]";
 
-const labelClass =
-  "block min-w-0 text-[13px] font-semibold text-[#2B4162]";
+const labelClass = "block min-w-0 text-[13px] font-semibold text-[#2B4162]";
 
 const signInHref = "/sign-in?next=%2Fprofile";
 
@@ -129,7 +126,7 @@ function PersonalInformation({
       const updated = await profileApi.update(
         profile.user_id,
         result.data,
-        controller.signal
+        controller.signal,
       );
 
       if (controller.signal.aborted) return;
@@ -184,7 +181,7 @@ function PersonalInformation({
     name: keyof ProfileFields,
     label: string,
     autoComplete: string,
-    type = "text"
+    type = "text",
   ) => (
     <div className="min-w-0">
       <label className={labelClass} htmlFor={`profile-${name}`}>
@@ -234,16 +231,8 @@ function PersonalInformation({
         Keep your name and contact details up to date.
       </p>
 
-      <form
-        noValidate
-        onSubmit={submit}
-        className="mt-5"
-        aria-busy={saving}
-      >
-        <fieldset
-          disabled={saving}
-          className="m-0 min-w-0 border-0 p-0"
-        >
+      <form noValidate onSubmit={submit} className="mt-5" aria-busy={saving}>
+        <fieldset disabled={saving} className="m-0 min-w-0 border-0 p-0">
           <legend className="sr-only">Personal information</legend>
 
           <div className="grid min-w-0 gap-5 sm:grid-cols-2">
@@ -254,7 +243,6 @@ function PersonalInformation({
             <div className="min-w-0 sm:col-span-2">
               <label htmlFor="profile-email" className={labelClass}>
                 Email address
-
                 <input
                   id="profile-email"
                   type="email"
@@ -270,7 +258,7 @@ function PersonalInformation({
                 id="profile-email-hint"
                 className="mt-2 text-xs leading-5 text-[#6F7F8D]"
               >
-                Email is linked to your sign-in account. Email changes aren't
+                Email is linked to your sign-in account. Email changes aren&apos;t
                 available here.
               </p>
             </div>
@@ -298,11 +286,7 @@ function PersonalInformation({
             }`}
           >
             {message.kind === "success" && (
-              <Check
-                size={17}
-                aria-hidden="true"
-                className="mt-1 shrink-0"
-              />
+              <Check size={17} aria-hidden="true" className="mt-1 shrink-0" />
             )}
 
             {message.text}
@@ -310,11 +294,7 @@ function PersonalInformation({
         )}
 
         <div className="mt-5 flex flex-wrap items-center gap-3 border-t border-[#385F71]/15 pt-5">
-          <button
-            type="submit"
-            disabled={saving}
-            className={buttonClass}
-          >
+          <button type="submit" disabled={saving} className={buttonClass}>
             {saving ? "Saving changes…" : "Save changes"}
           </button>
         </div>
@@ -344,7 +324,7 @@ function AccountProfile({ account }: { account: Account }) {
         setError(
           error instanceof ProfileRequestError
             ? error.message
-            : "We couldn't load your profile. Check your connection and try again."
+            : "We couldn't load your profile. Check your connection and try again.",
         );
       });
 
@@ -372,7 +352,9 @@ function AccountProfile({ account }: { account: Account }) {
       onSaved={setProfile}
       onSessionChanged={() => {
         setProfile(null);
-        setError("Your session has changed. Reload your profile or sign in again.");
+        setError(
+          "Your session has changed. Reload your profile or sign in again.",
+        );
       }}
     />
   );
@@ -389,9 +371,7 @@ export function ProfileContent({
   onSaved: (profile: UserProfile) => void;
   onSessionChanged: () => void;
 }) {
-  const name = [profile.firstname, profile.lastname]
-    .filter(Boolean)
-    .join(" ");
+  const name = [profile.firstname, profile.lastname].filter(Boolean).join(" ");
 
   const email = account.email ?? profile.email;
 
@@ -429,14 +409,8 @@ export function ProfileContent({
           </p>
 
           <p className="mt-1 flex min-w-0 items-start gap-1.5 text-sm leading-6 text-[#6F7F8D]">
-            <Mail
-              size={14}
-              aria-hidden="true"
-              className="mt-1 shrink-0"
-            />
-            <span className="min-w-0 [overflow-wrap:anywhere]">
-              {email}
-            </span>
+            <Mail size={14} aria-hidden="true" className="mt-1 shrink-0" />
+            <span className="min-w-0 [overflow-wrap:anywhere]">{email}</span>
           </p>
 
           <p className="mt-2 text-sm leading-6 text-[#6F7F8D]">
@@ -522,11 +496,7 @@ function ProfileError({
       <p className="mt-3 text-sm leading-6 text-[#6F7F8D]">{message}</p>
 
       <div className="mt-5 flex flex-wrap items-center gap-4">
-        <button
-          type="button"
-          onClick={onRetry}
-          className={buttonClass}
-        >
+        <button type="button" onClick={onRetry} className={buttonClass}>
           <RefreshCw size={16} aria-hidden="true" />
           Try again
         </button>

@@ -46,7 +46,7 @@ export function DashboardSidebar({
   };
 
   return (
-    <aside className="w-full md:w-64 bg-white border-b md:border-b-0 md:border-r border-brand-slate/15 flex flex-col justify-between shrink-0 self-stretch">
+    <aside className="w-full md:w-64 bg-white border-b md:border-b-0 md:border-r border-brand-slate/15 flex flex-col justify-between shrink-0 self-start md:sticky md:top-0 md:h-screen md:overflow-y-auto">
       <div className="p-4 md:p-6 space-y-4 md:space-y-8">
         <div className="flex items-center gap-3">
           <Link

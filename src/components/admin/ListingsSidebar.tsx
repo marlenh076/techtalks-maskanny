@@ -7,7 +7,7 @@ export interface ListingFilter {
 export default function ListingsSidebar({ filters, pendingCount, totalCount, onFilterChange }: {
   filters: ListingFilter; pendingCount?: number; totalCount?: number; onFilterChange: (value: ListingFilter) => void;
 }) {
-  return <aside className="w-full lg:w-72 bg-white rounded-2xl border border-brand-slate/15 p-5 shadow-2xs space-y-6 shrink-0 self-start">
+  return <aside className="w-full xl:w-[272px] 2xl:w-72 bg-white rounded-2xl border border-brand-slate/15 p-5 shadow-2xs space-y-6 shrink-0 self-start">
     <div className="flex items-center gap-2 pb-4 border-b border-brand-slate/10"><Filter className="w-4 h-4" /><h3 className="font-bold text-sm uppercase tracking-wider">Listing Filters</h3></div>
     <div className="space-y-1.5"><span className="text-xs font-semibold text-brand-slate uppercase tracking-wider block mb-2">Moderation & Visibility</span>
       {[{ id: "pending", label: "Pending Review", icon: Clock, count: pendingCount }, { id: "all", label: "All Submissions", icon: Building2, count: totalCount },

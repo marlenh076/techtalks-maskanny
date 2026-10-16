@@ -38,7 +38,7 @@ export function MarketplaceHero({
         </p>
       </div>
 
-      <div aria-hidden="true" className={styles.widgets}>
+      <div className={styles.widgets}>
         <div className={styles.searchWidget}>
           <div className={styles.glassCard}>
             <div className={styles.widgetLabel}>
@@ -47,22 +47,22 @@ export function MarketplaceHero({
             </div>
             <p className={styles.widgetTitle}>A place that fits you.</p>
             <div className={styles.indicators}>
-              <span>
-                <MapPin size={14} />
+              <button type="button" aria-controls="hero-university" onClick={() => document.getElementById("hero-university")?.focus()}>
+                <MapPin size={14} aria-hidden="true" />
                 Location
-              </span>
-              <span>
-                <Wallet size={14} />
+              </button>
+              <button type="button" aria-controls="hero-budget" onClick={() => document.getElementById("hero-budget")?.focus()}>
+                <Wallet size={14} aria-hidden="true" />
                 Budget
-              </span>
-              <span>
-                <House size={14} />
+              </button>
+              <button type="button" aria-controls="hero-property-type" onClick={() => document.getElementById("hero-property-type")?.focus()}>
+                <House size={14} aria-hidden="true" />
                 Housing
-              </span>
+              </button>
             </div>
           </div>
         </div>
-        <div className={styles.universityWidget}>
+        <div aria-hidden="true" className={styles.universityWidget}>
           <div className={styles.glassCard}>
             <div className={styles.widgetLabel}>
               <span>Find your campus</span>

@@ -178,6 +178,47 @@
     gap: 4px 16px;
 }
 
+.directionsLink {
+    display: inline-flex;
+    flex-shrink: 0;
+    align-items: center;
+    gap: 4px;
+    white-space: nowrap;
+    transition: color 180ms ease;
+}
+
+.directionsLink svg {
+    flex-shrink: 0;
+    transition: transform 180ms ease;
+}
+
+.directionsLink:hover {
+    color: var(--color-brand-navy);
+    text-decoration: underline;
+    text-underline-offset: 3px;
+}
+
+.directionsLink:hover svg {
+    transform: translate(2px, -2px);
+}
+
+.directionsLink:focus-visible {
+    outline: 2px solid var(--color-brand-navy);
+    outline-offset: 4px;
+    border-radius: 2px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .directionsLink,
+    .directionsLink svg {
+        transition: none;
+    }
+
+    .directionsLink:hover svg {
+        transform: none;
+    }
+}
+
 .description {
     margin: 14px 0 0;
     color: var(--ink-2);

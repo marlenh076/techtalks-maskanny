@@ -116,24 +116,24 @@ export default function ReportsSidebar() {
           }
         }}
       >
-        <label className="text-xs font-bold">
+        <label className="block !mb-0 text-xs font-bold">
           Start date
           <input
             type="date"
             required
             value={from}
             onChange={(event) => setFrom(event.target.value)}
-            className={inputClass + " mt-1"}
+            className={inputClass + " mt-1 block"}
           />
         </label>
-        <label className="text-xs font-bold">
+        <label className="block !mb-0 text-xs font-bold">
           End date (inclusive)
           <input
             type="date"
             required
             value={to}
             onChange={(event) => setTo(event.target.value)}
-            className={inputClass + " mt-1"}
+            className={inputClass + " mt-1 block"}
           />
         </label>
         <button className={buttonClass}>Apply dates</button>

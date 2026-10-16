@@ -138,6 +138,7 @@
     width: anchor-size(width);
     max-width: calc(100vw - 24px);
     max-height: min(320px, calc(100dvh - 24px));
+    overflow-x: hidden;
     overflow-y: auto;
     position-try-fallbacks: flip-block;
     color: var(--ink);
@@ -146,7 +147,7 @@
     font-size: 14px;
     overscroll-behavior: contain;
     touch-action: pan-y;
-    scrollbar-width: thin;
+    scrollbar-width: none;
   }
 
   :global(.student-marketplace) .select option {

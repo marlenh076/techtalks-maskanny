@@ -37,19 +37,20 @@ export default function RecentSubmissions({ submissions, total = submissions.len
       {onViewAll && <button type="button" onClick={onViewAll} className="!text-sm font-semibold px-3 py-1.5 rounded-lg bg-brand-light hover:bg-brand-navy hover:text-white transition-colors duration-200 cursor-pointer">View All</button>}
     </div>
     {message && <p role="status" className="p-3 text-sm text-emerald-700">{message}</p>}
-    <div className="w-full overflow-x-auto"><table className="w-full text-left text-xs sm:text-sm text-brand-navy border-collapse">
+    <div className="w-full max-w-full overflow-x-auto overscroll-x-contain"><table className={`w-full text-left text-xs sm:text-sm text-brand-navy border-collapse ${isReadOnly ? "" : "table-fixed min-w-[822px]"}`}>
+      {!isReadOnly && <colgroup><col className="w-[205px]" /><col className="w-[91px]" /><col className="w-[100px]" /><col className="w-[80px]" /><col className="w-[126px]" /><col className="w-[220px]" /></colgroup>}
       <thead className="bg-brand-light/50 border-b border-brand-slate/10 text-[11px] font-bold text-brand-slate uppercase tracking-wider"><tr>
-        <th className="py-3 px-4">Property</th><th className="py-3 px-2 hidden md:table-cell">Type</th><th className="py-3 px-2">Host</th><th className="py-3 px-2">Price</th><th className="py-3 px-2">Status</th>{!isReadOnly && <th className="py-3 px-4 text-right">Actions</th>}
+        <th className="py-3 px-4">Property</th><th className={`py-3 px-2 ${isReadOnly ? "hidden md:table-cell" : ""}`}>Type</th><th className="py-3 px-2">Host</th><th className="py-3 px-2">Price</th><th className="py-3 px-2">Status</th>{!isReadOnly && <th className="py-3 px-4 text-right">Actions</th>}
       </tr></thead>
       <tbody className="divide-y divide-brand-slate/10">{submissions.map(row => <tr key={row.property_id} className="hover:bg-brand-light/30 transition-colors">
-        <td className="py-3 px-4"><div className="flex items-center gap-3"><div className="relative w-11 h-11 rounded-xl overflow-hidden bg-slate-100 border border-brand-slate/15 shrink-0">
+        <td className="py-3 px-4"><div className={`flex items-center gap-3 ${isReadOnly ? "" : "min-w-0"}`}><div className="relative w-11 h-11 rounded-xl overflow-hidden bg-slate-100 border border-brand-slate/15 shrink-0">
           {row.cover_image ? <Image unoptimized src={row.cover_image} alt="" fill sizes="44px" className="object-cover" /> : <div className="w-full h-full flex items-center justify-center text-slate-400"><Building className="w-5 h-5" /></div>}
-        </div><button type="button" onClick={() => setSelected({ id: row.property_id, kind: "detail" })} className="font-semibold max-w-[180px] truncate text-left hover:underline">{row.title}</button></div></td>
-        <td className="py-3 px-2 hidden md:table-cell"><span className="px-2.5 py-1 rounded-md text-[11px] bg-slate-100 capitalize">{row.property_type}</span></td>
-        <td className="py-3 px-2 text-brand-slate">{[row.host.firstname, row.host.lastname].join(" ")}</td>
+        </div><button type="button" onClick={() => setSelected({ id: row.property_id, kind: "detail" })} title={row.title} className={isReadOnly ? "font-semibold max-w-[180px] truncate text-left hover:underline" : "font-semibold block min-w-0 max-w-full truncate text-left hover:underline"}>{row.title}</button></div></td>
+        <td className={`py-3 px-2 ${isReadOnly ? "hidden md:table-cell" : ""}`}><span className="px-2.5 py-1 rounded-md text-[11px] bg-slate-100 capitalize">{row.property_type}</span></td>
+        <td className="py-3 px-2 text-brand-slate">{isReadOnly ? [row.host.firstname, row.host.lastname].join(" ") : <span className="block truncate" title={[row.host.firstname, row.host.lastname].join(" ")}>{[row.host.firstname, row.host.lastname].join(" ")}</span>}</td>
         <td className="py-3 px-2 font-semibold whitespace-nowrap">${row.price.toLocaleString()}<span className="text-[10px] font-normal text-brand-slate">/mo</span></td>
-        <td className="py-3 px-2"><span className={`inline-flex px-2.5 py-1 rounded-md text-[10px] font-bold uppercase border ${row.is_live ? "bg-emerald-50 text-emerald-700 border-emerald-200" : row.approval_status === "rejected" ? "bg-rose-50 text-rose-700 border-rose-200" : "bg-amber-50 text-amber-700 border-amber-200"}`}>{propertyStatus(row)}</span>{row.request_type === "renewal" && <p className="text-[10px] text-brand-slate mt-1">Pending boost renewal</p>}</td>
-        {!isReadOnly && <td className="py-3 px-4 text-right"><div className="inline-flex items-center gap-1.5">
+        <td className="py-3 px-2"><span className={`inline-flex ${isReadOnly ? "" : "whitespace-nowrap"} px-2.5 py-1 rounded-md text-[10px] font-bold uppercase border ${row.is_live ? "bg-emerald-50 text-emerald-700 border-emerald-200" : row.approval_status === "rejected" ? "bg-rose-50 text-rose-700 border-rose-200" : "bg-amber-50 text-amber-700 border-amber-200"}`}>{propertyStatus(row)}</span>{row.request_type === "renewal" && <p className="text-[10px] text-brand-slate mt-1">Pending boost renewal</p>}</td>
+        {!isReadOnly && <td className="py-3 px-4 text-right"><div className="flex flex-wrap items-center justify-end gap-1.5">
           <ContactOwnerButton owner={{ name: [row.host.firstname, row.host.lastname].join(" "), phone: row.host.phone, email: row.host.email }} listingId={row.property_id} />
           <button type="button" onClick={() => setSelected({ id: row.property_id, kind: "edit" })} className="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-lg text-xs font-semibold bg-brand-light border border-brand-slate/15"><Edit2 className="w-3.5 h-3.5" />Edit</button>
           {row.approval_status === "pending" ? <>

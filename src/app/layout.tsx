@@ -1,5 +1,4 @@
 import type { Metadata } from "next";
-import { Inter } from "next/font/google";
 import { MarketplaceNav } from "@/src/components/navigation/MarketplaceNav";
 import { Toaster } from "sonner";
 import "./globals.css";
@@ -20,7 +19,7 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en">
-      <body className="min-h-screen font-sans antialiased bg-brand-light text-brand-navy">
+      <body suppressHydrationWarning className="min-h-screen font-sans antialiased bg-brand-light text-brand-navy">
         <MarketplaceNav />
         {children}
         <Toaster

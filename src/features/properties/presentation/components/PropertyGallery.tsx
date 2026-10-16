@@ -1,15 +1,7 @@
-
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import {
-  ChevronLeft,
-  ChevronRight,
-  Expand,
-  ImageOff,
-  Play,
-  X,
-} from "lucide-react";
+import { ChevronLeft, ChevronRight, ImageOff, Play, X } from "lucide-react";
 import type { Media } from "../../models/media.model";
 import { PropertyImage } from "./PropertyImage";
 import styles from "./PropertyGallery.module.css";
@@ -67,7 +59,6 @@ export function PropertyGallery({
   ]
     .filter(Boolean)
     .join(" · ");
-
 
   useEffect(() => {
     if (open || count < 2) return;
@@ -138,7 +129,6 @@ export function PropertyGallery({
           <span key={selected.media_id} className={styles.slideFrame}>
             {preview(selected, active)}
           </span>
-
         </button>
 
         {count > 1 && (
@@ -168,9 +158,7 @@ export function PropertyGallery({
         )}
       </div>
 
-      <p className={styles.caption}>
-        {mediaSummary} provided by the host
-      </p>
+      <p className={styles.caption}>{mediaSummary} provided by the host</p>
 
       {/* Existing full-screen gallery */}
       <dialog

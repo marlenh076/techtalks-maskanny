@@ -1,16 +1,16 @@
 "use client";
 import { useRef, useState, type FormEvent } from "react";
 import Image from "next/image";
-import { User, Bell, ShieldCheck, Globe, Sliders, Lock, LogOut, Eye, EyeOff } from "lucide-react";
+import { User, ShieldCheck, Globe, Lock, LogOut, Eye, EyeOff } from "lucide-react";
 import { adminApi } from "@/src/features/admin/client/api";
 import { useAdminAction } from "@/src/features/admin/client/hooks";
 import { useAdminSession } from "./AdminAccessGuard";
 import { AdminModal, QueryState, buttonClass, inputClass } from "./AdminUI";
 
 const labels = {
-  EN: { general: "General", account: "Account & Profile", notifications: "Notifications", security: "Security", platform: "Platform Settings", save: "Save Changes", first: "First name", last: "Last name", email: "Email Address", avatar: "Upload New Avatar", password: "Change Password", logout: "Logout Session" },
-  AR: { general: "العام", account: "الحساب والملف الشخصي", notifications: "الإشعارات", security: "الأمان", platform: "إعدادات المنصة", save: "حفظ التغييرات", first: "الاسم الأول", last: "اسم العائلة", email: "البريد الإلكتروني", avatar: "رفع صورة جديدة", password: "تغيير كلمة المرور", logout: "تسجيل الخروج" },
-  FR: { general: "Général", account: "Compte & Profil", notifications: "Notifications", security: "Sécurité", platform: "Paramètres de la Plateforme", save: "Enregistrer les modifications", first: "Prénom", last: "Nom", email: "Adresse E-mail", avatar: "Télécharger un Nouvel Avatar", password: "Changer le Mot de Passe", logout: "Fermer la Session" },
+  EN: { account: "Account & Profile", security: "Security", save: "Save Changes", first: "First name", last: "Last name", email: "Email Address", avatar: "Upload New Avatar", password: "Change Password", logout: "Logout Session" },
+  AR: { account: "الحساب والملف الشخصي", security: "الأمان", save: "حفظ التغييرات", first: "الاسم الأول", last: "اسم العائلة", email: "البريد الإلكتروني", avatar: "رفع صورة جديدة", password: "تغيير كلمة المرور", logout: "تسجيل الخروج" },
+  FR: { account: "Compte & Profil", security: "Sécurité", save: "Enregistrer les modifications", first: "Prénom", last: "Nom", email: "Adresse E-mail", avatar: "Télécharger un Nouvel Avatar", password: "Changer le Mot de Passe", logout: "Fermer la Session" },
 };
 type Language = keyof typeof labels;
 function AccountForm({ language, onPassword, onMessage }: { language: Language; onPassword: () => void; onMessage: (value: string) => void ;}) {
@@ -55,16 +55,16 @@ function PasswordDialog({ onClose, onSaved }: { onClose: () => void; onSaved: ()
   </AdminModal>;
 }
 export default function SettingsView() {
-  const [language, setLanguage] = useState<Language>("EN"), [tab, setTab] = useState("ACCOUNT");
+  const [language, setLanguage] = useState<Language>("EN"), [tab, setTab] = useState<"ACCOUNT" | "SECURITY">("ACCOUNT");
   const [message, setMessage] = useState(""), [password, setPassword] = useState(false);
   const { profile } = useAdminSession(); const t = labels[language];
-  const unavailable: Record<string, string> = { GENERAL: "Platform name, support contacts and logo settings are unavailable until global configuration requirements are finalized.", NOTIFICATIONS: "Notification delivery and subscription requirements are not implemented.", PLATFORM: "Global language, currency and moderation defaults require confirmed platform policies." };
+  const tabs = [{ id: "ACCOUNT", label: t.account, icon: User }, { id: "SECURITY", label: t.security, icon: ShieldCheck }] as const;
   return <div className="flex flex-col gap-6 w-full flex-1 relative" dir={language === "AR" ? "rtl" : "ltr"}>
-    <div className="flex flex-wrap items-center gap-3 bg-white p-4 rounded-2xl border border-brand-slate/15 shadow-xs"><Globe className="w-4 h-4" /><span className="text-xs font-bold">Language:</span><div className="flex gap-1.5 bg-brand-light p-1 rounded-xl">{[{ id: "EN", label: "English" }, { id: "AR", label: "العربية" }, { id: "FR", label: "Français" }].map(item => <button type="button" key={item.id} onClick={() => setLanguage(item.id as Language)} className={`px-3 py-1.5 rounded-lg text-xs font-bold ${language === item.id ? "bg-brand-navy text-white" : "text-brand-slate"}`}>{item.label}</button>)}</div><span className="text-[10px] text-brand-slate">Display language for this view</span></div>
+    <div className="flex flex-wrap items-center gap-3 bg-white p-4 rounded-2xl border border-brand-slate/15 shadow-xs"><Globe className="w-4 h-4" /><span className="text-xs font-bold">Language:</span><div className="flex gap-1.5 bg-brand-light p-1 rounded-xl">{[{ id: "EN", label: "English" }, { id: "AR", label: "العربية" }, { id: "FR", label: "Français" }].map(item => <button type="button" key={item.id} onClick={() => setLanguage(item.id as Language)} className={`px-3 py-1.5 rounded-lg text-xs font-bold ${language === item.id ? "bg-brand-navy text-white" : "text-brand-slate"}`}>{item.label}</button>)}</div></div>
     {message && <p role="status" className="p-4 rounded-xl bg-emerald-50 border border-emerald-200 text-sm text-emerald-700">{message}</p>}
-    <div className="flex items-center gap-2 overflow-x-auto pb-2 border-b border-brand-slate/15">{[{ id: "GENERAL", label: t.general, icon: Sliders }, { id: "ACCOUNT", label: t.account, icon: User }, { id: "NOTIFICATIONS", label: t.notifications, icon: Bell }, { id: "SECURITY", label: t.security, icon: ShieldCheck }, { id: "PLATFORM", label: t.platform, icon: Globe }].map(item => { const Icon = item.icon; return <button type="button" key={item.id} onClick={() => { setTab(item.id); setMessage(""); }} className={`flex items-center gap-2 px-3.5 py-2 rounded-xl text-xs font-bold shrink-0 ${tab === item.id ? "bg-brand-navy text-white shadow-sm" : "bg-white text-brand-slate border border-brand-slate/15"}`}><Icon className="w-3.5 h-3.5" />{item.label}</button>; })}</div>
+    <div className="flex items-center gap-2 overflow-x-auto pb-2 border-b border-brand-slate/15">{tabs.map(item => { const Icon = item.icon; return <button type="button" key={item.id} onClick={() => { setTab(item.id); setMessage(""); }} className={`flex items-center gap-2 px-3.5 py-2 rounded-xl text-xs font-bold shrink-0 ${tab === item.id ? "bg-brand-navy text-white shadow-sm" : "bg-white text-brand-slate border border-brand-slate/15"}`}><Icon className="w-3.5 h-3.5" />{item.label}</button>; })}</div>
     {tab === "ACCOUNT" ? <AccountForm key={profile.firstname + "|" + profile.lastname + "|" + profile.email} language={language} onPassword={() => { setMessage(""); setPassword(true); }} onMessage={setMessage} /> :
-      <div className="bg-white p-6 rounded-2xl border border-brand-slate/15 shadow-xs space-y-4"><h3 className="text-sm font-bold uppercase">{tab === "SECURITY" ? t.security : tab === "GENERAL" ? t.general : tab === "NOTIFICATIONS" ? t.notifications : t.platform}</h3><p className="text-sm text-brand-slate">{tab === "SECURITY" ? "Admin authorization and audit logging are enforced by the server. Two-factor and cross-device session-management controls are unavailable in this Dashboard." : unavailable[tab]}</p>{tab === "SECURITY" && <button type="button" onClick={() => setPassword(true)} className={buttonClass}>{t.password}</button>}</div>}
+      <div className="bg-white p-6 rounded-2xl border border-brand-slate/15 shadow-xs space-y-4"><h3 className="text-sm font-bold uppercase">{t.security}</h3><p className="text-sm text-brand-slate">Admin authorization and audit logging are enforced by the server. Two-factor and cross-device session-management controls are unavailable in this Dashboard.</p><button type="button" onClick={() => setPassword(true)} className={buttonClass}>{t.password}</button></div>}
     {password && <PasswordDialog onClose={() => setPassword(false)} onSaved={() => { setPassword(false); setMessage("Password updated."); }} />}
   </div>;
 }

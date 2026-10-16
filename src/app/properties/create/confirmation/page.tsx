@@ -9,10 +9,10 @@ export const metadata: Metadata = {
 
 export default function PropertyConfirmationPage() {
   return (
-    <main className="flex min-h-screen items-center justify-center bg-[#F8F9FB] px-5 py-12">
+    <main className="flex min-h-[calc(100dvh-72px)] items-center justify-center bg-[var(--bg)] px-5 py-0">
       <section
         aria-labelledby="confirmation-title"
-        className="relative w-full max-w-[600px] overflow-hidden rounded-2xl border border-[#385F71]/15 bg-white px-8 py-10 text-center shadow-[0_20px_60px_-35px_rgba(43,65,98,0.22)] sm:px-12 sm:py-12"
+        className="relative w-full max-w-[560px] overflow-hidden rounded-2xl border border-[#385F71]/15 bg-white px-6 py-6 text-center shadow-[0_20px_60px_-35px_rgba(43,65,98,0.22)] sm:px-10 sm:py-7"
       >
         {/* Brand accent */}
         <div
@@ -20,14 +20,14 @@ export default function PropertyConfirmationPage() {
           className="absolute top-0 left-0 h-1 w-full bg-[#D7B377]"
         />
 
-        <p className="mb-8 text-[11px] font-bold uppercase tracking-[0.2em] text-[#8F754F]">
+        <p className="mb-5 text-[11px] font-bold uppercase tracking-[0.2em] text-[#8F754F]">
           Maskanny · Hosting
         </p>
 
         {/* Success icon */}
         <div
           aria-hidden="true"
-          className="mx-auto mb-7 grid size-[68px] place-items-center rounded-full border border-[#D7B377]/50 bg-[#E9EEF2] text-[#2B4162]"
+          className="mx-auto mb-5 grid size-[60px] place-items-center rounded-full border border-[#D7B377]/50 bg-[#E9EEF2] text-[#2B4162]"
         >
           <Check size={30} strokeWidth={2.4} />
         </div>
@@ -45,7 +45,7 @@ export default function PropertyConfirmationPage() {
         </p>
 
         {/* Review information */}
-        <div className="mt-8 flex items-start gap-4 rounded-xl border border-[#385F71]/10 bg-[#F8F9FB] p-5 text-left">
+        <div className="mt-6 flex items-start gap-4 rounded-xl border border-[#385F71]/10 bg-[#F8F9FB] p-4 text-left">
           <div className="grid size-10 shrink-0 place-items-center rounded-full border border-[#D7B377]/35 bg-white text-[#385F71]">
             <Clock3 size={19} />
           </div>
@@ -62,7 +62,7 @@ export default function PropertyConfirmationPage() {
         </div>
 
         {/* Publication requirements */}
-        <div className="mt-4 flex items-start gap-3 rounded-xl border border-[#D7B377]/35 bg-[#FBF8F1] p-4 text-left">
+        <div className="mt-3 flex items-start gap-3 rounded-xl border border-[#D7B377]/35 bg-[#FBF8F1] p-3 text-left">
           <ShieldCheck
             size={19}
             className="mt-0.5 shrink-0 text-[#8F754F]"
@@ -80,7 +80,7 @@ export default function PropertyConfirmationPage() {
 
         <Link
           href="/"
-          className="mt-8 inline-flex min-h-[50px] w-full items-center justify-center rounded-full border border-[#D7B377]/50 bg-[#2B4162] px-7 py-3 text-[14px] font-semibold text-white transition-colors duration-200 hover:border-[#D7B377] hover:bg-[#385F71] focus-visible:outline-2 focus-visible:outline-[#D7B377] focus-visible:outline-offset-4 sm:w-auto sm:min-w-[200px]"
+          className="mt-6 inline-flex min-h-[50px] w-full items-center justify-center rounded-full border border-[#D7B377]/50 bg-[#2B4162] px-7 py-3 text-[14px] font-semibold !text-white transition-colors duration-200 hover:border-[#D7B377] hover:bg-[#385F71] focus-visible:outline-2 focus-visible:outline-[#D7B377] focus-visible:outline-offset-4 sm:w-auto sm:min-w-[200px]"
         >
           Go to Home Page
           <span aria-hidden="true" className="ml-2 text-[#D7B377]">
@@ -88,7 +88,7 @@ export default function PropertyConfirmationPage() {
           </span>
         </Link>
 
-        <p className="mt-7 text-[12px] text-[#8A98A6]">
+        <p className="mt-5 text-[12px] text-[#8A98A6]">
           Student housing, made simpler.
         </p>
       </section>

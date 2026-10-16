@@ -18,7 +18,7 @@ export function PropertyLocation({ latitude, longitude, address }: { latitude: n
     <section className={styles.section} aria-labelledby="property-location-title">
       <div className={styles.sectionHeader}>
         <h2 id="property-location-title">Location</h2>
-        {position && <a href={propertyDirectionsUrl(position)} target="_blank" rel="noopener noreferrer" className={styles.textLink}>
+        {position && <a href={propertyDirectionsUrl(position)} target="_blank" rel="noopener noreferrer" className={styles.directionsLink}>
           Open directions <ArrowUpRight size={16} aria-hidden="true" /><span className="sr-only"> (opens in a new tab)</span>
         </a>}
       </div>

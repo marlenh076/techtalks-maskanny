@@ -32,14 +32,14 @@ export default function AdminListings({ preset, initialStatus = "pending" }: { p
     setPagination(value => ({ ...value, page: 1 }));
     result.reload(); counts.reload();
   }
-  return <div className="flex flex-col lg:flex-row gap-6 items-stretch w-full min-w-0 flex-1">
+  return <div className="flex flex-col xl:flex-row gap-6 items-stretch w-full min-w-0 flex-1">
     <ListingsSidebar filters={filters} totalCount={counts.data?.total}
       pendingCount={filters.status === "pending" && !query && filters.category === "all" ? result.data?.total : undefined}
       onFilterChange={setFilters} />
     <div className="flex-1 min-w-0 space-y-3">
-      <form className="flex flex-wrap gap-2 items-center" onSubmit={event => { event.preventDefault(); setQuery(search.trim()); setPagination(value => ({ ...value, page: 1 })); }}>
-        <div className="relative flex-1 min-w-48"><Search className="absolute left-3 top-3 w-4 h-4 text-brand-slate" /><input aria-label="Search listings" value={search} maxLength={200} onChange={event => setSearch(event.target.value)} placeholder="Search listings, owners or addresses…" className={inputClass + " pl-9"} /></div>
-        <button className={buttonClass}>Search</button>
+      <form className="flex flex-col sm:flex-row gap-2 items-stretch sm:items-center min-w-0" onSubmit={event => { event.preventDefault(); setQuery(search.trim()); setPagination(value => ({ ...value, page: 1 })); }}>
+        <div className="relative flex-1 min-w-0"><Search className="absolute left-3 top-3 w-4 h-4 text-brand-slate" /><input aria-label="Search listings" value={search} maxLength={200} onChange={event => setSearch(event.target.value)} placeholder="Search listings, owners or addresses…" className={inputClass + " pl-9"} /></div>
+        <button className={buttonClass + " shrink-0"}>Search</button>
       </form>
       {message && <p role="status" className="p-3 rounded-xl bg-emerald-50 text-sm text-emerald-700">{message}</p>}
       <QueryState error={counts.error} retry={counts.reload} />
