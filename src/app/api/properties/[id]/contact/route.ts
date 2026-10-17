@@ -4,10 +4,7 @@ import { PropertyRepository } from "@/src/features/properties/repository/propert
 import { HostContactRepository } from "@/src/features/properties/repository/host_contact.repository";
 import { hostContactSchema } from "@/src/features/properties/models/host_contact.model";
 
-export async function GET(
-  _request: Request,
-  { params }: { params: Promise<{ id: string }> },
-) {
+export async function GET(_request: Request, { params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
   if (!z.uuid().safeParse(id).success) {
     return NextResponse.json({ error: "Invalid property ID" }, { status: 400 });

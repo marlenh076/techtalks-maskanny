@@ -8,6 +8,4 @@ export interface User {
   created_at: string;
 }
 
-export type UserProfileUpdate = Partial<
-  Pick<User, "firstname" | "lastname" | "phone">
->;
+export type UserProfileUpdate = Partial<Pick<User, "firstname" | "lastname" | "phone">>;

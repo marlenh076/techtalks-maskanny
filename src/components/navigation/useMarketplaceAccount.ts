@@ -16,9 +16,7 @@ export type MarketplaceAccount =
 
 // Shared by the hook and session lifecycle tests. Role and identity come from
 // the validated Supabase user and database records, never browser storage.
-export function subscribeMarketplaceAccount(
-  onChange: (account: MarketplaceAccount) => void,
-) {
+export function subscribeMarketplaceAccount(onChange: (account: MarketplaceAccount) => void) {
   let active = true;
   let version = 0;
 
@@ -41,31 +39,18 @@ export function subscribeMarketplaceAccount(
           .select("role, firstname, lastname")
           .eq("user_id", user.id)
           .maybeSingle(),
-        supabase
-          .from("host")
-          .select("host_id")
-          .eq("user_id", user.id)
-          .maybeSingle(),
+        supabase.from("host").select("host_id").eq("user_id", user.id).maybeSingle(),
       ]);
       if (!active || request !== version) return;
       // A failed lookup must not mislabel an Admin or Host as a Student.
-      if (profile.error || host.error || !profile.data)
-        throw new Error("Account unavailable");
+      if (profile.error || host.error || !profile.data) throw new Error("Account unavailable");
       onChange({
         status: "authenticated",
         userId: user.id,
         name:
-          [profile.data.firstname, profile.data.lastname]
-            .filter(Boolean)
-            .join(" ")
-            .trim() || null,
+          [profile.data.firstname, profile.data.lastname].filter(Boolean).join(" ").trim() || null,
         email: user.email ?? null,
-        role:
-          profile.data.role === "admin"
-            ? "admin"
-            : host.data
-              ? "host"
-              : "student",
+        role: profile.data.role === "admin" ? "admin" : host.data ? "host" : "student",
       });
     } catch {
       if (active && request === version) onChange({ status: "error" });

@@ -1,11 +1,21 @@
-'use client';
+"use client";
 
-import React from 'react';
+interface StatusCounts {
+  active: number;
+  pending: number;
+  approved: number;
+  rejected: number;
+}
 
-export function CategoryDonuts() {
-
+export function CategoryDonuts({ counts }: { counts: StatusCounts }) {
+  const total = counts.active + counts.pending + counts.approved + counts.rejected;
+  const activeEnd = total ? (counts.active / total) * 100 : 0;
+  const pendingEnd = total ? activeEnd + (counts.pending / total) * 100 : 0;
+  const approvedEnd = total ? pendingEnd + (counts.approved / total) * 100 : 0;
   const donutStyle = {
-    background: 'conic-gradient(#2B4162 0% 45%, #D7B377 45% 70%, #385F71 70% 85%, #8F5D38 85% 100%)',
+    background: total
+      ? `conic-gradient(#2B4162 0% ${activeEnd}%, #D7B377 ${activeEnd}% ${pendingEnd}%, #385F71 ${pendingEnd}% ${approvedEnd}%, #8F5D38 ${approvedEnd}% 100%)`
+      : "conic-gradient(#F5F0F6 0% 100%)",
   };
 
   return (
@@ -20,8 +30,10 @@ export function CategoryDonuts() {
             style={donutStyle}
           >
             <div className="w-full h-full bg-white rounded-full flex flex-col items-center justify-center shadow-sm">
-              <span className="text-lg font-bold text-brand-navy leading-tight">1,284</span>
-              <span className="text-[10px] font-medium uppercase tracking-wider text-brand-slate">Total</span>
+              <span className="text-lg font-bold text-brand-navy leading-tight">{total}</span>
+              <span className="text-[10px] font-medium uppercase tracking-wider text-brand-slate">
+                Total
+              </span>
             </div>
           </div>
         </div>
@@ -33,28 +45,36 @@ export function CategoryDonuts() {
             <span className="w-2.5 h-2.5 rounded-full bg-brand-navy shrink-0" />
             Active
           </span>
-          <span className="font-bold text-brand-navy">45%</span>
+          <span className="font-bold text-brand-navy">
+            {total ? Math.round((counts.active / total) * 100) : 0}%
+          </span>
         </div>
         <div className="flex justify-between items-center">
           <span className="flex items-center gap-2 text-brand-slate">
             <span className="w-2.5 h-2.5 rounded-full bg-brand-gold shrink-0" />
             Pending
           </span>
-          <span className="font-bold text-brand-navy">25%</span>
+          <span className="font-bold text-brand-navy">
+            {total ? Math.round((counts.pending / total) * 100) : 0}%
+          </span>
         </div>
         <div className="flex justify-between items-center">
           <span className="flex items-center gap-2 text-brand-slate">
             <span className="w-2.5 h-2.5 rounded-full bg-brand-slate shrink-0" />
-            Full
+            Approved
           </span>
-          <span className="font-bold text-brand-navy">15%</span>
+          <span className="font-bold text-brand-navy">
+            {total ? Math.round((counts.approved / total) * 100) : 0}%
+          </span>
         </div>
         <div className="flex justify-between items-center">
           <span className="flex items-center gap-2 text-brand-slate">
             <span className="w-2.5 h-2.5 rounded-full bg-brand-bronze shrink-0" />
-            Almost Full
+            Rejected
           </span>
-          <span className="font-bold text-brand-navy">15%</span>
+          <span className="font-bold text-brand-navy">
+            {total ? Math.round((counts.rejected / total) * 100) : 0}%
+          </span>
         </div>
       </div>
     </div>

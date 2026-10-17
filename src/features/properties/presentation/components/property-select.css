@@ -57,10 +57,7 @@
   font-size: 14px;
 }
 .property-create-select-viewport {
-  max-height: min(
-    280px,
-    calc(var(--radix-select-content-available-height) - 12px)
-  );
+  max-height: min(280px, calc(var(--radix-select-content-available-height) - 12px));
   overscroll-behavior: contain;
   touch-action: pan-y;
   scrollbar-width: thin !important;

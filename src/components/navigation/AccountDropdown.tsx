@@ -17,13 +17,11 @@ import {
 import { useLogout } from "@/src/lib/supabase/use-logout";
 import type { MarketplaceAccount } from "./useMarketplaceAccount";
 
-const focusClass = "focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#D7B377]";
+const focusClass =
+  "focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#D7B377]";
 const itemLayout = `flex min-h-11 w-full items-center gap-3 rounded-[10px] px-3 py-2.5 text-left text-sm font-medium transition-colors motion-reduce:transition-none ${focusClass}`;
 const itemClass = `${itemLayout} text-[var(--ink-2)] hover:bg-[var(--chip)] focus-visible:bg-[var(--chip)]`;
-type AuthenticatedAccount = Extract<
-  MarketplaceAccount,
-  { status: "authenticated" }
->;
+type AuthenticatedAccount = Extract<MarketplaceAccount, { status: "authenticated" }>;
 
 // Only existing, addressable destinations belong here. Saved properties and
 // history have no pages; My listings is currently a dashboard-local tab.
@@ -63,9 +61,7 @@ function AuthenticatedMenu({
               {account.name || account.email || "Your account"}
             </p>
             {account.name && account.email && (
-              <p className="mt-1 truncate text-xs text-[var(--soft)]">
-                {account.email}
-              </p>
+              <p className="mt-1 truncate text-xs text-[var(--soft)]">{account.email}</p>
             )}
           </div>
           {account.role !== "student" && (
@@ -85,24 +81,14 @@ function AuthenticatedMenu({
             onClick={onSelect}
             className={itemClass}
           >
-            <Icon
-              size={17}
-              aria-hidden="true"
-              className="shrink-0 text-[var(--success)]"
-            />
+            <Icon size={17} aria-hidden="true" className="shrink-0 text-[var(--success)]" />
             {label}
           </Link>
         ))}
       </div>
-      <div
-        role="separator"
-        className="mx-3 my-2 border-t border-[var(--line)]"
-      />
+      <div role="separator" className="mx-3 my-2 border-t border-[var(--line)]" />
       {logoutError && (
-        <p
-          role="alert"
-          className="px-3 pb-2 text-xs leading-relaxed text-[var(--danger)]"
-        >
+        <p role="alert" className="px-3 pb-2 text-xs leading-relaxed text-[var(--danger)]">
           {logoutError}
         </p>
       )}
@@ -120,11 +106,7 @@ function AuthenticatedMenu({
         className={`${itemLayout} text-[#cf373d] hover:bg-[#fff1f1] focus-visible:bg-[#fff1f1] disabled:cursor-wait disabled:opacity-60`}
       >
         {loggingOut ? (
-          <LoaderCircle
-            size={17}
-            aria-hidden="true"
-            className="motion-safe:animate-spin"
-          />
+          <LoaderCircle size={17} aria-hidden="true" className="motion-safe:animate-spin" />
         ) : (
           <LogOut size={17} aria-hidden="true" />
         )}
@@ -147,34 +129,18 @@ export function AccountMenu({
 }) {
   if (account.status === "loading")
     return (
-      <p
-        role="status"
-        className="flex items-center gap-3 px-3 py-5 text-sm text-[var(--soft)]"
-      >
-        <LoaderCircle
-          size={18}
-          aria-hidden="true"
-          className="motion-safe:animate-spin"
-        />
+      <p role="status" className="flex items-center gap-3 px-3 py-5 text-sm text-[var(--soft)]">
+        <LoaderCircle size={18} aria-hidden="true" className="motion-safe:animate-spin" />
         Checking your account…
       </p>
     );
   if (account.status === "error")
     return (
       <>
-        <p
-          role="alert"
-          className="px-3 py-2 text-sm leading-relaxed text-[var(--soft)]"
-        >
+        <p role="alert" className="px-3 py-2 text-sm leading-relaxed text-[var(--soft)]">
           We couldn&apos;t load your account. Please try again.
         </p>
-        <button
-          type="button"
-          role="menuitem"
-          tabIndex={-1}
-          onClick={onRetry}
-          className={itemClass}
-        >
+        <button type="button" role="menuitem" tabIndex={-1} onClick={onRetry} className={itemClass}>
           <RefreshCw size={17} aria-hidden="true" />
           Try again
         </button>
@@ -192,18 +158,12 @@ export function AccountMenu({
   return (
     <>
       <div role="presentation" className="px-3 pt-2 pb-4">
-        <p className="m-0 text-sm font-semibold text-[var(--ink)]">
-          Welcome to Maskanny
-        </p>
+        <p className="m-0 text-sm font-semibold text-[var(--ink)]">Welcome to Maskanny</p>
         <p className="mt-1 text-xs leading-relaxed text-[var(--soft)]">
           Find your next student home
         </p>
       </div>
-      <div
-        role="group"
-        aria-label="Sign in or register"
-        className="space-y-2 px-1 pb-1"
-      >
+      <div role="group" aria-label="Sign in or register" className="space-y-2 px-1 pb-1">
         <Link
           role="menuitem"
           tabIndex={-1}
@@ -250,17 +210,13 @@ export function AccountDropdown({
   const menuId = useId();
   const enabledItems = () =>
     Array.from(
-      menu.current?.querySelectorAll<HTMLElement>(
-        '[role="menuitem"]:not(:disabled)',
-      ) ?? [],
+      menu.current?.querySelectorAll<HTMLElement>('[role="menuitem"]:not(:disabled)') ?? [],
     );
 
   useEffect(() => {
     if (!open) return;
     const items = Array.from(
-      menu.current?.querySelectorAll<HTMLElement>(
-        '[role="menuitem"]:not(:disabled)',
-      ) ?? [],
+      menu.current?.querySelectorAll<HTMLElement>('[role="menuitem"]:not(:disabled)') ?? [],
     );
     (focusEdge.current === "last"
       ? (items.at(-1) ?? menu.current)
@@ -300,11 +256,7 @@ export function AccountDropdown({
     let next: HTMLElement | undefined;
     if (event.key === "ArrowDown") next = items[(index + 1) % items.length];
     if (event.key === "ArrowUp")
-      next =
-        items[
-          (index < 0 ? items.length - 1 : index - 1 + items.length) %
-            items.length
-        ];
+      next = items[(index < 0 ? items.length - 1 : index - 1 + items.length) % items.length];
     if (event.key === "Home") next = items[0];
     if (event.key === "End") next = items.at(-1);
     if (
@@ -314,12 +266,8 @@ export function AccountDropdown({
       !event.metaKey &&
       !event.altKey
     ) {
-      next = [...items.slice(index + 1), ...items.slice(0, index + 1)].find(
-        (item) =>
-          item.textContent
-            ?.trim()
-            .toLowerCase()
-            .startsWith(event.key.toLowerCase()),
+      next = [...items.slice(index + 1), ...items.slice(0, index + 1)].find((item) =>
+        item.textContent?.trim().toLowerCase().startsWith(event.key.toLowerCase()),
       );
     }
     if (next) {

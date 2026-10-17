@@ -8,7 +8,4 @@ export interface UniversityFilters {
 }
 
 export interface IUniversityRepository
-  extends
-    IReadRepository<University>,
-    ISearchRepository<University, UniversityFilters> 
-    {}
+  extends IReadRepository<University>, ISearchRepository<University, UniversityFilters> {}

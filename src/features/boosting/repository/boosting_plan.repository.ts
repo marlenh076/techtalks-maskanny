@@ -18,9 +18,7 @@ export class BoostingPlanRepository implements IBoostingPlanRepository {
   }
 
   async getAll(): Promise<BoostingPlan[]> {
-    const { data: plans, error } = await supabase
-      .from("boosting_plan")
-      .select("*");
+    const { data: plans, error } = await supabase.from("boosting_plan").select("*");
 
     if (error) {
       throw new Error(error.message);

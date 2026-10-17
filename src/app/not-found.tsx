@@ -1,4 +1,3 @@
-
 import Link from "next/link";
 import { ArrowLeft, ArrowUpRight } from "lucide-react";
 
@@ -21,8 +20,8 @@ export default function NotFound() {
         </h1>
 
         <p className="mx-auto mt-4 mb-0 max-w-[370px] text-[13px] leading-7 text-[#6F7F8D] sm:text-sm">
-          The page you&apos;re looking for may have moved or no longer exists.
-          Let&apos;s find your way home.
+          The page you&apos;re looking for may have moved or no longer exists. Let&apos;s find your
+          way home.
         </p>
 
         <div className="mt-8 flex flex-col items-stretch justify-center gap-3 sm:flex-row sm:items-center">

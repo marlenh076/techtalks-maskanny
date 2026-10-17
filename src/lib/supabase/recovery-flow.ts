@@ -6,9 +6,11 @@ export function recoveryRedirectUrl(origin: string): string {
 }
 
 export function hasRecoveryHint(url: URL): boolean {
-  return url.searchParams.get("flow") === "recovery"
-    || url.searchParams.get("type") === "recovery"
-    || new URLSearchParams(url.hash.slice(1)).get("type") === "recovery";
+  return (
+    url.searchParams.get("flow") === "recovery" ||
+    url.searchParams.get("type") === "recovery" ||
+    new URLSearchParams(url.hash.slice(1)).get("type") === "recovery"
+  );
 }
 
 /** Only the type returned by a successful Supabase exchange authorizes recovery. */
@@ -20,13 +22,24 @@ export function exchangedCodePurpose(
   return recoveryHint ? "invalid-recovery" : "confirmation";
 }
 
-export function validateResetPasswords(password: string, confirmation: string): {
+export function validateResetPasswords(
+  password: string,
+  confirmation: string,
+): {
   password?: string;
   confirmPassword?: string;
 } {
   return {
-    password: !password ? "Enter a new password." : password.length < 8 ? "Use at least 8 characters." : undefined,
-    confirmPassword: !confirmation ? "Confirm your new password." : password !== confirmation ? "Passwords do not match." : undefined,
+    password: !password
+      ? "Enter a new password."
+      : password.length < 8
+        ? "Use at least 8 characters."
+        : undefined,
+    confirmPassword: !confirmation
+      ? "Confirm your new password."
+      : password !== confirmation
+        ? "Passwords do not match."
+        : undefined,
   };
 }
 
@@ -38,7 +51,12 @@ export function hasValidRecoveryGrant(
   sessionId: string | undefined,
   now = Date.now(),
 ): boolean {
-  return Boolean(userId && sessionId && grant?.userId === userId
-    && grant.sessionId === sessionId && typeof grant.expiresAt === "number"
-    && grant.expiresAt > now);
+  return Boolean(
+    userId &&
+    sessionId &&
+    grant?.userId === userId &&
+    grant.sessionId === sessionId &&
+    typeof grant.expiresAt === "number" &&
+    grant.expiresAt > now,
+  );
 }

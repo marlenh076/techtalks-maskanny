@@ -23,7 +23,11 @@ export function HostOnboardingButton() {
         headers: { Authorization: `Bearer ${data.session.access_token}` },
       });
       if (!response.ok && response.status !== 409) {
-        throw new Error(response.status === 401 ? "Please sign in again to continue." : "We couldn't complete Host onboarding. Please try again.");
+        throw new Error(
+          response.status === 401
+            ? "Please sign in again to continue."
+            : "We couldn't complete Host onboarding. Please try again.",
+        );
       }
       setPhase("redirecting");
       window.location.replace("/properties/create");
@@ -36,10 +40,29 @@ export function HostOnboardingButton() {
 
   return (
     <div className={styles.action}>
-      {error && <p role="alert" className={styles.error}>{error}</p>}
-      {phase === "redirecting" && <p role="status" className={styles.status}>Your Host access is ready. Opening property creation…</p>}
-      <button type="button" onClick={() => void becomeHost()} disabled={phase !== "idle"} aria-busy={phase !== "idle"} className={styles.startButton}>
-        {phase === "activating" ? "Getting things ready…" : phase === "redirecting" ? "Opening property form…" : "Get started"}<ArrowRight size={18} aria-hidden="true" />
+      {error && (
+        <p role="alert" className={styles.error}>
+          {error}
+        </p>
+      )}
+      {phase === "redirecting" && (
+        <p role="status" className={styles.status}>
+          Your Host access is ready. Opening property creation…
+        </p>
+      )}
+      <button
+        type="button"
+        onClick={() => void becomeHost()}
+        disabled={phase !== "idle"}
+        aria-busy={phase !== "idle"}
+        className={styles.startButton}
+      >
+        {phase === "activating"
+          ? "Getting things ready…"
+          : phase === "redirecting"
+            ? "Opening property form…"
+            : "Get started"}
+        <ArrowRight size={18} aria-hidden="true" />
       </button>
       <p className={styles.support}>You&apos;ll continue to the property creation process.</p>
     </div>

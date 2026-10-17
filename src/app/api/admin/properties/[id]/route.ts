@@ -7,14 +7,22 @@ import { getAccessToken } from "@/src/lib/supabase/auth";
 export async function GET(request: Request, context: IdContext) {
   return authorized(request, async () => {
     const id = uuidSchema.parse((await context.params).id);
-    const item = await new PropertyModerationReadService(new PropertyModerationReadRepository(getAccessToken(request)!)).getById(id);
+    const item = await new PropertyModerationReadService(
+      new PropertyModerationReadRepository(getAccessToken(request)!),
+    ).getById(id);
     return item ? json(item) : json({ error: "Property not found" }, 404);
   });
 }
 export async function PATCH(request: Request, context: IdContext) {
-  return authorized(request, async repo => {
+  return authorized(request, async (repo) => {
     const id = uuidSchema.parse((await context.params).id);
     const { changes, reason } = await body(request, propertyEditSchema);
-    return json(await repo.rpc("admin_edit_property", { p_property_id: id, p_changes: changes, p_reason: reason }));
+    return json(
+      await repo.rpc("admin_edit_property", {
+        p_property_id: id,
+        p_changes: changes,
+        p_reason: reason,
+      }),
+    );
   });
 }

@@ -31,7 +31,10 @@ export async function POST(request: Request) {
   );
 
   try {
-    const { data, error } = await supabase.auth.verifyOtp({ token_hash: body.token_hash, type: body.type });
+    const { data, error } = await supabase.auth.verifyOtp({
+      token_hash: body.token_hash,
+      type: body.type,
+    });
     if (error || !data.user?.email_confirmed_at) {
       return Response.json({ verified: false }, { status: 400, headers: noStore });
     }

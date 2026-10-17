@@ -1,597 +1,599 @@
 .page {
-    min-height: 100vh;
-    background: var(--bg);
-    color: var(--ink);
+  min-height: 100vh;
+  background: var(--bg);
+  color: var(--ink);
 }
 
 .container {
-    width: calc(100% - 32px);
-    max-width: 1184px;
-    margin: 0 auto;
-    padding: 20px 0 48px;
+  width: calc(100% - 32px);
+  max-width: 1184px;
+  margin: 0 auto;
+  padding: 20px 0 48px;
 }
 
 .back {
-    display: inline-flex;
-    min-height: 42px;
-    align-items: center;
-    justify-content: center;
-    gap: 8px;
-    padding: 0 16px;
-    border: 1px solid #385F71;
-    border-radius: 10px;
-    background: #2B4162;
-    color: #F5F0F6;
-    font-size: 13px;
-    font-weight: 600;
-    text-decoration: none;
-    transition: background-color 180ms ease, border-color 180ms ease;
+  display: inline-flex;
+  min-height: 42px;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 0 16px;
+  border: 1px solid #385f71;
+  border-radius: 10px;
+  background: #2b4162;
+  color: #f5f0f6;
+  font-size: 13px;
+  font-weight: 600;
+  text-decoration: none;
+  transition:
+    background-color 180ms ease,
+    border-color 180ms ease;
 }
 
 .back:hover {
-    background: #385F71;
-    border-color: #385F71;
-    text-decoration: none;
+  background: #385f71;
+  border-color: #385f71;
+  text-decoration: none;
 }
 
 .back:focus-visible {
-    outline: 2px solid #D7B377;
-    outline-offset: 3px;
+  outline: 2px solid #d7b377;
+  outline-offset: 3px;
 }
 
 .header {
-    display: flex;
-    align-items: flex-start;
-    justify-content: space-between;
-    gap: 14px;
-    margin: 14px 0 22px;
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 14px;
+  margin: 14px 0 22px;
 }
 
 .heading {
-    min-width: 0;
+  min-width: 0;
 }
 
 .badges {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 8px;
-    margin-bottom: 12px;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-bottom: 12px;
 }
 
 .badge {
-    display: inline-flex;
-    align-items: center;
-    gap: 6px;
-    border: 1px solid rgb(61 118 89 / 12%);
-    border-radius: 999px;
-    padding: 6px 10px;
-    background: #eaf2ec;
-    color: #2B4162;
-    font-size: 12px;
-    font-weight: 600;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  border: 1px solid rgb(61 118 89 / 12%);
+  border-radius: 999px;
+  padding: 6px 10px;
+  background: #eaf2ec;
+  color: #2b4162;
+  font-size: 12px;
+  font-weight: 600;
 }
 
 .apartment {
-    border-color: #e9dfcf;
-    background: #f2ece2;
-    color: #776044;
+  border-color: #e9dfcf;
+  background: #f2ece2;
+  color: #776044;
 }
 
 .dorm {
-    border-color: #dce7ec;
-    background: #edf3f7;
-    color: #476a80;
+  border-color: #dce7ec;
+  background: #edf3f7;
+  color: #476a80;
 }
 
 .resident {
-    background: var(--surface);
-    color: var(--ink-2);
-    border-color: var(--line);
+  background: var(--surface);
+  color: var(--ink-2);
+  border-color: var(--line);
 }
 
 .title {
-    margin: 0;
-    max-width: 900px;
-    font-size: clamp(28px, 3.5vw, 33px);
-    font-weight: 500;
-    line-height: 1.12;
-    letter-spacing: -.035em;
-    overflow-wrap: anywhere;
+  margin: 0;
+  max-width: 900px;
+  font-size: clamp(28px, 3.5vw, 33px);
+  font-weight: 500;
+  line-height: 1.12;
+  letter-spacing: -0.035em;
+  overflow-wrap: anywhere;
 }
 
 .address {
-    display: flex;
-    align-items: flex-start;
-    gap: 7px;
-    margin: 12px 0 0;
-    color: #2B4162;
-    font-size: 13px;
-    line-height: 1.65;
-    overflow-wrap: anywhere;
+  display: flex;
+  align-items: flex-start;
+  gap: 7px;
+  margin: 12px 0 0;
+  color: #2b4162;
+  font-size: 13px;
+  line-height: 1.65;
+  overflow-wrap: anywhere;
 }
 
 .address svg {
-    flex: none;
-    margin-top: 2px;
+  flex: none;
+  margin-top: 2px;
 }
 
 .favorite {
-    display: inline-flex;
-    flex: none;
-    width: 44px;
-    height: 44px;
-    align-items: center;
-    justify-content: center;
-    border: 1px solid var(--line);
-    border-radius: 50%;
-    background: white;
-    color: #e5484d;
-    cursor: pointer;
+  display: inline-flex;
+  flex: none;
+  width: 44px;
+  height: 44px;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid var(--line);
+  border-radius: 50%;
+  background: white;
+  color: #e5484d;
+  cursor: pointer;
 }
 
 .favorite:hover {
-    background: #fff3f3;
-    border-color: #efc8c9;
+  background: #fff3f3;
+  border-color: #efc8c9;
 }
 
 .body {
-    display: grid;
-    gap: 16px;
-    align-items: start;
-    margin-top: 20px;
+  display: grid;
+  gap: 16px;
+  align-items: start;
+  margin-top: 20px;
 }
 
 .content {
-    display: grid;
-    min-width: 0;
-    gap: 16px;
+  display: grid;
+  min-width: 0;
+  gap: 16px;
 }
 
 .section,
 .contactPanel {
-    min-width: 0;
-    padding: 20px;
-    border: 1px solid var(--line);
-    border-radius: 24px;
-    background: var(--surface);
+  min-width: 0;
+  padding: 20px;
+  border: 1px solid var(--line);
+  border-radius: 24px;
+  background: var(--surface);
 }
 
 .section h2 {
-    margin: 0;
-    font-size: 22px;
-    font-weight: 500;
-    letter-spacing: -.025em;
-    line-height: 1.25;
+  margin: 0;
+  font-size: 22px;
+  font-weight: 500;
+  letter-spacing: -0.025em;
+  line-height: 1.25;
 }
 
 .section h3 {
-    margin: 0;
-    font-size: 13px;
-    font-weight: 600;
+  margin: 0;
+  font-size: 13px;
+  font-weight: 600;
 }
 
 .sectionHeader {
-    display: flex;
-    flex-wrap: wrap;
-    align-items: center;
-    justify-content: space-between;
-    gap: 4px 16px;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 4px 16px;
 }
 
 .directionsLink {
-    display: inline-flex;
-    flex-shrink: 0;
-    align-items: center;
-    gap: 4px;
-    white-space: nowrap;
-    transition: color 180ms ease;
+  display: inline-flex;
+  flex-shrink: 0;
+  align-items: center;
+  gap: 4px;
+  white-space: nowrap;
+  transition: color 180ms ease;
 }
 
 .directionsLink svg {
-    flex-shrink: 0;
-    transition: transform 180ms ease;
+  flex-shrink: 0;
+  transition: transform 180ms ease;
 }
 
 .directionsLink:hover {
-    color: var(--color-brand-navy);
-    text-decoration: underline;
-    text-underline-offset: 3px;
+  color: var(--color-brand-navy);
+  text-decoration: underline;
+  text-underline-offset: 3px;
 }
 
 .directionsLink:hover svg {
-    transform: translate(2px, -2px);
+  transform: translate(2px, -2px);
 }
 
 .directionsLink:focus-visible {
-    outline: 2px solid var(--color-brand-navy);
-    outline-offset: 4px;
-    border-radius: 2px;
+  outline: 2px solid var(--color-brand-navy);
+  outline-offset: 4px;
+  border-radius: 2px;
 }
 
 @media (prefers-reduced-motion: reduce) {
-    .directionsLink,
-    .directionsLink svg {
-        transition: none;
-    }
+  .directionsLink,
+  .directionsLink svg {
+    transition: none;
+  }
 
-    .directionsLink:hover svg {
-        transform: none;
-    }
+  .directionsLink:hover svg {
+    transform: none;
+  }
 }
 
 .description {
-    margin: 14px 0 0;
-    color: var(--ink-2);
-    font-size: 14px;
-    line-height: 1.8;
-    white-space: pre-line;
-    overflow-wrap: anywhere;
+  margin: 14px 0 0;
+  color: var(--ink-2);
+  font-size: 14px;
+  line-height: 1.8;
+  white-space: pre-line;
+  overflow-wrap: anywhere;
 }
 
 .muted,
 .empty {
-    margin: 12px 0 0;
-    color: var(--soft);
-    font-size: 13px;
-    line-height: 1.65;
+  margin: 12px 0 0;
+  color: var(--soft);
+  font-size: 13px;
+  line-height: 1.65;
 }
 
 .listed {
-    display: block;
-    margin-top: 18px;
-    padding-top: 16px;
-    border-top: 1px solid var(--line);
-    color: var(--soft);
-    font-size: 12px;
+  display: block;
+  margin-top: 18px;
+  padding-top: 16px;
+  border-top: 1px solid var(--line);
+  color: var(--soft);
+  font-size: 12px;
 }
 
 .aside {
-    min-width: 0;
-    order: -1;
+  min-width: 0;
+  order: -1;
 }
 
 .priceLabel {
-    margin: 0 0 6px;
-    color: var(--soft);
-    font-size: 12px;
+  margin: 0 0 6px;
+  color: var(--soft);
+  font-size: 12px;
 }
 
 .price {
-    display: flex;
-    flex-wrap: wrap;
-    align-items: baseline;
-    gap: 7px;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 7px;
 }
 
 .price strong {
-    font-size: 34px;
-    line-height: 1.1;
-    font-weight: 500;
-    letter-spacing: -.04em;
-    overflow-wrap: anywhere;
+  font-size: 34px;
+  line-height: 1.1;
+  font-weight: 500;
+  letter-spacing: -0.04em;
+  overflow-wrap: anywhere;
 }
 
 .price span {
-    font-size: 13px;
-    color: var(--soft);
+  font-size: 13px;
+  color: var(--soft);
 }
 
 .contactPanel hr {
-    border: 0;
-    border-top: 1px solid var(--line);
-    margin: 20px 0 16px;
+  border: 0;
+  border-top: 1px solid var(--line);
+  margin: 20px 0 16px;
 }
 
 .contactPanel h2 {
-    margin: 0;
-    font-size: 18px;
-    font-weight: 500;
-    letter-spacing: -.02em;
+  margin: 0;
+  font-size: 18px;
+  font-weight: 500;
+  letter-spacing: -0.02em;
 }
 
 .notice {
-    margin: 0 0 16px;
-    padding: 14px 16px;
-    border: 1px solid var(--line);
-    border-radius: 16px;
-    background: var(--surface);
-    font-size: 13px;
-    color: var(--ink-2);
-    line-height: 1.6;
+  margin: 0 0 16px;
+  padding: 14px 16px;
+  border: 1px solid var(--line);
+  border-radius: 16px;
+  background: var(--surface);
+  font-size: 13px;
+  color: var(--ink-2);
+  line-height: 1.6;
 }
 
 .retry {
-    display: inline-flex;
-    min-height: 44px;
-    align-items: center;
-    border: 0;
-    border-radius: 8px;
-    background: none;
-    color: #2B4162;
-    cursor: pointer;
-    font: inherit;
-    font-weight: 600;
-    text-decoration: underline;
-    text-underline-offset: 3px;
+  display: inline-flex;
+  min-height: 44px;
+  align-items: center;
+  border: 0;
+  border-radius: 8px;
+  background: none;
+  color: #2b4162;
+  cursor: pointer;
+  font: inherit;
+  font-weight: 600;
+  text-decoration: underline;
+  text-underline-offset: 3px;
 }
 
 .specs {
-    display: grid;
-    grid-template-columns: repeat(3, minmax(0, 1fr));
-    gap: 8px;
-    margin: 18px 0 0;
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 8px;
+  margin: 18px 0 0;
 }
 
 .spec {
-    min-width: 0;
-    border-radius: 16px;
-    background: var(--bg);
-    padding: 14px 10px;
+  min-width: 0;
+  border-radius: 16px;
+  background: var(--bg);
+  padding: 14px 10px;
 }
 
 .spec svg {
-    color: #2B4162;
-    margin-bottom: 9px;
+  color: #2b4162;
+  margin-bottom: 9px;
 }
 
 .spec dt {
-    color: var(--soft);
-    font-size: 11px;
-    line-height: 1.5;
+  color: var(--soft);
+  font-size: 11px;
+  line-height: 1.5;
 }
 
 .spec dd {
-    margin: 2px 0 0;
-    font-size: 20px;
-    font-weight: 500;
-    overflow-wrap: anywhere;
+  margin: 2px 0 0;
+  font-size: 20px;
+  font-weight: 500;
+  overflow-wrap: anywhere;
 }
 
 .featureGroup {
-    padding-top: 20px;
-    margin-top: 20px;
-    border-top: 1px solid var(--line);
+  padding-top: 20px;
+  margin-top: 20px;
+  border-top: 1px solid var(--line);
 }
 
 .features {
-    display: grid;
-    gap: 12px;
-    margin: 12px 0 0;
+  display: grid;
+  gap: 12px;
+  margin: 12px 0 0;
 }
 
 .feature {
-    display: flex;
-    min-width: 0;
-    align-items: center;
-    gap: 10px;
-    font-size: 13px;
-    line-height: 1.5;
-    color: var(--ink-2);
+  display: flex;
+  min-width: 0;
+  align-items: center;
+  gap: 10px;
+  font-size: 13px;
+  line-height: 1.5;
+  color: var(--ink-2);
 }
 
 .featureIcon {
-    display: grid;
-    width: 34px;
-    height: 34px;
-    flex: none;
-    place-items: center;
-    border-radius: 10px;
-    background: var(--success-bg);
-    color: #2B4162;
+  display: grid;
+  width: 34px;
+  height: 34px;
+  flex: none;
+  place-items: center;
+  border-radius: 10px;
+  background: var(--success-bg);
+  color: #2b4162;
 }
 
 .featureOff {
-    color: var(--soft);
-    background: var(--bg);
+  color: var(--soft);
+  background: var(--bg);
 }
 
 .universities {
-    display: grid;
-    gap: 10px;
-    margin-top: 16px;
+  display: grid;
+  gap: 10px;
+  margin-top: 16px;
 }
 
 .university {
-    display: flex;
-    min-width: 0;
-    align-items: center;
-    gap: 12px;
-    padding: 14px;
-    border: 1px solid var(--line);
-    border-radius: 16px;
-    color: #2B4162 ;
-    text-decoration: none;
+  display: flex;
+  min-width: 0;
+  align-items: center;
+  gap: 12px;
+  padding: 14px;
+  border: 1px solid var(--line);
+  border-radius: 16px;
+  color: #2b4162;
+  text-decoration: none;
 }
 
 .university:hover {
-    border-color: rgb(61 118 89 / 35%);
-    background: #f7f9f5;
+  border-color: rgb(61 118 89 / 35%);
+  background: #f7f9f5;
 }
 
 .universityCopy {
-    min-width: 0;
-    flex: 1;
-    overflow-wrap: anywhere;
+  min-width: 0;
+  flex: 1;
+  overflow-wrap: anywhere;
 }
 
 .universityCopy strong {
-    display: block;
-    font-size: 13px;
-    font-weight: 600;
-    line-height: 1.5;
+  display: block;
+  font-size: 13px;
+  font-weight: 600;
+  line-height: 1.5;
 }
 
 .universityCopy span {
-    display: block;
-    margin-top: 3px;
-    color: var(--soft);
-    font-size: 12px;
+  display: block;
+  margin-top: 3px;
+  color: var(--soft);
+  font-size: 12px;
 }
 
 .university > svg:first-child {
-    flex: none;
-    color: #2B4162;
+  flex: none;
+  color: #2b4162;
 }
 
 .university > svg:last-child {
-    flex: none;
-    color: #385F71;
+  flex: none;
+  color: #385f71;
 }
 .mapToolbar {
-    display: flex;
-    flex-wrap: wrap;
-    align-items: center;
-    justify-content: space-between;
-    gap: 8px 16px;
-    margin: 14px 0;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px 16px;
+  margin: 14px 0;
 }
 
 .mapToolbar p {
-    flex: 1 1 240px;
-    margin: 0;
-    color: var(--soft);
-    font-size: 12px;
-    line-height: 1.6;
+  flex: 1 1 240px;
+  margin: 0;
+  color: var(--soft);
+  font-size: 12px;
+  line-height: 1.6;
 }
 
 .secondaryButton {
-    display: inline-flex;
-    min-height: 44px;
-    align-items: center;
-    justify-content: center;
-    gap: 7px;
-    padding: 10px 15px;
-    border: 1px solid var(--line-strong);
-    border-radius: 999px;
-    background: var(--surface);
-    color: #2B4162;
-    cursor: pointer;
-    font: inherit;
-    font-size: 12px;
-    font-weight: 600;
+  display: inline-flex;
+  min-height: 44px;
+  align-items: center;
+  justify-content: center;
+  gap: 7px;
+  padding: 10px 15px;
+  border: 1px solid var(--line-strong);
+  border-radius: 999px;
+  background: var(--surface);
+  color: #2b4162;
+  cursor: pointer;
+  font: inherit;
+  font-size: 12px;
+  font-weight: 600;
 }
 
 .secondaryButton:hover {
-    background: var(--bg);
+  background: var(--bg);
 }
 
 .mapLoading {
-    display: grid;
-    height: 280px;
-    place-items: center;
-    background: var(--bg);
-    border-radius: 16px;
-    color: var(--soft);
-    font-size: 13px;
+  display: grid;
+  height: 280px;
+  place-items: center;
+  background: var(--bg);
+  border-radius: 16px;
+  color: var(--soft);
+  font-size: 13px;
 }
 
 .coordinates {
-    margin: 10px 0 0;
-    color: var(--soft);
-    font-size: 11px;
-    overflow-wrap: anywhere;
+  margin: 10px 0 0;
+  color: var(--soft);
+  font-size: 11px;
+  overflow-wrap: anywhere;
 }
 
 .state {
-    padding: 40px 20px;
-    text-align: center;
+  padding: 40px 20px;
+  text-align: center;
 }
 
 .state h1 {
-    margin: 0;
-    font-size: 28px;
-    font-weight: 500;
-    letter-spacing: -.03em;
+  margin: 0;
+  font-size: 28px;
+  font-weight: 500;
+  letter-spacing: -0.03em;
 }
 
 .skeleton {
-    height: 280px;
-    margin-top: 20px;
-    border-radius: 24px;
-    background: var(--placeholder-bg);
+  height: 280px;
+  margin-top: 20px;
+  border-radius: 24px;
+  background: var(--placeholder-bg);
 }
 
 .page :is(a, button):focus-visible {
-    outline: 2px solid #2B4162;
-    outline-offset: 4px;
+  outline: 2px solid #2b4162;
+  outline-offset: 4px;
 }
 
 .page .favorite:focus-visible {
-    outline-color: #e5484d;
+  outline-color: #e5484d;
 }
 
 @media (max-width: 767px) {
-    .header {
-        position: relative;
-        display: block;
-    }
+  .header {
+    position: relative;
+    display: block;
+  }
 
-    .favorite {
-        position: absolute;
-        top: 0;
-        right: 0;
-    }
+  .favorite {
+    position: absolute;
+    top: 0;
+    right: 0;
+  }
 
-    .badges {
-        min-height: 32px;
-        padding-right: 52px;
-    }
+  .badges {
+    min-height: 32px;
+    padding-right: 52px;
+  }
 }
 
 @media (min-width: 540px) {
-    .features {
-        grid-template-columns: repeat(2, minmax(0, 1fr));
-    }
+  .features {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
 
-    .spec {
-        padding: 16px;
-    }
+  .spec {
+    padding: 16px;
+  }
 }
 
 @media (min-width: 768px) {
-    .container {
-        width: calc(100% - 48px);
-        padding-top: 24px;
-        padding-bottom: 64px;
-    }
+  .container {
+    width: calc(100% - 48px);
+    padding-top: 24px;
+    padding-bottom: 64px;
+  }
 
-    .section,
-    .contactPanel {
-        padding: 26px;
-    }
+  .section,
+  .contactPanel {
+    padding: 26px;
+  }
 
-    .header {
-        margin-top: 18px;
-        margin-bottom: 26px;
-    }
+  .header {
+    margin-top: 18px;
+    margin-bottom: 26px;
+  }
 
-    .body,
-    .content {
-        gap: 22px;
-    }
+  .body,
+  .content {
+    gap: 22px;
+  }
 
-    .body {
-        margin-top: 26px;
-    }
+  .body {
+    margin-top: 26px;
+  }
 
-    .mapLoading {
-        height: 360px;
-    }
+  .mapLoading {
+    height: 360px;
+  }
 
-    .description {
-        font-size: 15px;
-    }
+  .description {
+    font-size: 15px;
+  }
 }
 
 @media (min-width: 1024px) {
-    .body {
-        grid-template-columns: minmax(0, 1fr) 340px;
-        gap: 28px;
-    }
+  .body {
+    grid-template-columns: minmax(0, 1fr) 340px;
+    gap: 28px;
+  }
 
-    .aside {
-        position: sticky;
-        top: 96px;
-        order: initial;
-    }
+  .aside {
+    position: sticky;
+    top: 96px;
+    order: initial;
+  }
 }

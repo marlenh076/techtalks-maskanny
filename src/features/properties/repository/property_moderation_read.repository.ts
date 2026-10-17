@@ -15,10 +15,9 @@ export class PropertyModerationReadRepository {
   }
 
   async list(status: ModerationStatus): Promise<ModerationPropertySummary[]> {
-    const { data, error } = await this.supabase.rpc(
-      "list_moderation_properties",
-      { p_status: status },
-    );
+    const { data, error } = await this.supabase.rpc("list_moderation_properties", {
+      p_status: status,
+    });
 
     if (error) databaseError(error);
     if (!Array.isArray(data)) throw new Error("Invalid moderation list response");
@@ -27,10 +26,9 @@ export class PropertyModerationReadRepository {
   }
 
   async getById(propertyId: string): Promise<ModerationPropertyDetails | null> {
-    const { data, error } = await this.supabase.rpc(
-      "get_moderation_property",
-      { p_property_id: propertyId },
-    );
+    const { data, error } = await this.supabase.rpc("get_moderation_property", {
+      p_property_id: propertyId,
+    });
 
     if (error) databaseError(error);
     if (data === null) return null;

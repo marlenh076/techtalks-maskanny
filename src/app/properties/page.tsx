@@ -6,7 +6,5 @@ export default async function PropertiesPage({
   searchParams: Promise<Record<string, string | string[] | undefined>>;
 }) {
   const filters = await searchParams;
-  return (
-    <ListingsBrowser searchParams={filters} />
-  );
+  return <ListingsBrowser searchParams={filters} />;
 }

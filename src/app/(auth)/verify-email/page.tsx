@@ -6,7 +6,10 @@ export const dynamic = "force-dynamic";
 
 export default async function VerifyEmailPage() {
   const supabase = await createCookieClient();
-  const { data: { user }, error } = await supabase.auth.getUser();
+  const {
+    data: { user },
+    error,
+  } = await supabase.auth.getUser();
 
   if (!error && user?.email_confirmed_at) {
     const { data: profile } = await supabase

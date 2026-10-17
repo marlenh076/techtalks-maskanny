@@ -44,5 +44,7 @@ export function useUniversities() {
 export type UniversitiesResource = ReturnType<typeof useUniversities>;
 
 export function useUniversity(id: string | undefined) {
-  return useUniversityResource<University>(id ? `/api/universities/${encodeURIComponent(id)}` : null);
+  return useUniversityResource<University>(
+    id ? `/api/universities/${encodeURIComponent(id)}` : null,
+  );
 }

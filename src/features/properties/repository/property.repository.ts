@@ -1,7 +1,4 @@
-import {
-  supabase,
-  createAuthenticatedClient,
-} from "../../../lib/supabase/client";
+import { supabase, createAuthenticatedClient } from "../../../lib/supabase/client";
 import { Property, PropertyCreate } from "../models/property.model";
 import { IPropertyRepository, PropertyFilters } from "./IProperty.repository";
 
@@ -15,9 +12,7 @@ export class PropertyRepository implements IPropertyRepository {
   private supabase;
 
   constructor(accessToken?: string) {
-    this.supabase = accessToken
-      ? createAuthenticatedClient(accessToken)
-      : supabase;
+    this.supabase = accessToken ? createAuthenticatedClient(accessToken) : supabase;
   }
 
   async create(data: PropertyCreate & { property_id?: string }): Promise<Property> {
@@ -54,18 +49,11 @@ export class PropertyRepository implements IPropertyRepository {
   }
 
   async delete(id: string): Promise<void> {
-    const { data: property, error } = await this.supabase
-      .from("property")
-      .delete()
-      .eq("property_id", id)
-      .select()
-      .maybeSingle();
-
-    if (error) {
-      throw new Error(error.message);
-    }
-
-    if (!property) {
+    const { data, error } = await this.supabase.rpc("archive_host_property", {
+      p_property_id: id,
+    });
+    if (error) throw new Error(error.message);
+    if (!data || data.property_id !== id || !data.archived_at) {
       throw new PropertyUnavailableError();
     }
   }
@@ -84,7 +72,8 @@ export class PropertyRepository implements IPropertyRepository {
     const { data, error } = await this.supabase
       .from("property")
       .select("*")
-      .eq("host_id", hostId);
+      .eq("host_id", hostId)
+      .is("archived_at", null);
 
     if (error) {
       throw new Error(error.message);
@@ -107,8 +96,16 @@ export class PropertyRepository implements IPropertyRepository {
     return data;
   }
 
+  async getPublicLiveBoostActivationTimes(): Promise<
+    { property_id: string; activated_at: string }[]
+  > {
+    const { data, error } = await this.supabase.rpc("public_live_boost_activation_times");
+    if (error) throw new Error(error.message);
+    return data ?? [];
+  }
+
   async search(filters: PropertyFilters): Promise<Property[]> {
-    let query = this.supabase.from("property").select("*");
+    let query = this.supabase.from("property").select("*").is("archived_at", null);
 
     if (filters.university_id) {
       // Use the same client and RLS as the property search. An empty association

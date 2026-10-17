@@ -33,9 +33,7 @@ function SearchForm({
   return (
     <form
       className={`${styles.searchForm} ${mobile ? styles.dialogForm : styles.desktopSearch}`}
-      aria-label={
-        mobile ? "Mobile student housing search" : "Find student housing"
-      }
+      aria-label={mobile ? "Mobile student housing search" : "Find student housing"}
       action="/properties"
       method="get"
       aria-busy={pending}
@@ -51,9 +49,7 @@ function SearchForm({
             onChange={(event) => onChange("university_id", event.target.value)}
             disabled={universities.status !== "ready"}
             aria-describedby={
-              universities.status === "error"
-                ? `${prefix}-university-error`
-                : undefined
+              universities.status === "error" ? `${prefix}-university-error` : undefined
             }
           >
             <option value="">
@@ -64,10 +60,7 @@ function SearchForm({
                   : "Any university"}
             </option>
             {universities.data?.map((university) => (
-              <option
-                key={university.university_id}
-                value={university.university_id}
-              >
+              <option key={university.university_id} value={university.university_id}>
                 {university.name}
               </option>
             ))}
@@ -111,17 +104,11 @@ function SearchForm({
           aria-label={pending ? "Searching…" : "Search student housing"}
         >
           <Search size={21} aria-hidden="true" />
-          <span className={styles.searchText}>
-            {pending ? "Searching…" : "Search"}
-          </span>
+          <span className={styles.searchText}>{pending ? "Searching…" : "Search"}</span>
         </button>
       </div>
       {universities.status === "error" && (
-        <p
-          id={`${prefix}-university-error`}
-          role="status"
-          className={styles.error}
-        >
+        <p id={`${prefix}-university-error`} role="status" className={styles.error}>
           Universities couldn&apos;t load.{" "}
           <button type="button" onClick={universities.retry}>
             Try again
@@ -133,11 +120,7 @@ function SearchForm({
   );
 }
 
-export function HeroSearch({
-  universities,
-}: {
-  universities: UniversitiesResource;
-}) {
+export function HeroSearch({ universities }: { universities: UniversitiesResource }) {
   const router = useRouter();
   const [pending, startNavigation] = useTransition();
   const [values, setValues] = useState<Filters>({
@@ -156,18 +139,9 @@ export function HeroSearch({
     const viewport = window.visualViewport;
     const updateViewport = () => {
       const height = viewport?.height ?? window.innerHeight;
-      const bottom = Math.max(
-        0,
-        window.innerHeight - height - (viewport?.offsetTop ?? 0),
-      );
-      dialog.current?.style.setProperty(
-        "--search-viewport-height",
-        `${height}px`,
-      );
-      dialog.current?.style.setProperty(
-        "--search-viewport-bottom",
-        `${bottom}px`,
-      );
+      const bottom = Math.max(0, window.innerHeight - height - (viewport?.offsetTop ?? 0));
+      dialog.current?.style.setProperty("--search-viewport-height", `${height}px`);
+      dialog.current?.style.setProperty("--search-viewport-bottom", `${bottom}px`);
     };
     const desktop = window.matchMedia("(min-width: 768px)");
     const closeOnDesktop = () => {
@@ -189,13 +163,10 @@ export function HeroSearch({
     event.preventDefault();
     const params = new URLSearchParams();
     for (const [key, value] of new FormData(event.currentTarget)) {
-      if (typeof value === "string" && value.trim())
-        params.set(key, value.trim());
+      if (typeof value === "string" && value.trim()) params.set(key, value.trim());
     }
     dialog.current?.close();
-    startNavigation(() =>
-      router.push(`/properties${params.size ? `?${params}` : ""}`),
-    );
+    startNavigation(() => router.push(`/properties${params.size ? `?${params}` : ""}`));
   };
   const formProps = {
     universities,
@@ -273,11 +244,7 @@ export function HeroSearch({
       >
         <div className={styles.dialogHeader}>
           <h2 id="hero-search-dialog-title">Find student housing</h2>
-          <button
-            type="button"
-            aria-label="Close search"
-            onClick={() => dialog.current?.close()}
-          >
+          <button type="button" aria-label="Close search" onClick={() => dialog.current?.close()}>
             <X size={21} aria-hidden="true" />
           </button>
         </div>

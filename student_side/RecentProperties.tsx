@@ -2,20 +2,14 @@
 
 import { useState } from "react";
 import Link from "next/link";
-import {
-  ArrowUpRight,
-  Compass,
-  GraduationCap,
-  House,
-  MapPin,
-} from "lucide-react";
+import { ArrowUpRight, Compass, GraduationCap, House, MapPin } from "lucide-react";
 import { PropertyCard } from "@/src/features/properties/presentation/components/PropertyCard";
 import { usePropertyListings } from "@/src/features/properties/presentation/components/usePropertyListings";
-import { comparePropertiesNewestFirst } from "@/src/features/properties/presentation/components/property-order";
+import { selectMostRecentlyActivatedProperty } from "@/src/features/properties/presentation/components/property-order";
 import { useFavorites } from "./useFavorites";
 
 const gridClass =
-  "grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3 lg:gap-6";
+  "grid grid-cols-1 gap-4 md:grid-cols-[minmax(0,1fr)_minmax(0,1.35fr)] lg:grid-cols-3 lg:gap-6";
 
 const stateClass =
   "rounded-[var(--radius-md)] border border-[#385F71]/20 bg-white px-5 py-10 text-center sm:px-6 sm:py-12";
@@ -69,14 +63,13 @@ function DiscoveryPanel() {
 
         <p className="mt-3 max-w-md text-sm leading-6 text-[#385F71] lg:mt-4 lg:leading-7">
           <span className="lg:hidden">
-            Explore available homes or start with your university to find a
-            location that works for you.
+            Explore available homes or start with your university to find a location that works for
+            you.
           </span>
 
           <span className="hidden lg:inline">
-            A good student home starts with a location that works for you.
-            Explore the available properties or find housing connected to your
-            university.
+            A good student home starts with a location that works for you. Explore the available
+            properties or find housing connected to your university.
           </span>
         </p>
       </div>
@@ -86,7 +79,7 @@ function DiscoveryPanel() {
           href="/properties"
           className={`inline-flex min-h-12 items-center justify-center gap-2 rounded-full bg-[#2B4162] px-5 text-sm font-semibold text-white transition-colors hover:bg-[#385F71] ${focusClass}`}
         >
-          Explore properties
+          Explore All
           <ArrowUpRight size={16} aria-hidden="true" />
         </Link>
 
@@ -102,6 +95,26 @@ function DiscoveryPanel() {
   );
 }
 
+function MobileExploreLink() {
+  return (
+    <Link
+      href="/properties"
+      aria-label="Explore more properties"
+      className={`flex min-h-16 items-center gap-3 rounded-[var(--radius-sm)] border border-[#385F71]/20 bg-[#E9EEF2] px-4 py-3 text-[#2B4162] md:hidden ${focusClass}`}
+    >
+      <Compass size={21} aria-hidden="true" className="shrink-0" />
+
+      <span className="min-w-0 flex-1">
+        <span className="block text-sm font-semibold">More places to explore</span>
+
+        <span className="mt-0.5 block text-xs text-[#385F71]">Browse all student properties</span>
+      </span>
+
+      <ArrowUpRight size={17} aria-hidden="true" className="shrink-0" />
+    </Link>
+  );
+}
+
 export function RecentProperties() {
   const [revision, setRevision] = useState(0);
   const { properties, status } = usePropertyListings("", revision);
@@ -110,11 +123,9 @@ export function RecentProperties() {
   if (status === "loading") {
     return (
       <div className={gridClass} aria-busy="true" role="status">
-        <span className="sr-only">
-          Loading recently listed properties…
-        </span>
+        <span className="sr-only">Loading recently listed properties…</span>
 
-        {[0, 1, 2].map((item) => (
+        {[0].map((item) => (
           <div
             key={item}
             aria-hidden="true"
@@ -130,6 +141,8 @@ export function RecentProperties() {
             </div>
           </div>
         ))}
+        <DiscoveryPanel />
+        <MobileExploreLink />
       </div>
     );
   }
@@ -141,9 +154,7 @@ export function RecentProperties() {
           We couldn&apos;t load the properties
         </h3>
 
-        <p className="mt-3 text-sm text-[#385F71]">
-          Check your connection and try again.
-        </p>
+        <p className="mt-3 text-sm text-[#385F71]">Check your connection and try again.</p>
 
         <button
           type="button"
@@ -158,34 +169,35 @@ export function RecentProperties() {
 
   if (properties.length === 0) {
     return (
-      <div role="status" className={stateClass}>
-        <span className="mx-auto mb-5 grid size-16 place-items-center rounded-2xl bg-[#E9EEF2] text-[#2B4162]">
-          <House size={28} strokeWidth={1.5} aria-hidden="true" />
-        </span>
+      <div className={gridClass}>
+        <div role="status" className={stateClass}>
+          <span className="mx-auto mb-5 grid size-16 place-items-center rounded-2xl bg-[#E9EEF2] text-[#2B4162]">
+            <House size={28} strokeWidth={1.5} aria-hidden="true" />
+          </span>
 
-        <h3 className="text-[22px] font-medium tracking-tight text-[#2B4162]">
-          Your next home could be here soon
-        </h3>
+          <h3 className="text-[22px] font-medium tracking-tight text-[#2B4162]">
+            Your next home could be here soon
+          </h3>
 
-        <p className="mt-3 text-sm text-[#385F71]">
-          There are no student properties to browse right now. Check back soon
-          for new listings.
-        </p>
+          <p className="mt-3 text-sm text-[#385F71]">
+            There are no student properties to browse right now. Check back soon for new listings.
+          </p>
 
-        <Link
-          href="#explore-universities"
-          className={`mt-5 inline-flex min-h-11 items-center gap-2 rounded-full text-sm font-semibold text-[#2B4162] transition-colors hover:text-[#8F754F] ${focusClass}`}
-        >
-          Find your university
-          <ArrowUpRight size={16} aria-hidden="true" />
-        </Link>
+          <Link
+            href="#explore-universities"
+            className={`mt-5 inline-flex min-h-11 items-center gap-2 rounded-full text-sm font-semibold text-[#2B4162] transition-colors hover:text-[#8F754F] ${focusClass}`}
+          >
+            Find your university
+            <ArrowUpRight size={16} aria-hidden="true" />
+          </Link>
+        </div>
+        <DiscoveryPanel />
+        <MobileExploreLink />
       </div>
     );
   }
 
-  const newest = [...properties]
-    .sort(comparePropertiesNewestFirst)
-    .slice(0, 3);
+  const newest = selectMostRecentlyActivatedProperty(properties);
 
   const layout =
     newest.length === 1
@@ -208,30 +220,7 @@ export function RecentProperties() {
       {newest.length === 1 && (
         <>
           <DiscoveryPanel />
-
-          <Link
-            href="/properties"
-            aria-label="Explore more properties"
-            className={`flex min-h-16 items-center gap-3 rounded-[var(--radius-sm)] border border-[#385F71]/20 bg-[#E9EEF2] px-4 py-3 text-[#2B4162] md:hidden ${focusClass}`}
-          >
-            <Compass size={21} aria-hidden="true" className="shrink-0" />
-
-            <span className="min-w-0 flex-1">
-              <span className="block text-sm font-semibold">
-                More places to explore
-              </span>
-
-              <span className="mt-0.5 block text-xs text-[#385F71]">
-                Browse all student properties
-              </span>
-            </span>
-
-            <ArrowUpRight
-              size={17}
-              aria-hidden="true"
-              className="shrink-0"
-            />
-          </Link>
+          <MobileExploreLink />
         </>
       )}
     </div>

@@ -17,9 +17,7 @@ export async function GET(request: NextRequest) {
   try {
     const searchParams = request.nextUrl.searchParams;
 
-    const result = propertyFiltersSchema.safeParse(
-      Object.fromEntries(searchParams.entries()),
-    );
+    const result = propertyFiltersSchema.safeParse(Object.fromEntries(searchParams.entries()));
 
     if (!result.success) {
       return NextResponse.json({ error: result.error.issues }, { status: 400 });
@@ -34,10 +32,7 @@ export async function GET(request: NextRequest) {
   } catch (error) {
     console.error(error);
 
-    return NextResponse.json(
-      { error: "Failed to fetch properties" },
-      { status: 500 },
-    );
+    return NextResponse.json({ error: "Failed to fetch properties" }, { status: 500 });
   }
 }
 
@@ -57,10 +52,7 @@ export async function POST(request: NextRequest) {
     const host = await new HostRepository(token).getByUserId(user.id);
 
     if (!host) {
-      return NextResponse.json(
-        { error: "Host access required" },
-        { status: 403 },
-      );
+      return NextResponse.json({ error: "Host access required" }, { status: 403 });
     }
 
     const data = await request.json().catch(() => undefined);
@@ -111,9 +103,6 @@ export async function POST(request: NextRequest) {
   } catch (error) {
     console.error(error);
 
-    return NextResponse.json(
-      { error: "Failed to create property" },
-      { status: 500 },
-    );
+    return NextResponse.json({ error: "Failed to create property" }, { status: 500 });
   }
 }

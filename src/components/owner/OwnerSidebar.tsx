@@ -4,14 +4,7 @@ import React from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { useLogout } from "@/src/lib/supabase/use-logout";
-import {
-  LayoutDashboard,
-  Building2,
-  Settings,
-  Mail,
-  Star,
-  LogOut,
-} from "lucide-react";
+import { LayoutDashboard, Building2, Settings, Mail, Star, LogOut } from "lucide-react";
 
 interface OnwerSidebarProps {
   activeTab: string;
@@ -51,17 +44,10 @@ export function OwnerSidebar({
           className="flex w-fit items-center gap-3 rounded-xl cursor-pointer hover:opacity-80 transition-opacity"
         >
           <div className="relative w-8 h-8 shrink-0 overflow-hidden rounded-xl">
-            <Image
-              src="/Maskanny.svg"
-              alt="Maskanny Logo"
-              fill
-              className="object-contain p-1"
-            />
+            <Image src="/Maskanny.svg" alt="Maskanny Logo" fill className="object-contain p-1" />
           </div>
 
-          <span className="text-lg font-bold tracking-tight text-brand-navy">
-            Maskanny
-          </span>
+          <span className="text-lg font-bold tracking-tight text-brand-navy">Maskanny</span>
         </Link>
 
         <nav
@@ -83,9 +69,7 @@ export function OwnerSidebar({
                     : "text-brand-slate hover:bg-brand-light hover:text-brand-navy"
                 }`}
               >
-                <Icon
-                  className={`w-4 h-4 ${isActive ? "text-brand-gold" : "text-brand-slate"}`}
-                />
+                <Icon className={`w-4 h-4 ${isActive ? "text-brand-gold" : "text-brand-slate"}`} />
                 <span>{item.label}</span>
               </button>
             );
@@ -96,9 +80,7 @@ export function OwnerSidebar({
       <div className="p-4 border-t border-brand-slate/10 m-4 space-y-3">
         <div className="w-full flex items-center gap-2.5 px-3 py-2.5 rounded-xl bg-brand-light/60 border border-brand-slate/10">
           <Mail className="w-3.5 h-3.5 text-brand-slate shrink-0" />
-          <span className="text-xs font-medium text-brand-navy truncate">
-            {userEmail}
-          </span>
+          <span className="text-xs font-medium text-brand-navy truncate">{userEmail}</span>
         </div>
 
         {!onLogout && logoutError && (

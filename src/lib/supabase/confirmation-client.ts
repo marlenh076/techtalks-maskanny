@@ -39,10 +39,12 @@ export function createPkceConfirmationClient() {
           if (separator < 0) return [];
           const name = part.slice(0, separator);
           if (!isVerifier(name)) return [];
-          return [{
-            name: `${temporaryKey}${name.slice(sourceKey.length)}`,
-            value: decodeURIComponent(part.slice(separator + 1)),
-          }];
+          return [
+            {
+              name: `${temporaryKey}${name.slice(sourceKey.length)}`,
+              value: decodeURIComponent(part.slice(separator + 1)),
+            },
+          ];
         });
       },
       setAll(cookies) {

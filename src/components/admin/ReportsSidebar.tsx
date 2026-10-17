@@ -1,30 +1,10 @@
 "use client";
 import { useCallback, useState } from "react";
 import { BarChart3, Building2, Users, Download } from "lucide-react";
-import {
-  BarChart,
-  Bar,
-  CartesianGrid,
-  ResponsiveContainer,
-  Tooltip,
-  XAxis,
-  YAxis,
-} from "recharts";
-import {
-  adminApi,
-  queryString,
-  type ReportType,
-} from "@/src/features/admin/client/api";
-import {
-  errorMessage,
-  useAdminAction,
-  useAdminQuery,
-} from "@/src/features/admin/client/hooks";
-import {
-  calendarDate,
-  calendarRange,
-  dateRange,
-} from "@/src/features/admin/client/format";
+import { BarChart, Bar, CartesianGrid, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
+import { adminApi, queryString, type ReportType } from "@/src/features/admin/client/api";
+import { errorMessage, useAdminAction, useAdminQuery } from "@/src/features/admin/client/hooks";
+import { calendarDate, calendarRange, dateRange } from "@/src/features/admin/client/format";
 import { MetricCard } from "./MetricCard";
 import { AnalyticsChart } from "./AnalyticsChart";
 import { EmptyState, QueryState, buttonClass, inputClass } from "./AdminUI";
@@ -40,11 +20,7 @@ export default function ReportsSidebar() {
   const key = queryString(range);
   const load = useCallback(
     (signal: AbortSignal) =>
-      adminApi.report(
-        type,
-        Object.fromEntries(new URLSearchParams(key)),
-        signal,
-      ),
+      adminApi.report(type, Object.fromEntries(new URLSearchParams(key)), signal),
     [key, type],
   );
   const result = useAdminQuery(type + key, load);
@@ -75,9 +51,7 @@ export default function ReportsSidebar() {
     ? ["approved", "pending", "rejected", "active"]
         .map((status) => ({
           status,
-          count: result.data!.items.find(
-            (row) => row.metric === `${status}_properties`,
-          )?.value,
+          count: result.data!.items.find((row) => row.metric === `${status}_properties`)?.value,
         }))
         .filter((row) => row.count !== undefined)
     : [];
@@ -149,20 +123,20 @@ export default function ReportsSidebar() {
           {download.pending ? "Downloading…" : "Download CSV"}
         </button>
       </form>
-      {datesChanged && <p role="status" className="text-xs text-brand-slate">Apply the selected dates before downloading a report.</p>}
+      {datesChanged && (
+        <p role="status" className="text-xs text-brand-slate">
+          Apply the selected dates before downloading a report.
+        </p>
+      )}
       <QueryState error={rangeError || download.error} />
-      <QueryState
-        loading={result.loading}
-        error={result.error}
-        retry={result.reload}
-      />
+      <QueryState loading={result.loading} error={result.error} retry={result.reload} />
       {result.data && (
         <>
           <p className="text-xs text-brand-slate">
-            Current totals as of {new Date(result.data.as_of).toLocaleString()}.
-            Creation counts use {new Date(result.data.from).toLocaleString()}{" "}
-            through {new Date(result.data.to).toLocaleString()} (end exclusive).
-            Range must be at most 366 days.
+            Current totals as of {new Date(result.data.as_of).toLocaleString()}. Creation counts use{" "}
+            {new Date(result.data.from).toLocaleString()} through{" "}
+            {new Date(result.data.to).toLocaleString()} (end exclusive). Range must be at most 366
+            days.
           </p>
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
             {result.data.items.map((row) => (
@@ -173,17 +147,12 @@ export default function ReportsSidebar() {
               />
             ))}
           </div>
-          {!result.data.items.length && (
-            <EmptyState>No supported report data.</EmptyState>
-          )}
+          {!result.data.items.length && <EmptyState>No supported report data.</EmptyState>}
           {counts.length > 0 && (
             <div className="bg-white p-6 rounded-2xl border border-brand-slate/15 shadow-sm">
-              <h3 className="font-bold text-base">
-                Listing Moderation & Publication
-              </h3>
+              <h3 className="font-bold text-base">Listing Moderation & Publication</h3>
               <p className="text-xs text-brand-slate mb-5">
-                Published listings are a subset of moderation-approved
-                properties.
+                Published listings are a subset of moderation-approved properties.
               </p>
               <div className="h-64">
                 <ResponsiveContainer width="100%" height="100%">
@@ -202,17 +171,15 @@ export default function ReportsSidebar() {
       )}
       {type !== "listings" && (
         <>
-          <QueryState
-            loading={stats.loading}
-            error={stats.error}
-            retry={stats.reload}
-          />
-          {stats.data && <AnalyticsChart trends={stats.data.trends} from={stats.data.from} to={stats.data.to} />}
+          <QueryState loading={stats.loading} error={stats.error} retry={stats.reload} />
+          {stats.data && (
+            <AnalyticsChart trends={stats.data.trends} from={stats.data.from} to={stats.data.to} />
+          )}
         </>
       )}
       <p className="text-xs text-brand-slate">
-        Review, occupancy, search, favorites and contact-activity reports are
-        unavailable because those data models are not implemented.
+        Review, occupancy, search, favorites and contact-activity reports are unavailable because
+        those data models are not implemented.
       </p>
     </div>
   );

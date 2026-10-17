@@ -4,9 +4,7 @@ import { User } from "@/src/features/users/models/user.model";
 
 import { Media } from "./media.model";
 import { Property } from "./property.model";
-import type {
-  AdminActivity,
-} from "@/src/features/admin/models/admin.model";
+import type { AdminActivity } from "@/src/features/admin/models/admin.model";
 
 export type ModerationStatus = Property["approval_status"];
 

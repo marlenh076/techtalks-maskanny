@@ -83,9 +83,7 @@ export default function PropertyLocationPicker({
     onUnconfirm();
     const current = beginOperation();
     if (!navigator.geolocation) {
-      setMessage(
-        "Browser location is unavailable. Select the property on the map.",
-      );
+      setMessage("Browser location is unavailable. Select the property on the map.");
       return;
     }
     setIsLocating(true);
@@ -124,10 +122,7 @@ export default function PropertyLocationPicker({
       if (current !== operation.current) return;
       if (!response.ok) {
         const error =
-          body &&
-          typeof body === "object" &&
-          "error" in body &&
-          typeof body.error === "string"
+          body && typeof body === "object" && "error" in body && typeof body.error === "string"
             ? body.error
             : "Address search failed. Select the property on the map.";
         throw new Error(error);
@@ -167,24 +162,19 @@ export default function PropertyLocationPicker({
             {isSearching ? "Searching…" : "Search address"}
           </button>
         )}
-        <button
-          type="button"
-          className={BUTTON}
-          disabled={disabled || isLocating}
-          onClick={locate}
-        >
+        <button type="button" className={BUTTON} disabled={disabled || isLocating} onClick={locate}>
           <LocateFixed aria-hidden="true" size={16} />
           {isLocating ? "Locating…" : "Use my current location"}
         </button>
       </div>
       <div className="space-y-1.5 text-[13px] leading-[1.6] text-(--soft)">
         <p id="location-instructions" className="m-0">
-          Click the map to place a pin, or drag the pin to the property
-          entrance. Check the address above, then confirm below.
+          Click the map to place a pin, or drag the pin to the property entrance. Check the address
+          above, then confirm below.
         </p>
         <p id="location-keyboard-help" className="m-0 text-[12px]">
-          Use current location only while at the property. With a keyboard,
-          focus the map, move with arrow keys and press Enter to place the pin.
+          Use current location only while at the property. With a keyboard, focus the map, move with
+          arrow keys and press Enter to place the pin.
         </p>
       </div>
       {results.length > 0 && resultAddress === address.trim() && (
@@ -220,11 +210,7 @@ export default function PropertyLocationPicker({
               className="mt-0.5 shrink-0 text-(--success)"
             />
           ) : (
-            <MapPin
-              aria-hidden="true"
-              size={20}
-              className="mt-0.5 shrink-0 text-(--soft)"
-            />
+            <MapPin aria-hidden="true" size={20} className="mt-0.5 shrink-0 text-(--soft)" />
           )}
           <div className="min-w-0 space-y-1.5">
             <p
@@ -237,14 +223,10 @@ export default function PropertyLocationPicker({
                 ? `${confirmed ? "Location confirmed" : "Location not confirmed"}: ${position.latitude.toFixed(6)}, ${position.longitude.toFixed(6)}`
                 : "No property location selected."}
             </p>
-            <p
-              id="location-confirmation-help"
-              className="m-0 text-[12px] leading-5 text-(--soft)"
-            >
+            <p id="location-confirmation-help" className="m-0 text-[12px] leading-5 text-(--soft)">
               {confirmed
                 ? "The address and map pin are ready for submission."
-                : confirmedAddress !== null &&
-                    confirmedAddress !== address.trim()
+                : confirmedAddress !== null && confirmedAddress !== address.trim()
                   ? "Address changed. Check the map pin and confirm again."
                   : confirmedAddress !== null
                     ? "Location needs reconfirmation. Check the map pin and confirm again."
@@ -262,12 +244,7 @@ export default function PropertyLocationPicker({
           aria-describedby={`location-confirmation-help${error ? " location-error" : ""}`}
           className="inline-flex min-h-[48px] shrink-0 cursor-pointer items-center justify-center gap-2 rounded-(--radius-full) border-0 bg-(--ink) px-5 py-3 text-[13px]! font-medium! text-white hover:bg-(--btn-bg-hover) focus-visible:outline-2 focus-visible:outline-(--ink) focus-visible:outline-offset-[3px] disabled:cursor-not-allowed disabled:opacity-50 max-[700px]:w-full"
           disabled={
-            disabled ||
-            confirmed ||
-            !position ||
-            !address.trim() ||
-            isLocating ||
-            isSearching
+            disabled || confirmed || !position || !address.trim() || isLocating || isSearching
           }
           onClick={() => {
             setConfirmedAddress(address.trim());
@@ -286,11 +263,7 @@ export default function PropertyLocationPicker({
         </p>
       )}
       {error && (
-        <p
-          id="location-error"
-          role="alert"
-          className="text-[13px] leading-6 text-(--danger)"
-        >
+        <p id="location-error" role="alert" className="text-[13px] leading-6 text-(--danger)">
           {error}
         </p>
       )}

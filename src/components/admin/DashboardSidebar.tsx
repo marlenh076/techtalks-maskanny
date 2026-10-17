@@ -64,13 +64,14 @@ export function DashboardSidebar({
               />
             </div>
 
-            <span className="text-lg font-bold tracking-tight text-brand-navy">
-              Maskanny
-            </span>
+            <span className="text-lg font-bold tracking-tight text-brand-navy">Maskanny</span>
           </Link>
         </div>
 
-        <nav aria-label="Admin sections" className="grid grid-cols-2 sm:grid-cols-3 md:block gap-1.5 md:space-y-1.5">
+        <nav
+          aria-label="Admin sections"
+          className="grid grid-cols-2 sm:grid-cols-3 md:block gap-1.5 md:space-y-1.5"
+        >
           {navItems.map((item) => {
             const Icon = item.icon;
             const isActive = activeTab === item.id;
@@ -81,14 +82,13 @@ export function DashboardSidebar({
                 type="button"
                 aria-current={isActive ? "page" : undefined}
                 onClick={() => setActiveTab(item.id)}
-                className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-semibold transition-all cursor-pointer ${isActive
-                  ? "bg-brand-navy text-white shadow-sm"
-                  : "text-brand-slate hover:bg-brand-light hover:text-brand-navy"
-                  }`}
+                className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-semibold transition-all cursor-pointer ${
+                  isActive
+                    ? "bg-brand-navy text-white shadow-sm"
+                    : "text-brand-slate hover:bg-brand-light hover:text-brand-navy"
+                }`}
               >
-                <Icon
-                  className={`w-4 h-4 ${isActive ? "text-brand-gold" : "text-brand-slate"}`}
-                />
+                <Icon className={`w-4 h-4 ${isActive ? "text-brand-gold" : "text-brand-slate"}`} />
                 <span>{item.label}</span>
               </button>
             );
@@ -99,9 +99,7 @@ export function DashboardSidebar({
       <div className="p-4 border-t border-brand-slate/10 mx-4 mb-4 md:m-4 grid grid-cols-1 sm:grid-cols-2 md:grid-cols-1 gap-3">
         <div className="w-full flex items-center gap-2.5 px-3 py-2.5 rounded-xl bg-brand-light/60 border border-brand-slate/10">
           <Mail className="w-3.5 h-3.5 text-brand-slate shrink-0" />
-          <span className="text-xs font-medium text-brand-navy truncate">
-            {userEmail}
-          </span>
+          <span className="text-xs font-medium text-brand-navy truncate">{userEmail}</span>
         </div>
 
         <button

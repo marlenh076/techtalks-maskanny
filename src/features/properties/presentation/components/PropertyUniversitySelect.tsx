@@ -47,11 +47,9 @@ export default function PropertyUniversitySelect({
         const universities = optionsSchema.parse(await response.json());
         if (!controller.signal.aborted)
           setOptions(
-            [
-              ...new Map(
-                universities.map((u) => [u.university_id, u]),
-              ).values(),
-            ].sort((a, b) => a.name.localeCompare(b.name)),
+            [...new Map(universities.map((u) => [u.university_id, u])).values()].sort((a, b) =>
+              a.name.localeCompare(b.name),
+            ),
           );
       } catch {
         if (!controller.signal.aborted)
@@ -68,9 +66,7 @@ export default function PropertyUniversitySelect({
 
   function toggle(university: University) {
     if (disabled) return;
-    const exists = selected.some(
-      (u) => u.university_id === university.university_id,
-    );
+    const exists = selected.some((u) => u.university_id === university.university_id);
     onChange(
       exists
         ? selected.filter((u) => u.university_id !== university.university_id)
@@ -79,27 +75,18 @@ export default function PropertyUniversitySelect({
     setAnnouncement(`${university.name} ${exists ? "removed" : "selected"}.`);
   }
   const search = query.trim().toLocaleLowerCase();
-  const visible = options.filter((u) =>
-    `${u.name} ${u.city}`.toLocaleLowerCase().includes(search),
-  );
+  const visible = options.filter((u) => `${u.name} ${u.city}`.toLocaleLowerCase().includes(search));
   const focus =
     "focus-visible:outline-2 focus-visible:outline-(--ink) focus-visible:outline-offset-2";
 
   return (
     <div className="mt-7 min-w-0">
-      <p
-        id="universities-label"
-        className="mb-2 text-[14px] font-medium text-(--ink-2)"
-      >
-        Nearby universities{" "}
-        <span className="font-normal text-(--soft)">(optional)</span>
+      <p id="universities-label" className="mb-2 text-[14px] font-medium text-(--ink-2)">
+        Nearby universities <span className="font-normal text-(--soft)">(optional)</span>
       </p>
-      <p
-        id="universities-help"
-        className="mb-3 text-[12px] leading-5 text-(--soft)"
-      >
-        Choose universities relevant to this property from the predefined list.
-        Distances are not verified.
+      <p id="universities-help" className="mb-3 text-[12px] leading-5 text-(--soft)">
+        Choose universities relevant to this property from the predefined list. Distances are not
+        verified.
       </p>
       <button
         type="button"
@@ -127,10 +114,7 @@ export default function PropertyUniversitySelect({
             : ""}
       </p>
       {loadError && (
-        <div
-          role="alert"
-          className="mt-2 text-[13px] leading-5 text-(--danger)"
-        >
+        <div role="alert" className="mt-2 text-[13px] leading-5 text-(--danger)">
           <p>{loadError}</p>
           <button
             type="button"
@@ -174,17 +158,13 @@ export default function PropertyUniversitySelect({
               >
                 <input
                   type="checkbox"
-                  checked={selected.some(
-                    (u) => u.university_id === university.university_id,
-                  )}
+                  checked={selected.some((u) => u.university_id === university.university_id)}
                   onChange={() => toggle(university)}
                   className={`size-5 shrink-0 accent-(--ink) ${focus}`}
                 />
                 <span className="min-w-0 text-[14px] font-normal [overflow-wrap:anywhere]">
                   {university.name}
-                  <span className="block text-[12px] text-(--soft)">
-                    {university.city}
-                  </span>
+                  <span className="block text-[12px] text-(--soft)">{university.city}</span>
                 </span>
               </label>
             ))}
@@ -207,18 +187,13 @@ export default function PropertyUniversitySelect({
         </div>
       )}
       {selected.length > 0 && (
-        <ul
-          aria-label="Selected universities"
-          className="mt-3 flex list-none flex-wrap gap-2 p-0"
-        >
+        <ul aria-label="Selected universities" className="mt-3 flex list-none flex-wrap gap-2 p-0">
           {selected.map((university) => (
             <li
               key={university.university_id}
               className="flex max-w-full items-center gap-1 rounded-[22px] bg-(--chip) pl-3 text-[13px] text-(--ink)"
             >
-              <span className="min-w-0 py-2 [overflow-wrap:anywhere]">
-                {university.name}
-              </span>
+              <span className="min-w-0 py-2 [overflow-wrap:anywhere]">{university.name}</span>
               <button
                 type="button"
                 disabled={disabled}

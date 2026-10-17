@@ -6,7 +6,10 @@ export const dynamic = "force-dynamic";
 
 export default async function HostOnboardingPage() {
   const supabase = await createCookieClient();
-  const { data: { user }, error: authError } = await supabase.auth.getUser();
+  const {
+    data: { user },
+    error: authError,
+  } = await supabase.auth.getUser();
   if (authError || !user) redirect("/sign-in?next=%2Fhost%2Fonboarding");
 
   const { data: host, error: hostError } = await supabase

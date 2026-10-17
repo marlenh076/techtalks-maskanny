@@ -1,4 +1,3 @@
-
 import Link from "next/link";
 import type { Metadata } from "next";
 import { Check, Clock3, ShieldCheck } from "lucide-react";
@@ -15,10 +14,7 @@ export default function PropertyConfirmationPage() {
         className="relative w-full max-w-[560px] overflow-hidden rounded-2xl border border-[#385F71]/15 bg-white px-6 py-6 text-center shadow-[0_20px_60px_-35px_rgba(43,65,98,0.22)] sm:px-10 sm:py-7"
       >
         {/* Brand accent */}
-        <div
-          aria-hidden="true"
-          className="absolute top-0 left-0 h-1 w-full bg-[#D7B377]"
-        />
+        <div aria-hidden="true" className="absolute top-0 left-0 h-1 w-full bg-[#D7B377]" />
 
         <p className="mb-5 text-[11px] font-bold uppercase tracking-[0.2em] text-[#8F754F]">
           Maskanny · Hosting
@@ -40,8 +36,8 @@ export default function PropertyConfirmationPage() {
         </h1>
 
         <p className="mx-auto mt-4 max-w-[440px] text-[14px] leading-7 text-[#6F7F8D] sm:text-[15px]">
-          Thank you for choosing Maskanny. Your listing has been received and
-          is now waiting for our team to review it.
+          Thank you for choosing Maskanny. Your listing has been received and is now waiting for our
+          team to review it.
         </p>
 
         {/* Review information */}
@@ -51,30 +47,21 @@ export default function PropertyConfirmationPage() {
           </div>
 
           <div>
-            <h2 className="text-[14px] font-semibold text-[#2B4162]">
-              What happens next?
-            </h2>
+            <h2 className="text-[14px] font-semibold text-[#2B4162]">What happens next?</h2>
             <p className="mt-1 text-[13px] leading-6 text-[#6F7F8D]">
-              Our team typically reviews listings within 12–24 hours. You can
-              check back after your listing has been reviewed.
+              Our team typically reviews listings within 12–24 hours. You can check back after your
+              listing has been reviewed.
             </p>
           </div>
         </div>
 
         {/* Publication requirements */}
         <div className="mt-3 flex items-start gap-3 rounded-xl border border-[#D7B377]/35 bg-[#FBF8F1] p-3 text-left">
-          <ShieldCheck
-            size={19}
-            className="mt-0.5 shrink-0 text-[#8F754F]"
-            aria-hidden="true"
-          />
+          <ShieldCheck size={19} className="mt-0.5 shrink-0 text-[#8F754F]" aria-hidden="true" />
 
           <p className="text-[12px] leading-6 text-[#6F7F8D]">
-            <span className="font-semibold text-[#2B4162]">
-              Before publication:
-            </span>{" "}
-            Your listing must receive Admin approval and have an active, paid
-            boosting plan.
+            <span className="font-semibold text-[#2B4162]">Before publication:</span> Your listing
+            must receive Admin approval and have an active, paid boosting plan.
           </p>
         </div>
 
@@ -88,9 +75,7 @@ export default function PropertyConfirmationPage() {
           </span>
         </Link>
 
-        <p className="mt-5 text-[12px] text-[#8A98A6]">
-          Student housing, made simpler.
-        </p>
+        <p className="mt-5 text-[12px] text-[#8A98A6]">Student housing, made simpler.</p>
       </section>
     </main>
   );

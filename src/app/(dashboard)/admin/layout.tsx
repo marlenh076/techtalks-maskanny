@@ -3,11 +3,7 @@ import { createCookieClient } from "@/src/lib/supabase/cookie-client";
 
 export const dynamic = "force-dynamic";
 
-export default async function AdminLayout({
-  children,
-}: {
-  children: React.ReactNode;
-}) {
+export default async function AdminLayout({ children }: { children: React.ReactNode }) {
   const supabase = await createCookieClient();
   const {
     data: { user },

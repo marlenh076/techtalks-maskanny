@@ -9,11 +9,9 @@ export class HostContactRepository {
     const serviceKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
     if (!serviceKey) throw new Error("Host contact service is not configured");
 
-    const client = createClient<Database>(
-      process.env.NEXT_PUBLIC_SUPABASE_URL!,
-      serviceKey,
-      { auth: { persistSession: false, autoRefreshToken: false } },
-    );
+    const client = createClient<Database>(process.env.NEXT_PUBLIC_SUPABASE_URL!, serviceKey, {
+      auth: { persistSession: false, autoRefreshToken: false },
+    });
     const { data: host, error: hostError } = await client
       .from("host")
       .select("user_id")

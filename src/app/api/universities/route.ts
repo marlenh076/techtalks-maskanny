@@ -10,9 +10,7 @@ export async function GET(request: NextRequest) {
   try {
     const searchParams = request.nextUrl.searchParams;
 
-    const result = universityFiltersSchema.safeParse(
-      Object.fromEntries(searchParams.entries()),
-    );
+    const result = universityFiltersSchema.safeParse(Object.fromEntries(searchParams.entries()));
 
     if (!result.success) {
       return NextResponse.json({ error: result.error.issues }, { status: 400 });
@@ -24,9 +22,6 @@ export async function GET(request: NextRequest) {
   } catch (error) {
     console.error(error);
 
-    return NextResponse.json(
-      { error: "Failed to fetch universities" },
-      { status: 500 },
-    );
+    return NextResponse.json({ error: "Failed to fetch universities" }, { status: 500 });
   }
 }

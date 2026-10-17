@@ -31,5 +31,4 @@ export class PropertyModerationRepository {
       databaseError(error);
     }
   }
-
 }

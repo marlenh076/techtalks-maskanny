@@ -8,18 +8,12 @@ import {
 } from "@/src/features/boosting/repository/property_boosting.repository";
 import { getAccessToken, getCurrentUser } from "@/src/lib/supabase/auth";
 
-export async function GET(
-  request: NextRequest,
-  { params }: { params: Promise<{ id: string }> },
-) {
+export async function GET(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   try {
     const { id } = await params;
 
     if (!z.uuid().safeParse(id).success) {
-      return NextResponse.json(
-        { error: "Invalid property boosting ID" },
-        { status: 400 },
-      );
+      return NextResponse.json({ error: "Invalid property boosting ID" }, { status: 400 });
     }
 
     const token = getAccessToken(request);
@@ -34,27 +28,19 @@ export async function GET(
 
     const propertyBoostingRepository = new PropertyBoostingRepository(token);
 
-    const propertyBoostingService = new PropertyBoostingService(
-      propertyBoostingRepository,
-    );
+    const propertyBoostingService = new PropertyBoostingService(propertyBoostingRepository);
 
     const propertyBoosting = await propertyBoostingService.getById(id);
 
     if (!propertyBoosting) {
-      return NextResponse.json(
-        { error: "Property boosting not found" },
-        { status: 404 },
-      );
+      return NextResponse.json({ error: "Property boosting not found" }, { status: 404 });
     }
 
     return NextResponse.json(propertyBoosting);
   } catch (error) {
     console.error(error);
 
-    return NextResponse.json(
-      { error: "Failed to fetch property boosting" },
-      { status: 500 },
-    );
+    return NextResponse.json({ error: "Failed to fetch property boosting" }, { status: 500 });
   }
 }
 
@@ -66,10 +52,7 @@ export async function DELETE(
     const { id } = await params;
 
     if (!z.uuid().safeParse(id).success) {
-      return NextResponse.json(
-        { error: "Invalid property boosting ID" },
-        { status: 400 },
-      );
+      return NextResponse.json({ error: "Invalid property boosting ID" }, { status: 400 });
     }
 
     const token = getAccessToken(request);
@@ -84,17 +67,12 @@ export async function DELETE(
 
     const propertyBoostingRepository = new PropertyBoostingRepository(token);
 
-    const propertyBoostingService = new PropertyBoostingService(
-      propertyBoostingRepository,
-    );
+    const propertyBoostingService = new PropertyBoostingService(propertyBoostingRepository);
 
     const existingPropertyBoosting = await propertyBoostingService.getById(id);
 
     if (!existingPropertyBoosting) {
-      return NextResponse.json(
-        { error: "Property boosting not found" },
-        { status: 404 },
-      );
+      return NextResponse.json({ error: "Property boosting not found" }, { status: 404 });
     }
 
     if (existingPropertyBoosting.status !== "pending") {
@@ -111,17 +89,11 @@ export async function DELETE(
     });
   } catch (error) {
     if (error instanceof PropertyBoostingRequestError) {
-      return NextResponse.json(
-        { error: error.message },
-        { status: error.status },
-      );
+      return NextResponse.json({ error: error.message }, { status: error.status });
     }
 
     console.error(error);
 
-    return NextResponse.json(
-      { error: "Failed to delete property boosting" },
-      { status: 500 },
-    );
+    return NextResponse.json({ error: "Failed to delete property boosting" }, { status: 500 });
   }
 }

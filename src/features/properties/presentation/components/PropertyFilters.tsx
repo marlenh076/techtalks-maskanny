@@ -1,10 +1,5 @@
 import { useRef } from "react";
-import {
-  ChevronDown,
-  RotateCcw,
-  Search,
-  SlidersHorizontal,
-} from "lucide-react";
+import { ChevronDown, RotateCcw, Search, SlidersHorizontal } from "lucide-react";
 import { PropertySelect, PROPERTY_INPUT_CLASSES } from "./PropertySelect";
 
 const fields = [
@@ -51,8 +46,7 @@ const numberFields = [
   { name: "bathrooms", label: "Bathrooms", placeholder: "Any" },
 ] as const;
 
-const labelClass =
-  "block min-w-0 text-sm font-semibold text-[#2B4162]";
+const labelClass = "block min-w-0 text-sm font-semibold text-[#2B4162]";
 
 const focusClass =
   "focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-[#D7B377]";
@@ -75,9 +69,7 @@ export function PropertyFilters({
   const searchInput = useRef<HTMLInputElement>(null);
   const advancedFilters = useRef<HTMLDivElement>(null);
 
-  const activeCount = [...fields, ...numberFields].filter(
-    (field) => values[field.name]
-  ).length;
+  const activeCount = [...fields, ...numberFields].filter((field) => values[field.name]).length;
 
   const renderSelect = (field: (typeof fields)[number]) => (
     <label key={field.name} className={labelClass}>
@@ -108,10 +100,7 @@ export function PropertyFilters({
         action="/properties"
         method="get"
         onInvalidCapture={(event) => {
-          if (
-            !expanded &&
-            advancedFilters.current?.contains(event.target as Node)
-          ) {
+          if (!expanded && advancedFilters.current?.contains(event.target as Node)) {
             event.preventDefault();
             onExpandedChange(true);
 
@@ -135,9 +124,7 @@ export function PropertyFilters({
             }
           }
 
-          if (
-            advancedFilters.current?.contains(document.activeElement)
-          ) {
+          if (advancedFilters.current?.contains(document.activeElement)) {
             searchInput.current?.focus({ preventScroll: true });
           }
 
@@ -145,11 +132,7 @@ export function PropertyFilters({
         }}
       >
         {values.university_id && (
-          <input
-            type="hidden"
-            name="university_id"
-            value={values.university_id}
-          />
+          <input type="hidden" name="university_id" value={values.university_id} />
         )}
 
         {/* Main search row */}
@@ -191,11 +174,7 @@ export function PropertyFilters({
             type="submit"
             className={`inline-flex min-h-11 items-center justify-center gap-2 rounded-full border border-[#D7B377]/60 bg-[#2B4162] px-4 text-sm font-semibold text-white shadow-sm transition-all duration-200 hover:border-[#D7B377] hover:bg-[#385F71] hover:shadow-md active:scale-[0.98] motion-reduce:transform-none motion-reduce:transition-none sm:min-h-12 sm:px-6 ${focusClass}`}
           >
-            <Search
-              size={17}
-              aria-hidden="true"
-              className="hidden text-[#D7B377] sm:block"
-            />
+            <Search size={17} aria-hidden="true" className="hidden text-[#D7B377] sm:block" />
             Search
           </button>
         </div>
@@ -217,8 +196,9 @@ export function PropertyFilters({
             <ChevronDown
               size={14}
               aria-hidden="true"
-              className={`transition-transform duration-200 motion-reduce:transition-none ${expanded ? "rotate-180" : ""
-                }`}
+              className={`transition-transform duration-200 motion-reduce:transition-none ${
+                expanded ? "rotate-180" : ""
+              }`}
             />
           </button>
         </div>
@@ -231,21 +211,16 @@ export function PropertyFilters({
           aria-label="Advanced filters"
           aria-hidden={!expanded}
           inert={!expanded}
-          className={`grid transition-[grid-template-rows,opacity] duration-200 ease-out motion-reduce:transition-none ${expanded
-              ? "grid-rows-[1fr] opacity-100"
-              : "grid-rows-[0fr] opacity-0"
-            }`}
+          className={`grid transition-[grid-template-rows,opacity] duration-200 ease-out motion-reduce:transition-none ${
+            expanded ? "grid-rows-[1fr] opacity-100" : "grid-rows-[0fr] opacity-0"
+          }`}
         >
           <div className="min-h-0 overflow-hidden">
             <div className="mt-3 grid gap-6 border-t border-[#385F71]/15 px-1 pt-6 pb-5 sm:px-2">
-              <div className="md:max-w-[360px]">
-                {renderSelect(fields[0])}
-              </div>
+              <div className="md:max-w-[360px]">{renderSelect(fields[0])}</div>
 
               <fieldset className="min-w-0 border-0 border-t border-solid border-[#385F71]/15 p-0 pt-5">
-                <legend className="sr-only">
-                  Monthly budget and space
-                </legend>
+                <legend className="sr-only">Monthly budget and space</legend>
 
                 <div className="grid grid-cols-2 gap-4 lg:grid-cols-4">
                   {numberFields.map((field) => (
@@ -259,9 +234,7 @@ export function PropertyFilters({
                         step="1"
                         placeholder={field.placeholder}
                         value={values[field.name] ?? ""}
-                        onChange={(event) =>
-                          onChange(field.name, event.target.value)
-                        }
+                        onChange={(event) => onChange(field.name, event.target.value)}
                       />
                     </label>
                   ))}
@@ -271,17 +244,13 @@ export function PropertyFilters({
               <fieldset className="min-w-0 border-0 border-t border-solid border-[#385F71]/15 p-0 pt-5">
                 <legend className="sr-only">Living preferences</legend>
 
-                <div className="grid gap-4 sm:grid-cols-3">
-                  {fields.slice(1).map(renderSelect)}
-                </div>
+                <div className="grid gap-4 sm:grid-cols-3">{fields.slice(1).map(renderSelect)}</div>
               </fieldset>
             </div>
 
             {/* Clear filters row */}
             <div className="flex flex-wrap items-center justify-between gap-3 border-t border-[#385F71]/15 px-1 pt-4 sm:px-2">
-              <p className="text-xs text-[#6F7F8D]">
-                Prices are per month in USD.
-              </p>
+              <p className="text-xs text-[#6F7F8D]">Prices are per month in USD.</p>
 
               <button
                 type="button"
@@ -301,4 +270,3 @@ export function PropertyFilters({
     </aside>
   );
 }
-

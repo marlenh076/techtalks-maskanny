@@ -35,9 +35,7 @@ export function MarketplaceFooter() {
                 height={38}
                 className="h-[38px] w-[38px] shrink-0 rounded-xl object-contain"
               />
-              <span className="text-xl font-semibold tracking-tight">
-                Maskanny
-              </span>
+              <span className="text-xl font-semibold tracking-tight">Maskanny</span>
             </Link>
 
             <p className="mb-0 mt-3 max-w-[290px] text-sm leading-6 text-[#D4DDE8]">
@@ -47,9 +45,7 @@ export function MarketplaceFooter() {
 
           {/* Explore */}
           <nav aria-label="Footer Explore">
-            <h2 className="mb-2.5 text-sm font-semibold text-white">
-              Explore
-            </h2>
+            <h2 className="mb-2.5 text-sm font-semibold text-white">Explore</h2>
             <ul className="m-0 list-none space-y-1.5 p-0">
               <li>
                 <Link href="/properties" className={linkClass}>
@@ -66,9 +62,7 @@ export function MarketplaceFooter() {
 
           {/* Hosting */}
           <nav aria-label="Footer Hosting">
-            <h2 className="mb-2.5 text-sm font-semibold text-white">
-              Hosting
-            </h2>
+            <h2 className="mb-2.5 text-sm font-semibold text-white">Hosting</h2>
             <ul className="m-0 list-none space-y-1.5 p-0">
               <li>
                 {hostHref ? (
@@ -101,9 +95,7 @@ export function MarketplaceFooter() {
         </div>
 
         <div className="flex flex-col gap-2 rounded-t-xl py-4 text-xs leading-5 text-[#BFCBDA] sm:flex-row sm:items-center sm:justify-between">
-          <p className="m-0">
-            © {new Date().getFullYear()} Maskanny. All rights reserved.
-          </p>
+          <p className="m-0">© {new Date().getFullYear()} Maskanny. All rights reserved.</p>
           <p className="m-0">Made for student living.</p>
         </div>
       </div>

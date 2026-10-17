@@ -5,10 +5,7 @@ import { HostRepository } from "@/src/features/users/repository/host.repository"
 import { PropertyRepository } from "@/src/features/properties/repository/property.repository";
 import { PropertyService } from "@/src/features/properties/service/property";
 
-export async function GET(
-  request: NextRequest,
-  { params }: { params: Promise<{ id: string }> },
-) {
+export async function GET(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   try {
     const { id } = await params;
     if (!z.uuid().safeParse(id).success) {
@@ -30,9 +27,7 @@ export async function GET(
       return NextResponse.json({ error: "Host access required" }, { status: 403 });
     }
 
-    const property = await new PropertyService(
-      new PropertyRepository(token),
-    ).getById(id);
+    const property = await new PropertyService(new PropertyRepository(token)).getById(id);
     if (!property) {
       return NextResponse.json({ error: "Property not found" }, { status: 404 });
     }
@@ -43,9 +38,6 @@ export async function GET(
     return NextResponse.json(property);
   } catch (error) {
     console.error(error);
-    return NextResponse.json(
-      { error: "Failed to fetch host property" },
-      { status: 500 },
-    );
+    return NextResponse.json({ error: "Failed to fetch host property" }, { status: 500 });
   }
 }

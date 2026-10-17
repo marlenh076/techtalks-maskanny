@@ -43,8 +43,7 @@ function subscribe(listener: () => void) {
 
   return () => {
     listeners.delete(listener);
-    if (listeners.size === 0)
-      window.removeEventListener("storage", handleStorage);
+    if (listeners.size === 0) window.removeEventListener("storage", handleStorage);
   };
 }
 
@@ -53,11 +52,7 @@ function getServerSnapshot() {
 }
 
 export function useFavorites() {
-  const saved = useSyncExternalStore(
-    subscribe,
-    readSavedSnapshot,
-    getServerSnapshot,
-  );
+  const saved = useSyncExternalStore(subscribe, readSavedSnapshot, getServerSnapshot);
 
   const toggle = useCallback((id: string) => {
     const current = readSavedSnapshot();
@@ -88,18 +83,18 @@ export function useFavorites() {
     }
 
     if (wasSaved) {
-  toast.success("Removed from favorites", {
-    id: toastId,
-    className: "font-sans !bg-[#2B4162] !text-white !border-[#385F71]",
-    closeButton: false,
-  });
-} else {
-  toast.success("Added to favorites", {
-    id: toastId,
-    className: "font-sans !bg-[#2B4162] !text-white !border-[#385F71]",
-    closeButton: false,
-  });
-}
+      toast.success("Removed from favorites", {
+        id: toastId,
+        className: "font-sans !bg-[#2B4162] !text-white !border-[#385F71]",
+        closeButton: false,
+      });
+    } else {
+      toast.success("Added to favorites", {
+        id: toastId,
+        className: "font-sans !bg-[#2B4162] !text-white !border-[#385F71]",
+        closeButton: false,
+      });
+    }
   }, []);
 
   const isSaved = useCallback((id: string) => saved.includes(id), [saved]);

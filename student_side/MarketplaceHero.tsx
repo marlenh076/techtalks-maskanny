@@ -13,11 +13,7 @@ import type { UniversitiesResource } from "@/src/features/universities/presentat
 import { HeroSearch } from "./HeroSearch";
 import styles from "./MarketplaceHero.module.css";
 
-export function MarketplaceHero({
-  universities,
-}: {
-  universities: UniversitiesResource;
-}) {
+export function MarketplaceHero({ universities }: { universities: UniversitiesResource }) {
   return (
     <section aria-labelledby="homepage-hero-title" className={styles.hero}>
       <div className={styles.photograph}>
@@ -33,8 +29,8 @@ export function MarketplaceHero({
       <div className={styles.heading}>
         <h1 id="homepage-hero-title">Your next home starts here.</h1>
         <p>
-          Find student housing near your university. Explore places that fit
-          your budget and lifestyle.
+          Find student housing near your university. Explore places that fit your budget and
+          lifestyle.
         </p>
       </div>
 
@@ -47,15 +43,27 @@ export function MarketplaceHero({
             </div>
             <p className={styles.widgetTitle}>A place that fits you.</p>
             <div className={styles.indicators}>
-              <button type="button" aria-controls="hero-university" onClick={() => document.getElementById("hero-university")?.focus()}>
+              <button
+                type="button"
+                aria-controls="hero-university"
+                onClick={() => document.getElementById("hero-university")?.focus()}
+              >
                 <MapPin size={14} aria-hidden="true" />
                 Location
               </button>
-              <button type="button" aria-controls="hero-budget" onClick={() => document.getElementById("hero-budget")?.focus()}>
+              <button
+                type="button"
+                aria-controls="hero-budget"
+                onClick={() => document.getElementById("hero-budget")?.focus()}
+              >
                 <Wallet size={14} aria-hidden="true" />
                 Budget
               </button>
-              <button type="button" aria-controls="hero-property-type" onClick={() => document.getElementById("hero-property-type")?.focus()}>
+              <button
+                type="button"
+                aria-controls="hero-property-type"
+                onClick={() => document.getElementById("hero-property-type")?.focus()}
+              >
                 <House size={14} aria-hidden="true" />
                 Housing
               </button>
@@ -72,9 +80,7 @@ export function MarketplaceHero({
               <p className={styles.campusCount}>
                 <strong>{universities.data?.length ?? 0}</strong>
                 <span>
-                  {universities.data?.length === 1
-                    ? "university"
-                    : "universities"}
+                  {universities.data?.length === 1 ? "university" : "universities"}
                   <br />
                   to explore
                 </span>

@@ -2,12 +2,9 @@ import { getAccessToken, getCurrentUser } from "@/src/lib/supabase/auth";
 import { UserRepository } from "../repository/user.repository";
 
 type CurrentAdminResult =
-  | { authorized: true; userId: string }
-  | { authorized: false; status: 401 | 403 };
+  { authorized: true; userId: string } | { authorized: false; status: 401 | 403 };
 
-export async function getCurrentAdmin(
-  request: Request,
-): Promise<CurrentAdminResult> {
+export async function getCurrentAdmin(request: Request): Promise<CurrentAdminResult> {
   const token = getAccessToken(request);
 
   if (!token) {

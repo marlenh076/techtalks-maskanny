@@ -1,9 +1,6 @@
 import { supabase } from "../../../lib/supabase/client";
 import { University } from "../models/university.model";
-import {
-  IUniversityRepository,
-  UniversityFilters,
-} from "./IUniversity.repository";
+import { IUniversityRepository, UniversityFilters } from "./IUniversity.repository";
 
 export class UniversityRepository implements IUniversityRepository {
   async getById(id: string): Promise<University | null> {
@@ -21,9 +18,7 @@ export class UniversityRepository implements IUniversityRepository {
   }
 
   async getAll(): Promise<University[]> {
-    const { data: universities, error } = await supabase
-      .from("university")
-      .select("*");
+    const { data: universities, error } = await supabase.from("university").select("*");
 
     if (error) {
       throw new Error(error.message);
@@ -39,9 +34,7 @@ export class UniversityRepository implements IUniversityRepository {
       const searchQuery = filters.query.replace(/[(),]/g, " ").trim();
 
       if (searchQuery) {
-        query = query.or(
-          `name.ilike.%${searchQuery}%,city.ilike.%${searchQuery}%`,
-        );
+        query = query.or(`name.ilike.%${searchQuery}%,city.ilike.%${searchQuery}%`);
       }
     }
 

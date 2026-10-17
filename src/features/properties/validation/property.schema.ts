@@ -9,15 +9,27 @@ export const propertySchema = z.object({
 
   address: z.string().trim().min(1, "Address is required"),
 
-  latitude: z.number().min(-90, "Latitude must be between -90 and 90").max(90, "Latitude must be between -90 and 90"),
+  latitude: z
+    .number()
+    .min(-90, "Latitude must be between -90 and 90")
+    .max(90, "Latitude must be between -90 and 90"),
 
-  longitude: z.number().min(-180, "Longitude must be between -180 and 180").max(180, "Longitude must be between -180 and 180"),
+  longitude: z
+    .number()
+    .min(-180, "Longitude must be between -180 and 180")
+    .max(180, "Longitude must be between -180 and 180"),
 
   price: z.number().positive("Monthly price must be greater than zero"),
 
-  bedrooms: z.number().int("Bedrooms must be a whole number").nonnegative("Bedrooms cannot be negative"),
+  bedrooms: z
+    .number()
+    .int("Bedrooms must be a whole number")
+    .nonnegative("Bedrooms cannot be negative"),
 
-  bathrooms: z.number().int("Bathrooms must be a whole number").nonnegative("Bathrooms cannot be negative"),
+  bathrooms: z
+    .number()
+    .int("Bathrooms must be a whole number")
+    .nonnegative("Bathrooms cannot be negative"),
 
   bed_count: z.number().int("Beds must be a whole number").nonnegative("Beds cannot be negative"),
 

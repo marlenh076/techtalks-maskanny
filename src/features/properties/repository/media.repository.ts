@@ -1,7 +1,4 @@
-import {
-  supabase,
-  createAuthenticatedClient,
-} from "../../../lib/supabase/client";
+import { supabase, createAuthenticatedClient } from "../../../lib/supabase/client";
 import { Media } from "../models/media.model";
 import { IMediaRepository } from "./IMedia.repository";
 
@@ -17,17 +14,13 @@ export class MediaRepository implements IMediaRepository {
   private supabase;
 
   constructor(accessToken?: string) {
-    this.supabase = accessToken
-      ? createAuthenticatedClient(accessToken)
-      : supabase;
+    this.supabase = accessToken ? createAuthenticatedClient(accessToken) : supabase;
   }
 
-  async create(data: Omit<Media, "media_id" | "created_at"> & { media_id?: string }): Promise<Media> {
-    const { data: media, error } = await this.supabase
-      .from("media")
-      .insert(data)
-      .select()
-      .single();
+  async create(
+    data: Omit<Media, "media_id" | "created_at"> & { media_id?: string },
+  ): Promise<Media> {
+    const { data: media, error } = await this.supabase.from("media").insert(data).select().single();
 
     if (error) {
       if (error.code === "M4093") throw new MediaLimitError(error.message);
@@ -72,9 +65,7 @@ export class MediaRepository implements IMediaRepository {
   }
 
   async getAll(): Promise<Media[]> {
-    const { data: media, error } = await this.supabase
-      .from("media")
-      .select("*");
+    const { data: media, error } = await this.supabase.from("media").select("*");
 
     if (error) {
       throw new Error(error.message);
@@ -98,7 +89,9 @@ export class MediaRepository implements IMediaRepository {
     return media;
   }
 
-  async getImagesByPropertyIds(propertyIds: string[]): Promise<Pick<Media, "property_id" | "url">[]> {
+  async getImagesByPropertyIds(
+    propertyIds: string[],
+  ): Promise<Pick<Media, "property_id" | "url">[]> {
     if (propertyIds.length === 0) return [];
 
     const { data, error } = await this.supabase

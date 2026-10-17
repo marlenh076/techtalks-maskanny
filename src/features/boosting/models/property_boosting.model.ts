@@ -14,7 +14,4 @@ export interface PropertyBoosting {
   legacy_payment: boolean;
 }
 
-export type PropertyBoostingCreate = Pick<
-  PropertyBoosting,
-  "property_id" | "boosting_plan_id"
->;
+export type PropertyBoostingCreate = Pick<PropertyBoosting, "property_id" | "boosting_plan_id">;

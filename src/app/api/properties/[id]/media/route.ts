@@ -4,11 +4,19 @@ import { MediaLimitError, MediaService } from "@/src/features/properties/service
 import { MediaRepository } from "@/src/features/properties/repository/media.repository";
 import { PropertyRepository } from "@/src/features/properties/repository/property.repository";
 import { HostRepository } from "@/src/features/users/repository/host.repository";
+import { PropertyBoostingRepository } from "@/src/features/boosting/repository/property_boosting.repository";
+import { PropertyBoostingService } from "@/src/features/boosting/service/property_boosting";
+import { BoostingPlanRepository } from "@/src/features/boosting/repository/boosting_plan.repository";
 import { StorageService } from "@/src/lib/supabase/storage";
 
 import { getAccessToken, getCurrentUser } from "@/src/lib/supabase/auth";
 import { z } from "zod";
-import { MAX_MEDIA_FILE_SIZE, MAX_PROPERTY_IMAGE_FILE_SIZE, PROPERTY_MEDIA_TYPES } from "@/src/features/properties/validation/media-limits";
+import {
+  MAX_MEDIA_FILE_SIZE,
+  MAX_PROPERTY_IMAGE_FILE_SIZE,
+  MAX_PROPERTY_IMAGES,
+  PROPERTY_MEDIA_TYPES,
+} from "@/src/features/properties/validation/media-limits";
 
 async function cleanupUploadedFile(
   storageService: StorageService,
@@ -22,18 +30,12 @@ async function cleanupUploadedFile(
   }
 }
 
-export async function GET(
-  request: NextRequest,
-  { params }: { params: Promise<{ id: string }> },
-) {
+export async function GET(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   try {
     const { id } = await params;
 
     if (!z.uuid().safeParse(id).success) {
-      return NextResponse.json(
-        { error: "Invalid property ID" },
-        { status: 400 },
-      );
+      return NextResponse.json({ error: "Invalid property ID" }, { status: 400 });
     }
 
     let token: string | null = null;
@@ -49,25 +51,19 @@ export async function GET(
       return NextResponse.json({ error: "Property not found" }, { status: 404 });
     }
 
-    const media = await new MediaService(
-      new MediaRepository(token ?? undefined),
-    ).getByPropertyId(id);
+    const media = await new MediaService(new MediaRepository(token ?? undefined)).getByPropertyId(
+      id,
+    );
 
     return NextResponse.json(media);
   } catch (error) {
     console.error(error);
 
-    return NextResponse.json(
-      { error: "Failed to fetch property media" },
-      { status: 500 },
-    );
+    return NextResponse.json({ error: "Failed to fetch property media" }, { status: 500 });
   }
 }
 
-export async function POST(
-  request: NextRequest,
-  { params }: { params: Promise<{ id: string }> },
-) {
+export async function POST(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   let uploadedFilePath: string | null = null;
   let token: string | null = null;
   let storageService: StorageService | null = null;
@@ -76,10 +72,7 @@ export async function POST(
     const { id } = await params;
 
     if (!z.uuid().safeParse(id).success) {
-      return NextResponse.json(
-        { error: "Invalid property ID" },
-        { status: 400 },
-      );
+      return NextResponse.json({ error: "Invalid property ID" }, { status: 400 });
     }
 
     token = getAccessToken(request);
@@ -106,9 +99,32 @@ export async function POST(
       return NextResponse.json({ error: "Forbidden" }, { status: 403 });
     }
 
+    if (property.archived_at) {
+      return NextResponse.json(
+        { error: "Archived properties cannot receive media" },
+        { status: 409 },
+      );
+    }
+
     if (property.approval_status === "rejected") {
       return NextResponse.json({ error: "Forbidden" }, { status: 403 });
     }
+
+    const currentBoost = await new PropertyBoostingService(
+      new PropertyBoostingRepository(token),
+    ).getCurrentByPropertyId(id);
+    const selectedPlan = currentBoost
+      ? await new BoostingPlanRepository().getById(currentBoost.boosting_plan_id)
+      : null;
+    if (currentBoost && !selectedPlan) {
+      return NextResponse.json(
+        { error: "The selected boost plan could not be loaded" },
+        { status: 409 },
+      );
+    }
+    const maxImages = currentBoost
+      ? Math.min(MAX_PROPERTY_IMAGES, selectedPlan!.max_images)
+      : MAX_PROPERTY_IMAGES;
 
     const formData = await request.formData().catch(() => null);
 
@@ -123,19 +139,19 @@ export async function POST(
     }
 
     if (!PROPERTY_MEDIA_TYPES.includes(file.type)) {
-      return NextResponse.json(
-        { error: "Unsupported file type" },
-        { status: 400 },
-      );
+      return NextResponse.json({ error: "Unsupported file type" }, { status: 400 });
     }
 
     const type = file.type.startsWith("image/") ? "image" : "video";
     const maxSize = type === "image" ? MAX_PROPERTY_IMAGE_FILE_SIZE : MAX_MEDIA_FILE_SIZE;
     if (file.size === 0 || file.size > maxSize) {
       return NextResponse.json(
-        { error: type === "image"
-          ? "Each photo must be nonempty and 5 MB or smaller. Choose a smaller image or reduce its resolution."
-          : "File must be nonempty and must not exceed 50 MB" },
+        {
+          error:
+            type === "image"
+              ? "Each photo must be nonempty and 5 MB or smaller. Choose a smaller image or reduce its resolution."
+              : "File must be nonempty and must not exceed 50 MB",
+        },
         { status: 400 },
       );
     }
@@ -146,7 +162,11 @@ export async function POST(
       return NextResponse.json({ error: "Invalid idempotency key" }, { status: 400 });
     }
     const orderInput = formData.get("sort_order");
-    const order = z.coerce.number().int().min(0).max(type === "image" ? 5 : 6)
+    const order = z.coerce
+      .number()
+      .int()
+      .min(0)
+      .max(type === "image" ? 5 : 6)
       .safeParse(orderInput ?? 0);
     if (!order.success) {
       return NextResponse.json({ error: "Invalid photo order" }, { status: 400 });
@@ -164,7 +184,7 @@ export async function POST(
     try {
       // Include the limit read in retry reconciliation: another same-key
       // request may have filled the sixth slot since the first lookup.
-      await mediaService.assertWithinLimit(id, type);
+      await mediaService.assertWithinLimit(id, type, undefined, maxImages);
       // A retry can replace its own deterministic path if the storage response
       // was lost before the media row was saved. Normal uploads remain inserts.
       await storageService.upload(token, "properties-media", filePath, file, Boolean(requestId));
@@ -173,10 +193,16 @@ export async function POST(
       // retry; deleting it here could leave a successful media row without a
       // file. Legacy uploads retain the existing rollback cleanup behavior.
       uploadedFilePath = requestId ? null : filePath;
-      const media = await mediaService.create({
-        property_id: id, url, type, sort_order: order.data,
-        ...(requestId ? { media_id: requestId } : {}),
-      });
+      const media = await mediaService.create(
+        {
+          property_id: id,
+          url,
+          type,
+          sort_order: order.data,
+          ...(requestId ? { media_id: requestId } : {}),
+        },
+        maxImages,
+      );
       uploadedFilePath = null;
       return NextResponse.json(media, { status: 201 });
     } catch (error) {
@@ -201,9 +227,6 @@ export async function POST(
 
     console.error(error);
 
-    return NextResponse.json(
-      { error: "Failed to create media" },
-      { status: 500 },
-    );
+    return NextResponse.json({ error: "Failed to create media" }, { status: 500 });
   }
 }

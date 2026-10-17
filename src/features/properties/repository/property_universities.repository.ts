@@ -6,6 +6,7 @@ export interface IPropertyUniversityRepository {
   getUniversitiesByPropertyId(propertyId: string): Promise<University[]>;
   getPropertiesByUniversityId(universityId: string): Promise<Property[]>;
   associate(propertyId: string, universityIds: string[]): Promise<void>;
+  replace(propertyId: string, universityIds: string[]): Promise<string[]>;
 }
 
 export class PropertyUniversityRepository implements IPropertyUniversityRepository {
@@ -27,6 +28,21 @@ export class PropertyUniversityRepository implements IPropertyUniversityReposito
       { onConflict: "property_id,university_id", ignoreDuplicates: true },
     );
     if (error) throw new Error(error.message);
+  }
+
+  async replace(propertyId: string, universityIds: string[]): Promise<string[]> {
+    const { data, error } = await this.client.rpc("replace_host_property_universities", {
+      p_property_id: propertyId,
+      p_university_ids: universityIds,
+    });
+    if (error) {
+      if (error.code === "42501")
+        throw new Error("You can only update universities for your own active property.");
+      if (error.code === "22023" || error.code === "23503")
+        throw new Error("One or more selected universities are invalid.");
+      throw new Error("Could not save university associations.");
+    }
+    return data ?? [];
   }
 
   async getUniversitiesByPropertyId(propertyId: string): Promise<University[]> {

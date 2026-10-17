@@ -4,22 +4,11 @@ import Link from "next/link";
 import { useEffect, useRef, useState } from "react";
 import type { FormEvent } from "react";
 import { useRouter } from "next/navigation";
-import {
-  Check,
-  LockKeyhole,
-  Mail,
-  RefreshCw,
-  ShieldCheck,
-  UserRound,
-} from "lucide-react";
+import { Check, LockKeyhole, Mail, RefreshCw, ShieldCheck, UserRound } from "lucide-react";
 
 import { useMarketplaceAccount } from "@/src/components/navigation/useMarketplaceAccount";
 import type { MarketplaceAccount } from "@/src/components/navigation/useMarketplaceAccount";
-import {
-  profileApi,
-  ProfileRequestError,
-  validateProfileFields,
-} from "../client/profile";
+import { profileApi, ProfileRequestError, validateProfileFields } from "../client/profile";
 import type { ProfileFields, UserProfile } from "../client/profile";
 import { SavedProperties } from "./SavedProperties";
 
@@ -30,8 +19,7 @@ const focusClass =
 
 const buttonClass = `inline-flex min-h-12 items-center justify-center gap-2 rounded-full bg-[#2B4162] px-6 text-sm font-semibold text-white transition-colors hover:bg-[#385F71] disabled:cursor-wait disabled:opacity-60 ${focusClass}`;
 
-const cardClass =
-  "min-w-0 rounded-2xl border border-[#385F71]/15 bg-white p-5 shadow-sm sm:p-6";
+const cardClass = "min-w-0 rounded-2xl border border-[#385F71]/15 bg-white p-5 shadow-sm sm:p-6";
 
 const fieldClass =
   "mt-2 block min-h-[48px] w-full min-w-0 rounded-xl border border-[#385F71]/15 bg-[#F8F9FB] px-4 py-3 text-sm text-[#2B4162] placeholder:text-[#6F7F8D] transition-colors hover:border-[#385F71]/40 focus:border-[#385F71] focus:outline-2 focus:outline-offset-2 focus:outline-[#385F71] aria-invalid:border-red-500 read-only:bg-[#F5F0F6] read-only:text-[#6F7F8D]";
@@ -41,10 +29,7 @@ const labelClass = "block min-w-0 text-[13px] font-semibold text-[#2B4162]";
 const signInHref = "/sign-in?next=%2Fprofile";
 
 function isSessionError(error: unknown) {
-  return (
-    error instanceof ProfileRequestError &&
-    (error.status === 401 || error.status === 403)
-  );
+  return error instanceof ProfileRequestError && (error.status === 401 || error.status === 403);
 }
 
 function PersonalInformation({
@@ -64,9 +49,7 @@ function PersonalInformation({
     phone: profile.phone,
   });
 
-  const [fieldErrors, setFieldErrors] = useState<
-    Partial<Record<keyof ProfileFields, string>>
-  >({});
+  const [fieldErrors, setFieldErrors] = useState<Partial<Record<keyof ProfileFields, string>>>({});
 
   const [saving, setSaving] = useState(false);
 
@@ -97,11 +80,7 @@ function PersonalInformation({
       for (const issue of result.error.issues) {
         const field = issue.path[0];
 
-        if (
-          field === "firstname" ||
-          field === "lastname" ||
-          field === "phone"
-        ) {
+        if (field === "firstname" || field === "lastname" || field === "phone") {
           errors[field] ??= issue.message;
         }
       }
@@ -123,11 +102,7 @@ function PersonalInformation({
     mutation.current = controller;
 
     try {
-      const updated = await profileApi.update(
-        profile.user_id,
-        result.data,
-        controller.signal,
-      );
+      const updated = await profileApi.update(profile.user_id, result.data, controller.signal);
 
       if (controller.signal.aborted) return;
 
@@ -177,12 +152,7 @@ function PersonalInformation({
     setMessage(null);
   };
 
-  const field = (
-    name: keyof ProfileFields,
-    label: string,
-    autoComplete: string,
-    type = "text",
-  ) => (
+  const field = (name: keyof ProfileFields, label: string, autoComplete: string, type = "text") => (
     <div className="min-w-0">
       <label className={labelClass} htmlFor={`profile-${name}`}>
         {label}
@@ -254,22 +224,15 @@ function PersonalInformation({
                 />
               </label>
 
-              <p
-                id="profile-email-hint"
-                className="mt-2 text-xs leading-5 text-[#6F7F8D]"
-              >
-                Email is linked to your sign-in account. Email changes aren&apos;t
-                available here.
+              <p id="profile-email-hint" className="mt-2 text-xs leading-5 text-[#6F7F8D]">
+                Email is linked to your sign-in account. Email changes aren&apos;t available here.
               </p>
             </div>
 
             <div className="min-w-0 sm:col-span-2">
               {field("phone", "Phone number", "tel-national", "tel")}
 
-              <p
-                id="profile-phone-hint"
-                className="mt-2 text-xs leading-5 text-[#6F7F8D]"
-              >
+              <p id="profile-phone-hint" className="mt-2 text-xs leading-5 text-[#6F7F8D]">
                 Use your 8-digit Lebanese number, without the country code.
               </p>
             </div>
@@ -352,9 +315,7 @@ function AccountProfile({ account }: { account: Account }) {
       onSaved={setProfile}
       onSessionChanged={() => {
         setProfile(null);
-        setError(
-          "Your session has changed. Reload your profile or sign in again.",
-        );
+        setError("Your session has changed. Reload your profile or sign in again.");
       }}
     />
   );
@@ -472,21 +433,12 @@ function ProfileLoading() {
         </div>
       </div>
 
-      <div
-        aria-hidden="true"
-        className={`${cardClass} h-96 motion-safe:animate-pulse`}
-      />
+      <div aria-hidden="true" className={`${cardClass} h-96 motion-safe:animate-pulse`} />
     </div>
   );
 }
 
-function ProfileError({
-  message,
-  onRetry,
-}: {
-  message: string;
-  onRetry: () => void;
-}) {
+function ProfileError({ message, onRetry }: { message: string; onRetry: () => void }) {
   return (
     <div role="alert" className={cardClass}>
       <h1 className="m-0 text-2xl font-semibold tracking-tight text-[#2B4162]">

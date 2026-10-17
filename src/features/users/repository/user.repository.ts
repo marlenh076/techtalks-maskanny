@@ -7,9 +7,7 @@ export class UserRepository implements IUserRepository {
   private supabase;
 
   constructor(accessToken?: string) {
-    this.supabase = accessToken
-      ? createAuthenticatedClient(accessToken)
-      : supabase;
+    this.supabase = accessToken ? createAuthenticatedClient(accessToken) : supabase;
   }
 
   async getById(id: string): Promise<User | null> {

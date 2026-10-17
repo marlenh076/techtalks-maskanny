@@ -27,10 +27,7 @@ const propertyTypeBadges = {
   studio: { icon: House, colors: chipTones.sage },
   apartment: { icon: Building2, colors: "bg-[#F5F0F6] text-[#8F754F]" },
   dorm: { icon: BedDouble, colors: chipTones.blue },
-} satisfies Record<
-  PropertyListing["property_type"],
-  { icon: LucideIcon; colors: string }
->;
+} satisfies Record<PropertyListing["property_type"], { icon: LucideIcon; colors: string }>;
 
 type FeatureChip = {
   label: string;
@@ -52,26 +49,18 @@ type PropertyCardProps = {
   onToggleSave?: (id: string) => void;
 };
 
-export function PropertyCard({
-  property,
-  saved = false,
-  onToggleSave,
-}: PropertyCardProps) {
+export function PropertyCard({ property, saved = false, onToggleSave }: PropertyCardProps) {
   const typeBadge = propertyTypeBadges[property.property_type];
   const TypeIcon = typeBadge.icon;
 
   const features: FeatureChip[] = [
     {
-      label: `${property.bedrooms} ${
-        property.bedrooms === 1 ? "bedroom" : "bedrooms"
-      }`,
+      label: `${property.bedrooms} ${property.bedrooms === 1 ? "bedroom" : "bedrooms"}`,
       icon: BedDouble,
       tone: "sage",
     },
     {
-      label: `${property.bathrooms} ${
-        property.bathrooms === 1 ? "bathroom" : "bathrooms"
-      }`,
+      label: `${property.bathrooms} ${property.bathrooms === 1 ? "bathroom" : "bathrooms"}`,
       icon: Bath,
       tone: "beige",
     },
@@ -89,9 +78,7 @@ export function PropertyCard({
     });
   }
 
-  const residentChip = residentChips.find(
-    (chip) => chip.gender === property.gender
-  );
+  const residentChip = residentChips.find((chip) => chip.gender === property.gender);
 
   if (residentChip) features.push(residentChip);
 
@@ -111,11 +98,7 @@ export function PropertyCard({
           <span
             className={`absolute top-6 left-3 inline-flex items-center gap-1.5 rounded-full border border-white/70 px-2.5 py-1.5 text-xs leading-4 font-semibold capitalize shadow-sm ${typeBadge.colors}`}
           >
-            <TypeIcon
-              size={14}
-              aria-hidden="true"
-              className="shrink-0"
-            />
+            <TypeIcon size={14} aria-hidden="true" className="shrink-0" />
             {property.property_type}
           </span>
         </div>
@@ -125,9 +108,7 @@ export function PropertyCard({
             <span className="text-[27px] font-semibold leading-tight tracking-[-0.04em]">
               ${property.price.toLocaleString()}
             </span>
-            <span className="text-xs font-medium text-[#6F7F8D]">
-              / month
-            </span>
+            <span className="text-xs font-medium text-[#6F7F8D]">/ month</span>
           </p>
 
           <h3 className="m-0 line-clamp-2 text-lg font-semibold leading-snug tracking-[-0.02em] text-[#2B4162] md:text-[19px]">
@@ -141,9 +122,7 @@ export function PropertyCard({
               aria-hidden="true"
               className="mt-0.5 shrink-0 text-[#8F754F]"
             />
-            <span className="line-clamp-2 break-words">
-              {property.address}
-            </span>
+            <span className="line-clamp-2 break-words">{property.address}</span>
           </p>
 
           <div className="mt-3 mb-3 flex flex-wrap items-center gap-1.5 md:mt-4 md:mb-5">
@@ -152,11 +131,7 @@ export function PropertyCard({
                 key={label}
                 className={`inline-flex items-center gap-1.5 rounded-[6px] px-2 py-1 text-xs leading-4 font-medium whitespace-nowrap ${chipTones[tone]}`}
               >
-                <Icon
-                  size={14}
-                  aria-hidden="true"
-                  className="shrink-0"
-                />
+                <Icon size={14} aria-hidden="true" className="shrink-0" />
                 {label}
               </span>
             ))}
@@ -166,9 +141,7 @@ export function PropertyCard({
             aria-hidden="true"
             className="mt-auto flex items-center justify-between border-t border-[#385F71]/15 pt-2 text-xs font-semibold text-[#385F71] md:pt-3"
           >
-            <span className="transition-colors group-hover:text-[#2B4162]">
-              View property
-            </span>
+            <span className="transition-colors group-hover:text-[#2B4162]">View property</span>
 
             <span className="grid size-8 place-items-center rounded-full bg-[#2B4162] text-white transition-colors group-hover:bg-[#385F71] motion-reduce:transition-none">
               <ArrowUpRight size={16} />
@@ -182,11 +155,7 @@ export function PropertyCard({
           type="button"
           onClick={() => onToggleSave(property.property_id)}
           aria-pressed={saved}
-          aria-label={
-            saved
-              ? `Remove ${property.title} from saved`
-              : `Save ${property.title}`
-          }
+          aria-label={saved ? `Remove ${property.title} from saved` : `Save ${property.title}`}
           className="absolute top-5 right-5 grid size-10 place-items-center rounded-full border border-white/70 bg-white text-[#2B4162] shadow-sm transition-colors hover:bg-[#F5F0F6] focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-[#D7B377] motion-reduce:transition-none"
         >
           <Heart

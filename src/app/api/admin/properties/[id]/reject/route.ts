@@ -8,7 +8,9 @@ export async function POST(request: Request, context: IdContext) {
   return authorized(request, async () => {
     const id = uuidSchema.parse((await context.params).id);
     const { reason } = await body(request, rejectionSchema, false);
-    await new PropertyModerationService(new PropertyModerationRepository(getAccessToken(request)!)).reject(id, reason!);
+    await new PropertyModerationService(
+      new PropertyModerationRepository(getAccessToken(request)!),
+    ).reject(id, reason!);
     return json({ message: "Property rejected" });
   });
 }

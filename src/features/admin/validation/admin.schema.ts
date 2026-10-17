@@ -2,10 +2,27 @@ import { z } from "zod";
 
 export const uuidSchema = z.uuid();
 export const reasonSchema = z.string().trim().min(1).max(1000);
-export const approvalSchema = z
-  .object({ reason: reasonSchema.optional() })
-  .strict();
+export const approvalSchema = z.object({ reason: reasonSchema.optional() }).strict();
 export const rejectionSchema = z.object({ reason: reasonSchema }).strict();
+export const boostPaymentDecisionSchema = z.discriminatedUnion("decision", [
+  z
+    .object({
+      decision: z.literal("approved"),
+      payment_id: uuidSchema.nullable(),
+      reference: z.string().trim().min(3).max(100),
+      whish_confirmed: z.literal(true),
+    })
+    .strict(),
+  z
+    .object({
+      decision: z.literal("rejected"),
+      payment_id: uuidSchema.nullable(),
+      reference: z.string().trim().min(3).max(100).nullable(),
+      whish_confirmed: z.literal(false),
+      reason: reasonSchema,
+    })
+    .strict(),
+]);
 const date = z.iso.datetime({ offset: true });
 const pagination = {
   page: z.coerce.number().int().min(1).max(1000000).default(1),
@@ -21,39 +38,44 @@ const validRange = (v: { from?: string; to?: string }) =>
 export const propertyListSchema = z
   .object({
     ...pagination,
-    status: z
-      .enum(["pending", "approved", "active", "rejected", "all"])
-      .default("pending"),
+    status: z.enum(["pending", "approved", "active", "rejected", "all"]).default("pending"),
     property_type: z.enum(["dorm", "studio", "apartment"]).optional(),
     host_id: uuidSchema.optional(),
   })
   .strict()
   .refine(validRange, "from must precede to");
-export const directoryListSchema = z.object({
-  page: pagination.page,
-  page_size: pagination.page_size,
-  query: pagination.query,
-  from: date.optional(),
-  to: date.optional(),
-  role: z.enum(["user", "admin"]).optional(),
-  sort: z.enum(["created_at", "name"]).default("created_at"),
-  direction: pagination.direction,
-}).strict().refine(validRange, "from must precede to");
-export const boostQueueSchema = z.object({
-  page: pagination.page,
-  page_size: pagination.page_size,
-  query: pagination.query,
-  from: date.optional(),
-  to: date.optional(),
-  payment_status: z.enum(["not_submitted", "legacy_unrecorded", "pending", "verified", "rejected"]).optional(),
-  boost_status: z.enum(["pending", "active", "expired", "rejected"]).optional(),
-}).strict().refine(validRange, "from must precede to");
+export const directoryListSchema = z
+  .object({
+    page: pagination.page,
+    page_size: pagination.page_size,
+    query: pagination.query,
+    from: date.optional(),
+    to: date.optional(),
+    role: z.enum(["user", "admin"]).optional(),
+    sort: z.enum(["created_at", "name"]).default("created_at"),
+    direction: pagination.direction,
+  })
+  .strict()
+  .refine(validRange, "from must precede to");
+export const boostQueueSchema = z
+  .object({
+    page: pagination.page,
+    page_size: pagination.page_size,
+    query: pagination.query,
+    from: date.optional(),
+    to: date.optional(),
+    payment_status: z
+      .enum(["not_submitted", "legacy_unrecorded", "pending", "verified", "rejected"])
+      .optional(),
+    boost_status: z.enum(["pending", "active", "expired", "rejected"]).optional(),
+  })
+  .strict()
+  .refine(validRange, "from must precede to");
 export const rangeSchema = z
   .object({ from: date, to: date })
   .strict()
   .refine(
-    (v) =>
-      validRange(v) && Date.parse(v.to) - Date.parse(v.from) <= 366 * 86400000,
+    (v) => validRange(v) && Date.parse(v.to) - Date.parse(v.from) <= 366 * 86400000,
     "Range must be positive and at most 366 days",
   );
 export const reportSchema = z
@@ -65,8 +87,7 @@ export const reportSchema = z
   })
   .strict()
   .refine(
-    (v) =>
-      validRange(v) && Date.parse(v.to) - Date.parse(v.from) <= 366 * 86400000,
+    (v) => validRange(v) && Date.parse(v.to) - Date.parse(v.from) <= 366 * 86400000,
     "Range must be positive and at most 366 days",
   );
 export const propertyEditSchema = z
@@ -100,10 +121,7 @@ export const passwordSchema = z
     nonce: z.string().min(1).max(100).optional(),
   })
   .strict()
-  .refine(
-    (v) => v.current_password !== v.new_password,
-    "Choose a different password",
-  );
+  .refine((v) => v.current_password !== v.new_password, "Choose a different password");
 
 export function queryObject(url: string) {
   const params = new URL(url).searchParams;

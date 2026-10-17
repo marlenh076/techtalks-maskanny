@@ -1,8 +1,8 @@
-'use client';
+"use client";
 
-import React, { useId, useState } from 'react';
-import { useModalFocus } from './AdminUI';
-import { Mail, Phone, User, X, Copy, Check, MessageSquare, ExternalLink } from 'lucide-react';
+import React, { useId, useState } from "react";
+import { useModalFocus } from "./AdminUI";
+import { Mail, Phone, User, X, Copy, Check, MessageSquare, ExternalLink } from "lucide-react";
 
 export interface OwnerContact {
   name: string;
@@ -17,30 +17,31 @@ interface ContactOwnerButtonProps {
 
 export default function ContactOwnerButton({ owner, listingId }: ContactOwnerButtonProps) {
   const [isOpen, setIsOpen] = useState(false);
-  const [copiedField, setCopiedField] = useState<'phone' | 'email' | null>(null);
-  const [copyError, setCopyError] = useState('');
+  const [copiedField, setCopiedField] = useState<"phone" | "email" | null>(null);
+  const [copyError, setCopyError] = useState("");
   const titleId = useId();
   const focus = useModalFocus(isOpen, () => setIsOpen(false));
 
-  const handleCopy = async (text: string, field: 'phone' | 'email') => {
+  const handleCopy = async (text: string, field: "phone" | "email") => {
     try {
       await navigator.clipboard.writeText(text);
-      setCopyError('');
+      setCopyError("");
       setCopiedField(field);
       setTimeout(() => setCopiedField(null), 2000);
-    } catch { setCopyError('Unable to copy. Please copy the contact manually.'); }
+    } catch {
+      setCopyError("Unable to copy. Please copy the contact manually.");
+    }
   };
 
   const formatWhatsAppNumber = (phone: string) => {
-    if (!phone) return '';
-    return phone.replace(/\D/g, '');
+    if (!phone) return "";
+    return phone.replace(/\D/g, "");
   };
 
-  const whatsAppNumber = formatWhatsAppNumber(owner?.phone || '');
+  const whatsAppNumber = formatWhatsAppNumber(owner?.phone || "");
 
   return (
     <>
-      
       <button
         type="button"
         onClick={() => setIsOpen(true)}
@@ -52,24 +53,34 @@ export default function ContactOwnerButton({ owner, listingId }: ContactOwnerBut
       </button>
 
       {isOpen && (
-        <div 
+        <div
           className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-brand-navy/40 backdrop-blur-xs animate-in fade-in duration-200"
-          onClick={event => { event.stopPropagation(); setIsOpen(false); }}
+          onClick={(event) => {
+            event.stopPropagation();
+            setIsOpen(false);
+          }}
         >
-          <div 
-            {...focus} role="dialog" aria-modal="true" aria-labelledby={titleId} tabIndex={-1}
+          <div
+            {...focus}
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby={titleId}
+            tabIndex={-1}
             className="bg-white rounded-2xl border border-brand-slate/15 shadow-2xl w-full max-w-md max-h-[90vh] overflow-y-auto animate-in zoom-in-95 duration-200"
             onClick={(e) => e.stopPropagation()}
           >
-          
             <div className="flex items-center justify-between px-6 py-4.5 border-b border-brand-slate/10 bg-brand-light/30">
               <div className="flex items-center gap-3">
                 <div className="w-9 h-9 rounded-xl bg-brand-navy/10 flex items-center justify-center text-brand-navy ring-1 ring-brand-navy/15">
                   <User className="w-4 h-4" />
                 </div>
                 <div>
-                  <h3 id={titleId} className="text-sm font-bold text-brand-navy tracking-tight">Host Contact Information</h3>
-                  {listingId && <p className="text-[11px] text-brand-slate font-mono">Ref: {listingId}</p>}
+                  <h3 id={titleId} className="text-sm font-bold text-brand-navy tracking-tight">
+                    Host Contact Information
+                  </h3>
+                  {listingId && (
+                    <p className="text-[11px] text-brand-slate font-mono">Ref: {listingId}</p>
+                  )}
                 </div>
               </div>
               <button
@@ -82,35 +93,37 @@ export default function ContactOwnerButton({ owner, listingId }: ContactOwnerBut
               </button>
             </div>
 
-           
             <div className="p-6 space-y-5">
-              
               <div className="space-y-1.5">
-                <label className="text-[11px] font-bold text-brand-slate uppercase tracking-wider">Host Full Name</label>
+                <label className="text-[11px] font-bold text-brand-slate uppercase tracking-wider">
+                  Host Full Name
+                </label>
                 <div className="px-3.5 py-2.5 rounded-xl bg-brand-light/40 border border-brand-slate/10 text-xs font-bold text-brand-navy shadow-2xs">
-                  {owner?.name || 'Not provided'}
+                  {owner?.name || "Not provided"}
                 </div>
               </div>
 
-              
               <div className="space-y-1.5">
-                <label className="text-[11px] font-bold text-brand-slate uppercase tracking-wider">Telephone & Direct Messaging</label>
+                <label className="text-[11px] font-bold text-brand-slate uppercase tracking-wider">
+                  Telephone & Direct Messaging
+                </label>
                 <div className="flex flex-col gap-3 p-3.5 rounded-xl bg-brand-light/40 border border-brand-slate/10 text-xs font-semibold text-brand-navy shadow-2xs">
                   <div className="flex items-center gap-2.5 text-brand-navy">
                     <Phone className="w-3.5 h-3.5 text-brand-slate shrink-0" />
-                    <span className="tracking-wide font-mono">{owner?.phone || 'No phone number available'}</span>
+                    <span className="tracking-wide font-mono">
+                      {owner?.phone || "No phone number available"}
+                    </span>
                   </div>
 
                   {owner?.phone && (
                     <div className="flex items-center gap-1.5 pt-1 border-t border-brand-slate/10 justify-end flex-wrap">
-                    
                       <button
                         type="button"
-                        onClick={() => handleCopy(owner.phone, 'phone')}
+                        onClick={() => handleCopy(owner.phone, "phone")}
                         className="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-lg text-xs font-semibold text-brand-slate bg-white border border-brand-slate/20 hover:text-brand-navy hover:border-brand-slate/40 transition-all cursor-pointer shadow-2xs"
                         title="Copy to clipboard"
                       >
-                        {copiedField === 'phone' ? (
+                        {copiedField === "phone" ? (
                           <>
                             <Check className="w-3.5 h-3.5 text-emerald-600" />
                             <span className="text-emerald-700">Copied</span>
@@ -123,7 +136,6 @@ export default function ContactOwnerButton({ owner, listingId }: ContactOwnerBut
                         )}
                       </button>
 
-                      
                       <a
                         href={`https://wa.me/${whatsAppNumber}`}
                         target="_blank"
@@ -136,7 +148,7 @@ export default function ContactOwnerButton({ owner, listingId }: ContactOwnerBut
 
                       <a
                         href={`tel:${owner.phone}`}
-                       className="inline-flex items-center gap-1 px-3 py-1.5 rounded-lg text-[11px] font-semibold !text-white bg-brand-navy hover:bg-brand-slate hover:!text-white transition-all duration-200 shadow-2xs cursor-pointer"
+                        className="inline-flex items-center gap-1 px-3 py-1.5 rounded-lg text-[11px] font-semibold !text-white bg-brand-navy hover:bg-brand-slate hover:!text-white transition-all duration-200 shadow-2xs cursor-pointer"
                       >
                         <Phone className="w-3.5 h-3.5" />
                         <span>Call</span>
@@ -146,25 +158,27 @@ export default function ContactOwnerButton({ owner, listingId }: ContactOwnerBut
                 </div>
               </div>
 
-            
               <div className="space-y-1.5">
-                <label className="text-[11px] font-bold text-brand-slate uppercase tracking-wider">Email Address</label>
+                <label className="text-[11px] font-bold text-brand-slate uppercase tracking-wider">
+                  Email Address
+                </label>
                 <div className="flex flex-col gap-3 p-3.5 rounded-xl bg-brand-light/40 border border-brand-slate/10 text-xs font-semibold text-brand-navy shadow-2xs">
                   <div className="flex items-center gap-2.5 truncate">
                     <Mail className="w-3.5 h-3.5 text-brand-slate shrink-0" />
-                    <span className="truncate font-mono">{owner?.email || 'No email available'}</span>
+                    <span className="truncate font-mono">
+                      {owner?.email || "No email available"}
+                    </span>
                   </div>
 
                   {owner?.email && (
                     <div className="flex items-center gap-1.5 pt-1 border-t border-brand-slate/10 justify-end">
-                   
                       <button
                         type="button"
-                        onClick={() => handleCopy(owner.email, 'email')}
+                        onClick={() => handleCopy(owner.email, "email")}
                         className="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-lg text-xs font-semibold text-brand-slate bg-white border border-brand-slate/20 hover:text-brand-navy hover:border-brand-slate/40 transition-all cursor-pointer shadow-2xs"
                         title="Copy to clipboard"
                       >
-                        {copiedField === 'email' ? (
+                        {copiedField === "email" ? (
                           <>
                             <Check className="w-3.5 h-3.5 text-emerald-600" />
                             <span className="text-emerald-700">Copied</span>
@@ -177,7 +191,6 @@ export default function ContactOwnerButton({ owner, listingId }: ContactOwnerBut
                         )}
                       </button>
 
-                     
                       <a
                         href={`mailto:${owner.email}`}
                         className="inline-flex items-center gap-1 px-3 py-1.5 rounded-lg text-[11px] font-semibold !text-white bg-brand-navy hover:bg-brand-slate hover:!text-white transition-all duration-200 shadow-2xs cursor-pointer"
@@ -191,8 +204,11 @@ export default function ContactOwnerButton({ owner, listingId }: ContactOwnerBut
               </div>
             </div>
 
-            
-            {copyError && <p role="alert" className="px-6 text-xs text-rose-700">{copyError}</p>}
+            {copyError && (
+              <p role="alert" className="px-6 text-xs text-rose-700">
+                {copyError}
+              </p>
+            )}
             <div className="px-6 py-3.5 bg-brand-light/40 border-t border-brand-slate/10 flex justify-end">
               <button
                 type="button"

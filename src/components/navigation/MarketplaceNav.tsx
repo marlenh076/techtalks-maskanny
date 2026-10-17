@@ -47,9 +47,7 @@ function MarketplaceBrand() {
         height={36}
         className="shrink-0 rounded-[10px]"
       />
-      <span className="text-xl font-semibold tracking-[-0.035em]">
-        Maskanny
-      </span>
+      <span className="text-xl font-semibold tracking-[-0.035em]">Maskanny</span>
     </Link>
   );
 }
@@ -79,11 +77,7 @@ function FullMarketplaceNav() {
   const { account, reload } = useMarketplaceAccount();
   const [menuOpen, setMenuOpen] = useState(false);
   const [accountOpen, setAccountOpen] = useState(false);
-  const scrolled = useSyncExternalStore(
-    subscribeToScroll,
-    hasScrolled,
-    serverScrolled,
-  );
+  const scrolled = useSyncExternalStore(subscribeToScroll, hasScrolled, serverScrolled);
   const homepage = pathname === "/";
   const transparent = homepage && !scrolled && !menuOpen;
   const menuButton = useRef<HTMLButtonElement>(null);
@@ -141,9 +135,7 @@ function FullMarketplaceNav() {
       >
         <MarketplaceBrand />
         <div className="flex items-center gap-2 sm:gap-3">
-          <ul className="hidden items-center gap-1 md:flex">
-            {links.map(navItem)}
-          </ul>
+          <ul className="hidden items-center gap-1 md:flex">{links.map(navItem)}</ul>
           <AccountDropdown
             account={account}
             onRetry={reload}
@@ -159,20 +151,14 @@ function FullMarketplaceNav() {
             type="button"
             aria-expanded={menuOpen}
             aria-controls="marketplace-menu"
-            aria-label={
-              menuOpen ? "Close navigation menu" : "Open navigation menu"
-            }
+            aria-label={menuOpen ? "Close navigation menu" : "Open navigation menu"}
             onClick={() => {
               setAccountOpen(false);
               setMenuOpen((open) => !open);
             }}
             className={`grid size-11 place-items-center rounded-full md:hidden ${transparent ? "text-white hover:bg-white/15" : "text-[var(--ink-2)] hover:bg-[var(--chip)]"} ${focusClass}`}
           >
-            {menuOpen ? (
-              <X size={22} aria-hidden="true" />
-            ) : (
-              <Menu size={22} aria-hidden="true" />
-            )}
+            {menuOpen ? <X size={22} aria-hidden="true" /> : <Menu size={22} aria-hidden="true" />}
           </button>
         </div>
       </nav>
@@ -182,9 +168,7 @@ function FullMarketplaceNav() {
         hidden={!menuOpen}
         className="border-t border-[var(--line)] bg-[var(--bg)] px-5 py-3 text-[var(--ink)] md:hidden"
       >
-        <ul className="mx-auto flex max-w-[1184px] flex-col gap-1">
-          {links.map(navItem)}
-        </ul>
+        <ul className="mx-auto flex max-w-[1184px] flex-col gap-1">{links.map(navItem)}</ul>
       </nav>
     </header>
   );

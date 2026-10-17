@@ -117,9 +117,7 @@ function FeaturedListingCard({ listing }: { listing: FeaturedListing }) {
           </div>
 
           <div className="flex flex-none items-baseline gap-[3px] whitespace-nowrap">
-            <strong className="text-[17px] font-semibold text-(--ink)">
-              ${listing.price}
-            </strong>
+            <strong className="text-[17px] font-semibold text-(--ink)">${listing.price}</strong>
             <span className="text-[10px] text-(--soft)">/ mo</span>
           </div>
         </div>
@@ -129,9 +127,7 @@ function FeaturedListingCard({ listing }: { listing: FeaturedListing }) {
         <div className="flex items-center gap-[8px] text-[12px] text-(--ink-2)">
           <span>{listing.gender}</span>
           <span className="text-(--faint)">•</span>
-          <span>
-            {listing.furnished === "Yes" ? "Furnished" : "Unfurnished"}
-          </span>
+          <span>{listing.furnished === "Yes" ? "Furnished" : "Unfurnished"}</span>
         </div>
 
         <p className="mt-[10px] mb-0 text-[11px] leading-[1.45] text-(--soft)">
@@ -181,8 +177,7 @@ export default function FeaturedListings() {
           </h2>
 
           <p className="mt-[16px] mb-0 max-w-[520px] text-[14px] leading-[1.6] text-(--soft)">
-            Discover more student housing options that might suit what
-            you&apos;re looking for.
+            Discover more student housing options that might suit what you&apos;re looking for.
           </p>
         </div>
       </div>

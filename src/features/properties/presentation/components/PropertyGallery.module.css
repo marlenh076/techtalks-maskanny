@@ -1,10 +1,9 @@
-
 .grid {
   display: grid;
   height: clamp(240px, 60vw, 340px);
   overflow: hidden;
   border-radius: 24px;
-  background: #E9EEF2;
+  background: #e9eef2;
   gap: 8px;
 }
 
@@ -15,7 +14,7 @@
   min-height: 0;
   padding: 0;
   border: 0;
-  background: #E9EEF2;
+  background: #e9eef2;
   cursor: pointer;
   overflow: hidden;
 }
@@ -42,8 +41,8 @@
   justify-content: center;
   flex-direction: column;
   gap: 12px;
-  background: #2B4162;
-  color: #F5F0F6;
+  background: #2b4162;
+  color: #f5f0f6;
   font-size: 13px;
 }
 
@@ -59,8 +58,8 @@
   padding: 10px 14px;
   border: 1px solid rgb(43 65 98 / 10%);
   border-radius: 999px;
-  background: #F5F0F6;
-  color: #2B4162;
+  background: #f5f0f6;
+  color: #2b4162;
   font-size: 12px;
   font-weight: 600;
   box-shadow: 0 4px 16px rgb(43 65 98 / 12%);
@@ -86,8 +85,8 @@
   padding: 20px;
   border: 1px solid #385F71/20;
   border-radius: 24px;
-  background: #E9EEF2;
-  color: #385F71;
+  background: #e9eef2;
+  color: #385f71;
   font-size: 13px;
 }
 
@@ -101,7 +100,7 @@
   min-width: 0;
   overflow: hidden;
   border-radius: 24px;
-  background: #E9EEF2;
+  background: #e9eef2;
   isolation: isolate;
 }
 
@@ -137,8 +136,8 @@
   justify-content: center;
   flex-direction: column;
   gap: 12px;
-  background: #2B4162;
-  color: #F5F0F6;
+  background: #2b4162;
+  color: #f5f0f6;
 }
 
 .slideArrow {
@@ -153,7 +152,7 @@
   border: 1px solid rgb(245 240 246 / 75%);
   border-radius: 50%;
   background: rgb(245 240 246 / 95%);
-  color: #2B4162;
+  color: #2b4162;
   box-shadow: 0 3px 12px rgb(43 65 98 / 20%);
   cursor: pointer;
   transition:
@@ -171,7 +170,7 @@
 }
 
 .slideArrow:hover {
-  color: #2B4162;
+  color: #2b4162;
   transform: translateY(-50%) scale(1.06);
 }
 
@@ -184,7 +183,7 @@
   border: 1px solid rgb(245 240 246 / 20%);
   border-radius: 999px;
   background: rgb(43 65 98 / 85%);
-  color: #F5F0F6;
+  color: #f5f0f6;
   font-size: 12px;
   font-weight: 600;
   font-variant-numeric: tabular-nums;
@@ -210,10 +209,10 @@
   max-height: calc(100dvh - 24px);
   margin: auto;
   padding: 0;
-  border: 1px solid #385F71;
+  border: 1px solid #385f71;
   border-radius: 24px;
-  background: #2B4162;
-  color: #F5F0F6;
+  background: #2b4162;
+  color: #f5f0f6;
   overflow: auto;
 }
 
@@ -245,14 +244,16 @@
   border: 1px solid rgb(245 240 246 / 30%);
   border-radius: 50%;
   background: transparent;
-  color: #F5F0F6;
+  color: #f5f0f6;
   cursor: pointer;
-  transition: background-color 180ms ease, border-color 180ms ease;
+  transition:
+    background-color 180ms ease,
+    border-color 180ms ease;
 }
 
 .roundButton:hover {
   background: rgb(245 240 246 / 12%);
-  border-color: #D7B377;
+  border-color: #d7b377;
 }
 
 .stage {
@@ -285,14 +286,14 @@
 }
 
 .mediaLabel {
-  color: #F5F0F6;
+  color: #f5f0f6;
   font-size: 12px;
 }
 
 .videoError {
   max-width: 400px;
   padding: 20px;
-  color: #F5F0F6;
+  color: #f5f0f6;
   font-size: 14px;
   text-align: center;
   line-height: 1.6;
@@ -300,12 +301,12 @@
 
 .grid button:focus-visible,
 .slideshow button:focus-visible {
-  outline: 3px solid #D7B377;
+  outline: 3px solid #d7b377;
   outline-offset: -5px;
 }
 
 .dialog button:focus-visible {
-  outline: 2px solid #D7B377;
+  outline: 2px solid #d7b377;
   outline-offset: 3px;
 }
 

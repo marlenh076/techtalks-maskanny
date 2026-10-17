@@ -32,7 +32,11 @@ export default function ForgotPasswordPage() {
         redirectTo: recoveryRedirectUrl(window.location.origin),
       });
       if (resetError) {
-        setError(resetError.status === 429 ? "Too many requests. Please wait and try again." : "We couldn't send a reset link. Please try again later.");
+        setError(
+          resetError.status === 429
+            ? "Too many requests. Please wait and try again."
+            : "We couldn't send a reset link. Please try again later.",
+        );
         return;
       }
       setSent(true);
@@ -45,17 +49,38 @@ export default function ForgotPasswordPage() {
 
   return (
     <>
-      <AuthHeading title="Forgot your password?" description="Enter your email to request a reset link." />
+      <AuthHeading
+        title="Forgot your password?"
+        description="Enter your email to request a reset link."
+      />
       {sent ? (
-        <AuthNotice success message="If an account exists for that email, you'll receive a reset link. Check your inbox and spam folder." />
+        <AuthNotice
+          success
+          message="If an account exists for that email, you'll receive a reset link. Check your inbox and spam folder."
+        />
       ) : (
         <form method="post" onSubmit={handleSubmit} className="space-y-5">
-          <AuthField id="email" name="email" label="Email address" type="email" autoComplete="email" placeholder="you@example.com" required />
+          <AuthField
+            id="email"
+            name="email"
+            label="Email address"
+            type="email"
+            autoComplete="email"
+            placeholder="you@example.com"
+            required
+          />
           <AuthNotice message={error} />
           <AuthButton loading={loading}>{loading ? "Sending link…" : "Send reset link"}</AuthButton>
         </form>
       )}
-      <p className="mt-7 text-center text-sm text-[var(--soft)]"><Link href="/sign-in" className="font-semibold text-[var(--ink)] underline-offset-4 hover:underline focus-visible:rounded-sm focus-visible:outline-2 focus-visible:outline-offset-3 focus-visible:outline-[var(--ink)]">Back to sign in</Link></p>
+      <p className="mt-7 text-center text-sm text-[var(--soft)]">
+        <Link
+          href="/sign-in"
+          className="font-semibold text-[var(--ink)] underline-offset-4 hover:underline focus-visible:rounded-sm focus-visible:outline-2 focus-visible:outline-offset-3 focus-visible:outline-[var(--ink)]"
+        >
+          Back to sign in
+        </Link>
+      </p>
     </>
   );
 }

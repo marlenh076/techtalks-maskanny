@@ -3,6 +3,7 @@ export interface BoostingPlan {
   name: string;
   duration_days: number;
   price: number;
+  currency: string | null;
   max_images: number;
   video_enabled: boolean;
   top_placement: boolean;

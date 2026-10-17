@@ -3,7 +3,7 @@ import { uuidSchema } from "@/src/features/admin/validation/admin.schema";
 import { AdminError } from "@/src/features/admin/service/errors";
 
 export async function GET(request: Request, context: IdContext) {
-  return authorized(request, async repo => {
+  return authorized(request, async (repo) => {
     const id = uuidSchema.parse((await context.params).id);
     const detail = await repo.directoryDetail("hosts", id);
     if (!detail) throw new AdminError("Host not found", 404);

@@ -1,6 +1,6 @@
-'use client';
+"use client";
 
-import { FileText, MessageSquare, CheckCircle2, XCircle, Inbox } from 'lucide-react';
+import { FileText, MessageSquare, CheckCircle2, XCircle, Inbox } from "lucide-react";
 
 interface ReviewSidebarProps {
   activeReviewFilter: string;
@@ -14,12 +14,12 @@ export function ReviewSidebar({
   pendingCount = 0,
 }: ReviewSidebarProps) {
   const navItems = [
-    { id: 'ALL', label: 'All Submissions', icon: Inbox },
-    { id: 'Pending', label: 'Pending Review', icon: FileText, badge: pendingCount },
-    { id: 'Application', label: 'Rental Applications', icon: FileText },
-    { id: 'Inquiry', label: 'Student Inquiries', icon: MessageSquare },
-    { id: 'Approved', label: 'Approved', icon: CheckCircle2 },
-    { id: 'Declined', label: 'Declined', icon: XCircle },
+    { id: "ALL", label: "All Submissions", icon: Inbox },
+    { id: "Pending", label: "Pending Review", icon: FileText, badge: pendingCount },
+    { id: "Application", label: "Rental Applications", icon: FileText },
+    { id: "Inquiry", label: "Student Inquiries", icon: MessageSquare },
+    { id: "Approved", label: "Approved", icon: CheckCircle2 },
+    { id: "Declined", label: "Declined", icon: XCircle },
   ];
 
   return (
@@ -42,22 +42,22 @@ export function ReviewSidebar({
             <button
               key={item.id}
               onClick={() => setActiveReviewFilter(item.id)}
-              className={`w-full flex items-center justify-between px-3 py-2.5 rounded-xl text-xs font-bold transition-all ${isActive
-                  ? 'bg-brand-navy text-white shadow-sm'
-                  : 'text-brand-slate hover:bg-brand-light hover:text-brand-navy'
-                }`}
+              className={`w-full flex items-center justify-between px-3 py-2.5 rounded-xl text-xs font-bold transition-all ${
+                isActive
+                  ? "bg-brand-navy text-white shadow-sm"
+                  : "text-brand-slate hover:bg-brand-light hover:text-brand-navy"
+              }`}
             >
               <div className="flex items-center gap-2.5">
-                <Icon className={`w-4 h-4 ${isActive ? 'text-white' : 'text-brand-slate'}`} />
+                <Icon className={`w-4 h-4 ${isActive ? "text-white" : "text-brand-slate"}`} />
                 <span>{item.label}</span>
               </div>
 
               {item.badge !== undefined && item.badge > 0 && (
                 <span
-                  className={`px-2 py-0.5 rounded-full text-[10px] font-bold ${isActive
-                      ? 'bg-white/20 text-white'
-                      : 'bg-amber-50 text-amber-600'
-                    }`}
+                  className={`px-2 py-0.5 rounded-full text-[10px] font-bold ${
+                    isActive ? "bg-white/20 text-white" : "bg-amber-50 text-amber-600"
+                  }`}
                 >
                   {item.badge}
                 </span>

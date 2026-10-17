@@ -1,17 +1,19 @@
-'use client';
+"use client";
 
-import { useState } from 'react';
-import Image from 'next/image';
-import { ChevronDown, ChevronUp, GraduationCap, Home, Building } from 'lucide-react';
+import { useState } from "react";
+import Image from "next/image";
+import { ChevronDown, ChevronUp, GraduationCap, Home, Building } from "lucide-react";
 
 export interface Submission {
   id: string;
   property: string;
   host: string;
   price: number;
-  status: 'Active' | 'Pending Review' | 'Rejected';
-  category: 'SHARED' | 'STUDIO' | 'DORM';
-  imageUrl?: string; 
+  status: "Active" | "Approved" | "Pending Review" | "Rejected";
+  category: "SHARED" | "STUDIO" | "DORM" | "APARTMENT";
+  moderationStatus?: "pending" | "approved" | "rejected";
+  visibilityStatus?: "Live" | "Hidden" | "Unavailable";
+  imageUrl?: string;
   owner?: {
     name: string;
     phone: string;
@@ -20,43 +22,42 @@ export interface Submission {
 }
 
 interface RecentSubmissionsProps {
-  activeStatus?: 'ALL' | 'ACTIVE' | 'REJECTED' | 'PENDING REVIEW';
-  activeCategory?: 'ALL' | 'SHARED' | 'STUDIO' | 'DORM';
+  activeStatus?: "ALL" | "ACTIVE" | "REJECTED" | "PENDING REVIEW";
+  activeCategory?: "ALL" | "SHARED" | "STUDIO" | "DORM" | "APARTMENT";
   submissions?: Submission[];
 }
 
 export function RecentSubmissions({
-  activeStatus = 'ALL',
-  activeCategory = 'ALL',
+  activeStatus = "ALL",
+  activeCategory = "ALL",
   submissions = [],
 }: RecentSubmissionsProps) {
   const [showAll, setShowAll] = useState(false);
 
   const filteredSubmissions = submissions.filter((item) => {
     const matchesStatus =
-      activeStatus === 'ALL' ||
-      (activeStatus === 'PENDING REVIEW' && item.status === 'Pending Review') ||
-      (activeStatus === 'ACTIVE' && item.status === 'Active') ||
-      (activeStatus === 'REJECTED' && item.status === 'Rejected');
+      activeStatus === "ALL" ||
+      (activeStatus === "PENDING REVIEW" && item.status === "Pending Review") ||
+      (activeStatus === "ACTIVE" && item.status === "Active") ||
+      (activeStatus === "REJECTED" && item.status === "Rejected");
 
-    const matchesCategory =
-      activeCategory === 'ALL' || item.category === activeCategory;
+    const matchesCategory = activeCategory === "ALL" || item.category === activeCategory;
 
     return matchesStatus && matchesCategory;
   });
 
-  const displayedSubmissions = showAll
-    ? filteredSubmissions
-    : filteredSubmissions.slice(0, 6);
+  const displayedSubmissions = showAll ? filteredSubmissions : filteredSubmissions.slice(0, 6);
 
-  const getCategoryIcon = (category: Submission['category']) => {
+  const getCategoryIcon = (category: Submission["category"]) => {
     switch (category) {
-      case 'DORM':
+      case "DORM":
         return <GraduationCap className="w-3.5 h-3.5 text-indigo-500" />;
-      case 'STUDIO':
+      case "STUDIO":
         return <Building className="w-3.5 h-3.5 text-blue-500" />;
-      case 'SHARED':
+      case "SHARED":
         return <Home className="w-3.5 h-3.5 text-emerald-500" />;
+      case "APARTMENT":
+        return <Building className="w-3.5 h-3.5 text-blue-500" />;
     }
   };
 
@@ -65,7 +66,9 @@ export function RecentSubmissions({
       <div className="p-4 sm:p-5 border-b border-brand-slate/10 flex items-center justify-between">
         <div>
           <h3 className="font-bold text-brand-navy text-sm sm:text-base">
-            {activeStatus === 'PENDING REVIEW' ? 'Pending Approval Requests' : 'Property Submissions'}
+            {activeStatus === "PENDING REVIEW"
+              ? "Pending Approval Requests"
+              : "Property Submissions"}
           </h3>
           <p className="text-xs text-brand-slate">
             Showing {displayedSubmissions.length} of {filteredSubmissions.length} entries
@@ -100,16 +103,13 @@ export function RecentSubmissions({
               <th className="py-3 px-2">Host</th>
               <th className="py-3 px-2">Price</th>
               <th className="py-3 px-2">Status</th>
-
             </tr>
           </thead>
           <tbody className="divide-y divide-brand-slate/10">
             {displayedSubmissions.length > 0 ? (
               displayedSubmissions.map((submission) => {
-
                 return (
                   <tr key={submission.id} className="hover:bg-brand-light/30 transition-colors">
-                  
                     <td className="py-3 px-3 sm:px-4">
                       <div className="flex items-center gap-3">
                         <div className="relative w-11 h-11 rounded-xl overflow-hidden bg-slate-100 border border-brand-slate/15 shrink-0 shadow-2xs">
@@ -134,7 +134,6 @@ export function RecentSubmissions({
                       </div>
                     </td>
 
-                  
                     <td className="py-3 px-2 hidden md:table-cell">
                       <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md text-[11px] font-medium bg-slate-100 text-slate-700">
                         {getCategoryIcon(submission.category)}
@@ -142,28 +141,34 @@ export function RecentSubmissions({
                       </span>
                     </td>
 
-                    
                     <td className="py-3 px-2 text-brand-slate max-w-[100px] truncate">
                       {submission.host}
                     </td>
 
-                  
                     <td className="py-3 px-2 font-semibold text-brand-navy whitespace-nowrap">
-                      ${submission.price}<span className="text-[10px] text-brand-slate font-normal">/mo</span>
+                      ${submission.price}
+                      <span className="text-[10px] text-brand-slate font-normal">/mo</span>
                     </td>
 
                     <td className="py-3 px-2 whitespace-nowrap">
                       <span
                         className={`inline-flex items-center px-2.5 py-1 rounded-md text-[10px] font-bold uppercase ${
-                          submission.status === 'Active'
-                            ? 'bg-emerald-50 text-emerald-700 border border-emerald-200/60'
-                            : submission.status === 'Pending Review'
-                            ? 'bg-amber-50 text-amber-700 border border-amber-200/60'
-                            : 'bg-rose-50 text-rose-700 border border-rose-200/60'
+                          submission.status === "Active"
+                            ? "bg-emerald-50 text-emerald-700 border border-emerald-200/60"
+                            : submission.status === "Pending Review"
+                              ? "bg-amber-50 text-amber-700 border border-amber-200/60"
+                              : submission.status === "Approved"
+                                ? "bg-brand-light text-brand-navy border border-brand-slate/20"
+                                : "bg-rose-50 text-rose-700 border border-rose-200/60"
                         }`}
                       >
                         {submission.status}
                       </span>
+                      {submission.moderationStatus && (
+                        <span className="block mt-1 text-[10px] text-brand-slate">
+                          Moderation: {submission.moderationStatus} · {submission.visibilityStatus}
+                        </span>
+                      )}
                     </td>
                   </tr>
                 );

@@ -7,9 +7,7 @@ export class HostRepository implements IHostRepository {
   private supabase;
 
   constructor(accessToken?: string) {
-    this.supabase = accessToken
-      ? createAuthenticatedClient(accessToken)
-      : supabase;
+    this.supabase = accessToken ? createAuthenticatedClient(accessToken) : supabase;
   }
 
   async getByUserId(userId: string): Promise<Host | null> {

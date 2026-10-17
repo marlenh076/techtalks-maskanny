@@ -39,8 +39,12 @@ export type Database = {
   };
   public: {
     Tables: {
+      property_view: {
+        Row: { property_view_id: number; property_id: string; visitor_key: string; viewed_at: string };
+        Insert: never; Update: never; Relationships: [];
+      };
       boost_payment: {
-        Row: { payment_id: string; property_boosting_id: string; submitted_by: string; reference: string; amount: number; currency: string; status: "pending" | "verified" | "rejected"; submitted_at: string; reviewed_at: string | null; reviewed_by: string | null; rejection_reason: string | null };
+        Row: { payment_id: string; property_boosting_id: string; submitted_by: string; reference: string | null; amount: number; currency: string; status: "pending" | "verified" | "rejected"; submitted_at: string; reviewed_at: string | null; reviewed_by: string | null; rejection_reason: string | null; receipt_path: string | null };
         Insert: never; Update: never; Relationships: [];
       };
       admin_activity: {
@@ -145,6 +149,7 @@ export type Database = {
       property: {
         Row: {
           address: string;
+          archived_at: string | null;
           approval_status: Database["public"]["Enums"]["property_approval_status"];
           bathroom_type: Database["public"]["Enums"]["bathroom_type"];
           bathrooms: number;
@@ -166,6 +171,7 @@ export type Database = {
         };
         Insert: {
           address: string;
+          archived_at?: string | null;
           approval_status?: Database["public"]["Enums"]["property_approval_status"];
           bathroom_type: Database["public"]["Enums"]["bathroom_type"];
           bathrooms: number;
@@ -187,6 +193,7 @@ export type Database = {
         };
         Update: {
           address?: string;
+          archived_at?: string | null;
           approval_status?: Database["public"]["Enums"]["property_approval_status"];
           bathroom_type?: Database["public"]["Enums"]["bathroom_type"];
           bathrooms?: number;
@@ -368,6 +375,16 @@ export type Database = {
       [_ in never]: never;
     };
     Functions: {
+      archive_host_property: {
+        Args: { p_property_id: string };
+        Returns: Database["public"]["Tables"]["property"]["Row"];
+      };
+      public_live_boost_activation_times: {
+        Args: Record<string, never>;
+        Returns: { property_id: string; activated_at: string }[];
+      };
+      record_property_view: { Args: { p_property_id: string; p_visitor_key: string }; Returns: boolean };
+      host_property_view_daily: { Args: { p_from: string | null; p_to: string }; Returns: { day: string; views: number }[] };
       admin_directory_list: { Args: { p_kind: string; p_filters?: Json }; Returns: Json };
       admin_directory_detail: { Args: { p_id: string; p_kind: string }; Returns: Json };
       admin_boost_queue: { Args: { p_filters?: Json }; Returns: Json };
@@ -381,6 +398,9 @@ export type Database = {
       moderate_property: { Args: { p_property_id: string; p_decision: string; p_reason?: string }; Returns: undefined };
       decide_boost: { Args: { p_boost_id: string; p_decision: string; p_reason?: string }; Returns: Json };
       submit_boost_payment: { Args: { p_boost_id: string; p_reference: string; p_amount: number; p_currency: string }; Returns: Json };
+      submit_host_boost_payment: { Args: { p_boost_id: string; p_reference: string | null; p_receipt_path: string | null }; Returns: Json };
+      get_host_boost_payment_status: { Args: { p_boost_id: string }; Returns: Json };
+      admin_decide_boost_payment: { Args: { p_boost_id: string; p_payment_id: string | null; p_reference: string | null; p_decision: string; p_whish_confirmed: boolean; p_reason: string | null }; Returns: Database["public"]["Tables"]["property_boosting"]["Row"] };
       review_boost_payment: { Args: { p_payment_id: string; p_decision: string; p_reason?: string }; Returns: Json };
       activate_property_boost: { Args: { p_boost_id: string }; Returns: Json };
       approve_property: {
@@ -401,6 +421,7 @@ export type Database = {
         Args: { p_property_id: string };
         Returns: Json;
       };
+      replace_host_property_universities: { Args: { p_property_id: string; p_university_ids: string[] }; Returns: string[] };
       is_property_effectively_live: {
         Args: { p_property_id: string };
         Returns: boolean;

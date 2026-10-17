@@ -2,14 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { divIcon, type Marker as LeafletMarker } from "leaflet";
-import {
-  MapContainer,
-  Marker,
-  TileLayer,
-  ZoomControl,
-  useMap,
-  useMapEvents,
-} from "react-leaflet";
+import { MapContainer, Marker, TileLayer, ZoomControl, useMap, useMapEvents } from "react-leaflet";
 import "leaflet/dist/leaflet.css";
 import type { Coordinates } from "./property-location";
 export type { Coordinates } from "./property-location";
@@ -55,17 +48,10 @@ function MapSelection({
     const container = map.getContainer();
     container.setAttribute("role", "region");
     container.setAttribute("aria-label", "Property location map");
-    container.setAttribute(
-      "aria-describedby",
-      "location-instructions location-keyboard-help",
-    );
+    container.setAttribute("aria-describedby", "location-instructions location-keyboard-help");
   }, [map]);
   useEffect(() => {
-    if (position)
-      map.setView(
-        [position.latitude, position.longitude],
-        Math.max(map.getZoom(), 15),
-      );
+    if (position) map.setView([position.latitude, position.longitude], Math.max(map.getZoom(), 15));
   }, [map, position]);
 
   return position ? (
@@ -97,16 +83,36 @@ function MapPreview({ position, interactive }: { position: Coordinates; interact
     container.setAttribute("aria-label", "Property location map");
     container.setAttribute("aria-describedby", "property-map-help");
     container.style.touchAction = interactive ? "none" : "pan-y";
-    for (const handler of [map.dragging, map.touchZoom, map.doubleClickZoom, map.keyboard, map.boxZoom]) {
-      if (interactive) handler.enable(); else handler.disable();
+    for (const handler of [
+      map.dragging,
+      map.touchZoom,
+      map.doubleClickZoom,
+      map.keyboard,
+      map.boxZoom,
+    ]) {
+      if (interactive) handler.enable();
+      else handler.disable();
     }
   }, [map, interactive]);
-  return <Marker position={[position.latitude, position.longitude]} icon={markerIcon}
-    title="Saved property location" alt="Saved property location" keyboard={false} interactive={false} />;
+  return (
+    <Marker
+      position={[position.latitude, position.longitude]}
+      icon={markerIcon}
+      title="Saved property location"
+      alt="Saved property location"
+      keyboard={false}
+      interactive={false}
+    />
+  );
 }
 
 type PropertyMapProps =
-  | { position: Coordinates | null; disabled: boolean; onSelect: (point: Coordinates) => void; readOnly?: false }
+  | {
+      position: Coordinates | null;
+      disabled: boolean;
+      onSelect: (point: Coordinates) => void;
+      readOnly?: false;
+    }
   | { position: Coordinates; readOnly: true; interactive: boolean };
 
 export default function PropertyMap(props: PropertyMapProps) {
@@ -135,13 +141,17 @@ export default function PropertyMap(props: PropertyMapProps) {
           eventHandlers={{ tileerror: () => setTileError(true) }}
         />
         {interactive && <ZoomControl position="topleft" />}
-        {props.readOnly ? <MapPreview position={props.position} interactive={props.interactive} /> :
-          <MapSelection position={position} disabled={props.disabled} onSelect={props.onSelect} />}
+        {props.readOnly ? (
+          <MapPreview position={props.position} interactive={props.interactive} />
+        ) : (
+          <MapSelection position={position} disabled={props.disabled} onSelect={props.onSelect} />
+        )}
       </MapContainer>
       {tileError && (
         <p role="status" className="mt-2 text-sm text-(--danger)">
-          {props.readOnly ? "Map tiles could not load. You can still open directions to the saved location." :
-            "Map tiles could not load. Check your connection; you can still use your current location."}
+          {props.readOnly
+            ? "Map tiles could not load. You can still open directions to the saved location."
+            : "Map tiles could not load. Check your connection; you can still use your current location."}
         </p>
       )}
     </div>

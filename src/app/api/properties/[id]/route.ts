@@ -14,52 +14,34 @@ import { HostRepository } from "@/src/features/users/repository/host.repository"
 const propertyRepository = new PropertyRepository();
 const propertyService = new PropertyService(propertyRepository);
 
-export async function GET(
-  request: NextRequest,
-  { params }: { params: Promise<{ id: string }> },
-) {
+export async function GET(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   try {
     const { id } = await params;
 
     if (!z.uuid().safeParse(id).success) {
-      return NextResponse.json(
-        { error: "Invalid property ID" },
-        { status: 400 },
-      );
+      return NextResponse.json({ error: "Invalid property ID" }, { status: 400 });
     }
 
     const property = await propertyService.getById(id);
 
     if (!property || property.approval_status !== "approved") {
-      return NextResponse.json(
-        { error: "Property not found" },
-        { status: 404 },
-      );
+      return NextResponse.json({ error: "Property not found" }, { status: 404 });
     }
 
     return NextResponse.json(property);
   } catch (error) {
     console.error(error);
 
-    return NextResponse.json(
-      { error: "Failed to fetch property" },
-      { status: 500 },
-    );
+    return NextResponse.json({ error: "Failed to fetch property" }, { status: 500 });
   }
 }
 
-export async function PATCH(
-  request: NextRequest,
-  { params }: { params: Promise<{ id: string }> },
-) {
+export async function PATCH(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   try {
     const { id } = await params;
 
     if (!z.uuid().safeParse(id).success) {
-      return NextResponse.json(
-        { error: "Invalid property ID" },
-        { status: 400 },
-      );
+      return NextResponse.json({ error: "Invalid property ID" }, { status: 400 });
     }
 
     const token = getAccessToken(request);
@@ -103,10 +85,7 @@ export async function PATCH(
 
     console.error(error);
 
-    return NextResponse.json(
-      { error: "Failed to update property" },
-      { status: 500 },
-    );
+    return NextResponse.json({ error: "Failed to update property" }, { status: 500 });
   }
 }
 
@@ -118,10 +97,7 @@ export async function DELETE(
     const { id } = await params;
 
     if (!z.uuid().safeParse(id).success) {
-      return NextResponse.json(
-        { error: "Invalid property ID" },
-        { status: 400 },
-      );
+      return NextResponse.json({ error: "Invalid property ID" }, { status: 400 });
     }
 
     const token = getAccessToken(request);
@@ -151,14 +127,26 @@ export async function DELETE(
       return NextResponse.json({ error: "Forbidden" }, { status: 403 });
     }
 
-    const storageService = new StorageService();
-
-    await storageService.deleteFolder(token, "properties-media", id);
-
+    // The archive is the authoritative database operation. Never remove public
+    // objects until its transaction has committed successfully.
     await propertyService.delete(id);
 
+    let mediaCleanupPending = false;
+    try {
+      await new StorageService().deleteFolder(token, "properties-media", id);
+    } catch (error) {
+      // The archived row is already safe and hidden. A repeated DELETE can retry
+      // this idempotent folder cleanup without touching financial history.
+      mediaCleanupPending = true;
+      console.error("Archived property photo cleanup is pending:", error);
+    }
+
     return NextResponse.json(
-      { message: "Property deleted successfully" },
+      {
+        message: "Property archived successfully",
+        archived: true,
+        media_cleanup_pending: mediaCleanupPending,
+      },
       { status: 200 },
     );
   } catch (error) {
@@ -168,9 +156,6 @@ export async function DELETE(
 
     console.error(error);
 
-    return NextResponse.json(
-      { error: "Failed to delete property" },
-      { status: 500 },
-    );
+    return NextResponse.json({ error: "Failed to delete property" }, { status: 500 });
   }
 }

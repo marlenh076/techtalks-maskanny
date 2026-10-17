@@ -11,12 +11,12 @@ import { HostRepository } from "@/src/features/users/repository/host.repository"
 
 import { StorageService } from "@/src/lib/supabase/storage";
 import { getAccessToken, getCurrentUser } from "@/src/lib/supabase/auth";
-import { MAX_MEDIA_FILE_SIZE, PROPERTY_MEDIA_TYPES } from "@/src/features/properties/validation/media-limits";
+import {
+  MAX_MEDIA_FILE_SIZE,
+  PROPERTY_MEDIA_TYPES,
+} from "@/src/features/properties/validation/media-limits";
 
-export async function GET(
-  request: NextRequest,
-  { params }: { params: Promise<{ id: string }> },
-) {
+export async function GET(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   try {
     const { id } = await params;
 
@@ -32,9 +32,7 @@ export async function GET(
       }
     }
 
-    const media = await new MediaService(
-      new MediaRepository(token ?? undefined),
-    ).getById(id);
+    const media = await new MediaService(new MediaRepository(token ?? undefined)).getById(id);
 
     if (!media) {
       return NextResponse.json({ error: "Media not found" }, { status: 404 });
@@ -44,17 +42,11 @@ export async function GET(
   } catch (error) {
     console.error(error);
 
-    return NextResponse.json(
-      { error: "Failed to fetch media" },
-      { status: 500 },
-    );
+    return NextResponse.json({ error: "Failed to fetch media" }, { status: 500 });
   }
 }
 
-export async function PUT(
-  request: NextRequest,
-  { params }: { params: Promise<{ id: string }> },
-) {
+export async function PUT(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   try {
     const { id } = await params;
 
@@ -82,9 +74,7 @@ export async function PUT(
       return NextResponse.json({ error: "Media not found" }, { status: 404 });
     }
 
-    const property = await new PropertyRepository(token).getById(
-      existingMedia.property_id,
-    );
+    const property = await new PropertyRepository(token).getById(existingMedia.property_id);
 
     if (!property) {
       return NextResponse.json({ error: "Media not found" }, { status: 404 });
@@ -96,7 +86,7 @@ export async function PUT(
       return NextResponse.json({ error: "Forbidden" }, { status: 403 });
     }
 
-    if (property.approval_status === "rejected") {
+    if (property.archived_at || property.approval_status === "rejected") {
       return NextResponse.json({ error: "Forbidden" }, { status: 403 });
     }
 
@@ -113,17 +103,11 @@ export async function PUT(
     }
 
     if (!PROPERTY_MEDIA_TYPES.includes(file.type)) {
-      return NextResponse.json(
-        { error: "Unsupported file type" },
-        { status: 400 },
-      );
+      return NextResponse.json({ error: "Unsupported file type" }, { status: 400 });
     }
 
     if (file.size > MAX_MEDIA_FILE_SIZE) {
-      return NextResponse.json(
-        { error: "File size must not exceed 50 MB" },
-        { status: 400 },
-      );
+      return NextResponse.json({ error: "File size must not exceed 50 MB" }, { status: 400 });
     }
 
     const fileExtension = file.name.split(".").pop();
@@ -154,9 +138,7 @@ export async function PUT(
 
     const oldUrl = new URL(existingMedia.url);
 
-    const oldPath = oldUrl.pathname.split(
-      "/storage/v1/object/public/properties-media/",
-    )[1];
+    const oldPath = oldUrl.pathname.split("/storage/v1/object/public/properties-media/")[1];
 
     if (oldPath) {
       try {
@@ -178,10 +160,7 @@ export async function PUT(
 
     console.error(error);
 
-    return NextResponse.json(
-      { error: "Failed to replace media" },
-      { status: 500 },
-    );
+    return NextResponse.json({ error: "Failed to replace media" }, { status: 500 });
   }
 }
 
@@ -216,9 +195,7 @@ export async function DELETE(
 
     const oldUrl = new URL(existingMedia.url);
 
-    const oldPath = oldUrl.pathname.split(
-      "/storage/v1/object/public/properties-media/",
-    )[1];
+    const oldPath = oldUrl.pathname.split("/storage/v1/object/public/properties-media/")[1];
 
     if (!oldPath) {
       return NextResponse.json({ error: "Invalid media URL" }, { status: 400 });
@@ -240,9 +217,6 @@ export async function DELETE(
 
     console.error(error);
 
-    return NextResponse.json(
-      { error: "Failed to delete media" },
-      { status: 500 },
-    );
+    return NextResponse.json({ error: "Failed to delete media" }, { status: 500 });
   }
 }

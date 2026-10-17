@@ -10,14 +10,10 @@ interface MyListingsSidebarProps {
   onDeleteListing: (id: string) => void;
 }
 
-export function MyListingsSidebar({
-  listings,
-  onUpdateListing,
-}: MyListingsSidebarProps) {
+export function MyListingsSidebar({ listings, onUpdateListing }: MyListingsSidebarProps) {
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editForm, setEditForm] = useState<Partial<OwnerSubmission>>({});
-  const [originalListing, setOriginalListing] =
-    useState<OwnerSubmission | null>(null);
+  const [originalListing, setOriginalListing] = useState<OwnerSubmission | null>(null);
 
   const handleEditClick = (item: OwnerSubmission) => {
     setEditingId(item.id);
@@ -39,17 +35,11 @@ export function MyListingsSidebar({
     )
       return;
 
-    const changes: Partial<
-      Pick<OwnerSubmission, "property" | "price" | "category">
-    > = {};
+    const changes: Partial<Pick<OwnerSubmission, "property" | "price" | "category">> = {};
     if (editForm.property.trim() !== originalListing.property)
       changes.property = editForm.property.trim();
-    if (editForm.price !== originalListing.price)
-      changes.price = editForm.price;
-    if (
-      editForm.category != null &&
-      editForm.category !== originalListing.category
-    )
+    if (editForm.price !== originalListing.price) changes.price = editForm.price;
+    if (editForm.category != null && editForm.category !== originalListing.category)
       changes.category = editForm.category;
 
     onUpdateListing({
@@ -70,8 +60,7 @@ export function MyListingsSidebar({
           Manage Your Dorms & Properties ({listings.length})
         </h3>
         <p className="text-xs text-brand-slate mt-0.5">
-          Review your student housing units and click edit to update titles,
-          prices, or categories.
+          Review your student housing units and click edit to update titles, prices, or categories.
         </p>
       </div>
 
@@ -109,9 +98,7 @@ export function MyListingsSidebar({
                     <input
                       type="text"
                       value={editForm.property || ""}
-                      onChange={(e) =>
-                        setEditForm({ ...editForm, property: e.target.value })
-                      }
+                      onChange={(e) => setEditForm({ ...editForm, property: e.target.value })}
                       className="w-full px-3 py-2 rounded-xl border border-brand-slate/30 text-xs font-medium text-brand-navy focus:outline-none focus:ring-2 focus:ring-brand-navy/20"
                     />
                   </div>
@@ -129,15 +116,11 @@ export function MyListingsSidebar({
                       onChange={(e) =>
                         setEditForm({
                           ...editForm,
-                          price:
-                            e.target.value === ""
-                              ? undefined
-                              : Number(e.target.value),
+                          price: e.target.value === "" ? undefined : Number(e.target.value),
                         })
                       }
                       className="w-full px-3 py-2 rounded-xl border border-brand-slate/30 text-xs font-medium text-brand-navy focus:outline-none focus:ring-2 focus:ring-brand-navy/20"
                     />
-
                   </div>
                 </div>
 
@@ -152,8 +135,7 @@ export function MyListingsSidebar({
                       onChange={(e) =>
                         setEditForm({
                           ...editForm,
-                          category: e.target
-                            .value as OwnerSubmission["category"],
+                          category: e.target.value as OwnerSubmission["category"],
                         })
                       }
                       className="w-full px-3 py-2 rounded-xl border border-brand-slate/30 text-xs font-medium text-brand-navy focus:outline-none focus:ring-2 focus:ring-brand-navy/20 bg-white"
@@ -216,9 +198,7 @@ export function MyListingsSidebar({
                         {item.status}
                       </span>
                     </div>
-                    <h4 className="text-sm font-bold text-brand-navy mt-1">
-                      {item.property}
-                    </h4>
+                    <h4 className="text-sm font-bold text-brand-navy mt-1">{item.property}</h4>
                     <p className="text-xs text-brand-slate">
                       ${item.price} / month • Added {item.createdAt}
                     </p>

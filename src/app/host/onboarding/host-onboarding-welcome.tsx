@@ -9,23 +9,14 @@ const benefits = [
   { icon: UsersRound, text: "Make your listing available to students." },
 ];
 
-export function HostOnboardingWelcome({
-  accessError = false,
-}: {
-  accessError?: boolean;
-}) {
+export function HostOnboardingWelcome({ accessError = false }: { accessError?: boolean }) {
   return (
     <main className={`student-marketplace ${styles.page}`}>
       <div className={styles.layout}>
-        <section
-          className={styles.content}
-          aria-labelledby="host-welcome-title"
-        >
+        <section className={styles.content} aria-labelledby="host-welcome-title">
           <p className={styles.eyebrow}>Hosting on Maskanny</p>
 
-          <h1 id="host-welcome-title">
-            Your space could be someone&apos;s next home.
-          </h1>
+          <h1 id="host-welcome-title">Your space could be someone&apos;s next home.</h1>
 
           <p className={styles.description}>
             List your property and help students find a place near campus.

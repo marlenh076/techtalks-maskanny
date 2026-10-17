@@ -12,7 +12,11 @@ import { AuthButton, AuthField, AuthHeading, AuthNotice, AuthPhoneField } from "
 import { localPhoneInput, normalizeLebanesePhone } from "./phone";
 import { signupErrorMessage, unexpectedSignupErrorMessage } from "./signup-error";
 
-export default function SignUpPage({ searchParams }: { searchParams: Promise<{ next?: string | string[] }> }) {
+export default function SignUpPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ next?: string | string[] }>;
+}) {
   const params = use(searchParams);
   const next = safeReturnPath(typeof params.next === "string" ? params.next : null);
   const signInHref = next ? `/sign-in?next=${encodeURIComponent(next)}` : "/sign-in";
@@ -57,7 +61,11 @@ export default function SignUpPage({ searchParams }: { searchParams: Promise<{ n
         email: profile.data.email,
         password,
         options: {
-          data: { firstname: profile.data.firstname, lastname: profile.data.lastname, phone: normalizedPhone.e164 },
+          data: {
+            firstname: profile.data.firstname,
+            lastname: profile.data.lastname,
+            phone: normalizedPhone.e164,
+          },
           emailRedirectTo: `${window.location.origin}/auth/callback`,
         },
       });
@@ -72,12 +80,16 @@ export default function SignUpPage({ searchParams }: { searchParams: Promise<{ n
       try {
         savePendingVerification(profile.data.email, next);
       } catch {
-        setError("We couldn't save your email for resend. If a confirmation link arrives, open it. You can also sign in.");
+        setError(
+          "We couldn't save your email for resend. If a confirmation link arrives, open it. You can also sign in.",
+        );
         return;
       }
       window.location.replace("/verify-email");
     } catch (cause) {
-      setError(isAuthError(cause) ? signupErrorMessage(cause) : unexpectedSignupErrorMessage(cause));
+      setError(
+        isAuthError(cause) ? signupErrorMessage(cause) : unexpectedSignupErrorMessage(cause),
+      );
     } finally {
       setLoading(false);
     }
@@ -85,23 +97,89 @@ export default function SignUpPage({ searchParams }: { searchParams: Promise<{ n
 
   return (
     <>
-      <AuthHeading title="Create your account" description="Start finding a place that feels like home." />
+      <AuthHeading
+        title="Create your account"
+        description="Start finding a place that feels like home."
+      />
       <form method="post" onSubmit={handleSubmit} className="space-y-4">
         <div className="grid gap-4 min-[700px]:grid-cols-2 min-[900px]:grid-cols-1 min-[1100px]:grid-cols-2">
-          <AuthField id="firstname" name="firstname" label="First name" type="text" autoComplete="given-name" placeholder="First name" required />
-          <AuthField id="lastname" name="lastname" label="Last name" type="text" autoComplete="family-name" placeholder="Last name" required />
+          <AuthField
+            id="firstname"
+            name="firstname"
+            label="First name"
+            type="text"
+            autoComplete="given-name"
+            placeholder="First name"
+            required
+          />
+          <AuthField
+            id="lastname"
+            name="lastname"
+            label="Last name"
+            type="text"
+            autoComplete="family-name"
+            placeholder="Last name"
+            required
+          />
         </div>
-        <AuthField id="email" name="email" label="Email address" type="email" autoComplete="email" placeholder="you@example.com" required />
+        <AuthField
+          id="email"
+          name="email"
+          label="Email address"
+          type="email"
+          autoComplete="email"
+          placeholder="you@example.com"
+          required
+        />
         <div>
-          <AuthPhoneField value={phone} onChange={(value) => { setPhone(localPhoneInput(value)); setPhoneError(null); }} error={phoneError} />
-          <p id="phone-help" className="mt-2 text-xs leading-5 text-[var(--soft)]">Lebanese mobile or landline number.</p>
+          <AuthPhoneField
+            value={phone}
+            onChange={(value) => {
+              setPhone(localPhoneInput(value));
+              setPhoneError(null);
+            }}
+            error={phoneError}
+          />
+          <p id="phone-help" className="mt-2 text-xs leading-5 text-[var(--soft)]">
+            Lebanese mobile or landline number.
+          </p>
         </div>
-        <AuthField id="password" name="password" label="Password" type="password" autoComplete="new-password" minLength={8} placeholder="At least 8 characters" required />
-        <AuthField id="confirmPassword" name="confirmPassword" label="Confirm password" type="password" autoComplete="new-password" minLength={8} placeholder="Enter it again" required />
+        <AuthField
+          id="password"
+          name="password"
+          label="Password"
+          type="password"
+          autoComplete="new-password"
+          minLength={8}
+          placeholder="At least 8 characters"
+          required
+        />
+        <AuthField
+          id="confirmPassword"
+          name="confirmPassword"
+          label="Confirm password"
+          type="password"
+          autoComplete="new-password"
+          minLength={8}
+          placeholder="Enter it again"
+          required
+        />
         <AuthNotice message={error} />
-        <div className="pt-2"><AuthButton loading={loading}>{loading ? "Creating account…" : "Create account"}</AuthButton></div>
+        <div className="pt-2">
+          <AuthButton loading={loading}>
+            {loading ? "Creating account…" : "Create account"}
+          </AuthButton>
+        </div>
       </form>
-      <p className="mt-6 text-center text-sm text-[var(--soft)]">Already have an account? <Link href={signInHref} className="auth-switch-link font-semibold underline-offset-4 hover:underline focus-visible:rounded-sm focus-visible:outline-2 focus-visible:outline-offset-3 focus-visible:outline-[var(--ink)]">Sign in</Link></p>
+      <p className="mt-6 text-center text-sm text-[var(--soft)]">
+        Already have an account?{" "}
+        <Link
+          href={signInHref}
+          className="auth-switch-link font-semibold underline-offset-4 hover:underline focus-visible:rounded-sm focus-visible:outline-2 focus-visible:outline-offset-3 focus-visible:outline-[var(--ink)]"
+        >
+          Sign in
+        </Link>
+      </p>
     </>
   );
 }

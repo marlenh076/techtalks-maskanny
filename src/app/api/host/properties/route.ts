@@ -21,15 +21,12 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ error: "Host access required" }, { status: 403 });
     }
 
-    const properties = await new PropertyService(
-      new PropertyRepository(token),
-    ).getByHostId(host.host_id);
+    const properties = await new PropertyService(new PropertyRepository(token)).getByHostId(
+      host.host_id,
+    );
     return NextResponse.json(properties);
   } catch (error) {
     console.error(error);
-    return NextResponse.json(
-      { error: "Failed to fetch host properties" },
-      { status: 500 },
-    );
+    return NextResponse.json({ error: "Failed to fetch host properties" }, { status: 500 });
   }
 }

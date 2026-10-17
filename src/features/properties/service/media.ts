@@ -14,14 +14,16 @@ export class MediaService {
     propertyId: string,
     type: Media["type"],
     excludeMediaId?: string,
+    maxImages = MAX_PROPERTY_IMAGES,
   ): Promise<void> {
     const existingMedia = await this.mediaRepository.getByPropertyId(propertyId);
     const count = existingMedia.filter(
       (media) => media.type === type && media.media_id !== excludeMediaId,
     ).length;
 
-    if (type === "image" && count >= MAX_PROPERTY_IMAGES) {
-      throw new MediaLimitError("Maximum number of images reached");
+    const imageLimit = Math.max(0, Math.min(MAX_PROPERTY_IMAGES, maxImages));
+    if (type === "image" && count >= imageLimit) {
+      throw new MediaLimitError(`Maximum of ${imageLimit} images allowed`);
     }
 
     if (type === "video" && count >= MAX_VIDEOS) {
@@ -29,8 +31,11 @@ export class MediaService {
     }
   }
 
-  async create(data: Omit<Media, "media_id" | "created_at"> & { media_id?: string }): Promise<Media> {
-    await this.assertWithinLimit(data.property_id, data.type);
+  async create(
+    data: Omit<Media, "media_id" | "created_at"> & { media_id?: string },
+    maxImages = MAX_PROPERTY_IMAGES,
+  ): Promise<Media> {
+    await this.assertWithinLimit(data.property_id, data.type, undefined, maxImages);
     return this.mediaRepository.create(data);
   }
 

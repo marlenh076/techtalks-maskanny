@@ -19,7 +19,10 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en">
-      <body suppressHydrationWarning className="min-h-screen font-sans antialiased bg-brand-light text-brand-navy">
+      <body
+        suppressHydrationWarning
+        className="min-h-screen font-sans antialiased bg-brand-light text-brand-navy"
+      >
         <MarketplaceNav />
         {children}
         <Toaster

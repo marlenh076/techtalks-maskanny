@@ -1,13 +1,38 @@
-'use client';
+"use client";
 
-import { useState, useMemo } from 'react';
-import { OwnerSidebar } from '@/src/components/owner/OwnerSidebar';
-import { MetricCard } from '@/src/components/admin/MetricCard';
-import { RecentSubmissions, type Submission } from '@/src/components/owner/RecentSubmissions';
-import { AnalyticsChart } from '@/src/components/owner/AnalyticsChart';
-import { CategoryDonuts } from '@/src/components/owner/CategoryDonuts';
-import { useRouter } from 'next/navigation';
-
+import { useState, useMemo, useEffect, useCallback } from "react";
+import Image from "next/image";
+import { OwnerSidebar } from "@/src/components/owner/OwnerSidebar";
+import { MetricCard } from "@/src/components/admin/MetricCard";
+import { RecentSubmissions, type Submission } from "@/src/components/owner/RecentSubmissions";
+import { AnalyticsChart } from "@/src/components/owner/AnalyticsChart";
+import { CategoryDonuts } from "@/src/components/owner/CategoryDonuts";
+import { useRouter } from "next/navigation";
+import { supabase } from "@/src/lib/supabase/client";
+import {
+  loadHostListings,
+  hostRequest,
+} from "@/src/features/properties/presentation/host-listings.api";
+import {
+  boostHref,
+  canRequestBoost,
+  coverImage,
+  isLive,
+  propertyFeatureLabels,
+  type HostListing,
+} from "@/src/features/properties/presentation/host-listings";
+import type { Property } from "@/src/features/properties/models/property.model";
+import type { Media } from "@/src/features/properties/models/media.model";
+import type { University } from "@/src/features/universities/models/university.model";
+import PropertyUniversitySelect from "@/src/features/properties/presentation/components/PropertyUniversitySelect";
+import type { BoostingPlan } from "@/src/features/boosting/models/boosting_plan.model";
+import { MAX_PROPERTY_IMAGES } from "@/src/features/properties/validation/media-limits";
+import {
+  saveListingChanges,
+  validatePhotoAdditions,
+  validatePropertyEdit,
+  type PendingPhoto,
+} from "@/src/features/properties/presentation/host-listing-editor";
 
 import {
   Plus,
@@ -18,42 +43,37 @@ import {
   Search,
   BarChart3,
   User,
-  Bell,
-  Sliders,
   Shield,
-  Globe,
   HelpCircle,
-  AlertCircle,
   MapPin,
   BedDouble,
   Home,
   Upload,
   Check,
-  Send,
   Bath,
-  Maximize,
-  ChevronDown,
-  ChevronUp,
   Save,
-  Rocket
-} from 'lucide-react';
-
+  Rocket,
+} from "lucide-react";
 
 export interface OwnerSubmission extends Submission {
+  propertyId: string;
+  approvalStatus: Property["approval_status"];
+  live: boolean;
+  canBoost: boolean;
+  unavailableRelatedData: string[];
+  associatedUniversities: University[];
   createdAt: string;
 
   description: string;
 
-  propertyType:
-  | 'Apartment'
-  | 'Dorm'
-  | 'Studio'
-  | 'Shared Apartment';
+  propertyType: "Apartment" | "Dorm" | "Studio" | "Shared Apartment";
 
-  roomType:
-  | 'Private Room'
-  | 'Shared Room'
-  | 'Studio';
+  electricityIncluded: boolean;
+  kitchenType: "private" | "shared";
+  bathroomType: "private" | "shared";
+  gender: "boys" | "girls" | "mixed";
+  images: Media[];
+  imageLimit: number | null;
 
   location: string;
   city: string;
@@ -64,13 +84,8 @@ export interface OwnerSubmission extends Submission {
   beds: number;
   bathrooms: number;
   rooms: number;
-  size: number;
 
-  furnishing:
-  | 'Furnished'
-  | 'Unfurnished';
-
-  availableRooms: number;
+  furnishing: "Furnished" | "Unfurnished";
 
   amenities: string[];
 
@@ -85,419 +100,517 @@ export interface StudentFeedback {
   date: string;
 }
 
-const MOCK_OWNER_SUBMISSIONS: OwnerSubmission[] = [
-  {
-    id: 'prop-001',
-    property: 'Campus View Student Residence',
-    host: 'You',
-    price: 400,
-    status: 'Active',
-    category: 'STUDIO',
-    createdAt: '2026-10-01',
-
-    description:
-      'Modern and fully furnished student accommodation located close to the university campus.',
-
-    propertyType: 'Studio',
-    roomType: 'Studio',
-
-    location: 'Hamra Street',
-    city: 'Beirut',
-    area: 'Hamra',
-    university: 'Lebanese University',
-    distanceToUniversity: '7 min',
-
-    beds: 1,
-    bathrooms: 1,
-    rooms: 1,
-    size: 35,
-    furnishing: 'Furnished',
-    availableRooms: 1,
-
-    amenities: [
-      'Wi-Fi',
-      'Electricity',
-      'Water',
-      'Air Conditioning',
-      'Kitchen',
-      'Laundry',
-      'Security',
-      'Elevator',
-      'Study Area',
+function toOwnerSubmission(listing: HostListing, plans: BoostingPlan[] | null): OwnerSubmission {
+  const { property, media, universities } = listing;
+  const live = isLive(listing);
+  const propertyType =
+    property.property_type === "dorm"
+      ? "Dorm"
+      : property.property_type === "studio"
+        ? "Studio"
+        : "Apartment";
+  const plan = listing.boost
+    ? plans?.find((item) => item.boosting_plan_id === listing.boost?.boosting_plan_id)
+    : null;
+  return {
+    id: property.property_id,
+    propertyId: property.property_id,
+    approvalStatus: property.approval_status,
+    live,
+    canBoost: canRequestBoost(listing),
+    moderationStatus: property.approval_status,
+    visibilityStatus:
+      listing.relatedData.boost === "unavailable" ? "Unavailable" : live ? "Live" : "Hidden",
+    unavailableRelatedData: [
+      ...(listing.relatedData.boost === "unavailable" ? ["boost status"] : []),
+      ...(listing.relatedData.media === "unavailable" ? ["photos"] : []),
+      ...(listing.relatedData.universities === "unavailable" ? ["university associations"] : []),
     ],
+    associatedUniversities: universities,
+    property: property.title,
+    host: "You",
+    price: property.price,
+    status:
+      property.approval_status === "pending"
+        ? "Pending Review"
+        : property.approval_status === "rejected"
+          ? "Rejected"
+          : live
+            ? "Active"
+            : "Approved",
+    category:
+      property.property_type === "dorm"
+        ? "DORM"
+        : property.property_type === "studio"
+          ? "STUDIO"
+          : "APARTMENT",
+    createdAt: property.created_at,
+    description: property.description ?? "",
+    propertyType,
+    electricityIncluded: property.electricity_included,
+    kitchenType: property.kitchen_type,
+    bathroomType: property.bathroom_type,
+    gender: property.gender,
+    images: media.filter((item) => item.type === "image"),
+    imageLimit: listing.boost
+      ? plan
+        ? Math.min(MAX_PROPERTY_IMAGES, plan.max_images)
+        : null
+      : MAX_PROPERTY_IMAGES,
+    location: property.address,
+    city: "",
+    area: "",
+    university:
+      listing.relatedData.universities === "unavailable"
+        ? "Unavailable"
+        : universities.map((item) => item.name).join(", "),
+    distanceToUniversity: "",
+    beds: property.bed_count,
+    bathrooms: property.bathrooms,
+    rooms: property.bedrooms,
+    furnishing: property.furnished ? "Furnished" : "Unfurnished",
+    amenities: propertyFeatureLabels(property),
+    photos: media.filter((item) => item.type === "image").map((item) => item.url),
+    imageUrl: coverImage(media) ?? undefined,
+  };
+}
 
-    photos: [
-      'https://images.unsplash.com/photo-1555854877-bab0e564b8d5?w=900',
-      'https://images.unsplash.com/photo-1522708323590-d24dbb6b0267?w=900',
-      'https://images.unsplash.com/photo-1505693416388-ac5ce068fe85?w=900',
-    ],
-
-    imageUrl:
-      'https://images.unsplash.com/photo-1555854877-bab0e564b8d5?w=500',
-  },
-
-  {
-    id: 'prop-002',
-    property: 'University Heights Residence',
-    host: 'You',
-    price: 420,
-    status: 'Pending Review',
-    category: 'DORM',
-    createdAt: '2026-09-29',
-
-    description:
-      'Comfortable student residence with shared facilities and easy access to universities.',
-
-    propertyType: 'Dorm',
-    roomType: 'Private Room',
-
-    location: 'Bliss Street',
-    city: 'Beirut',
-    area: 'Hamra',
-    university: 'Lebanese University',
-    distanceToUniversity: '10 min',
-
-    beds: 1,
-    bathrooms: 2,
-    rooms: 4,
-    size: 70,
-    furnishing: 'Furnished',
-    availableRooms: 2,
-
-    amenities: [
-      'Wi-Fi',
-      'Electricity',
-      'Water',
-      'Heating',
-      'Kitchen',
-      'Laundry',
-      'Parking',
-      'Security',
-    ],
-
-    photos: [
-      'https://images.unsplash.com/photo-1522771739844-6a9f6d5f14af?w=900',
-      'https://images.unsplash.com/photo-1598928506311-c55ded91a20c?w=900',
-    ],
-
-    imageUrl:
-      'https://images.unsplash.com/photo-1522771739844-6a9f6d5f14af?w=500',
-  },
-
-  {
-    id: 'prop-003',
-    property: 'Green Residence Dorm',
-    host: 'You',
-    price: 390,
-    status: 'Active',
-    category: 'DORM',
-    createdAt: '2026-09-15',
-
-    description:
-      'Affordable student dorm with essential amenities and a quiet environment for studying.',
-
-    propertyType: 'Dorm',
-    roomType: 'Shared Room',
-
-    location: 'Verdun',
-    city: 'Beirut',
-    area: 'Verdun',
-    university: 'Lebanese University',
-    distanceToUniversity: '12 min',
-
-    beds: 2,
-    bathrooms: 2,
-    rooms: 5,
-    size: 90,
-    furnishing: 'Furnished',
-    availableRooms: 3,
-
-    amenities: [
-      'Wi-Fi',
-      'Water',
-      'Electricity',
-      'Air Conditioning',
-      'Kitchen',
-      'Study Area',
-      'Security',
-      'Balcony',
-    ],
-
-    photos: [
-      'https://images.unsplash.com/photo-1598928506311-c55ded91a20c?w=900',
-      'https://images.unsplash.com/photo-1560185008-b033106af5c3?w=900',
-    ],
-
-    imageUrl:
-      'https://images.unsplash.com/photo-1598928506311-c55ded91a20c?w=500',
-  },
-];
-
-const MOCK_FEEDBACKS: StudentFeedback[] = [
-  {
-    id: 'fb-001',
-    studentName: 'Alex Johnson',
-    propertyTitle: 'Campus View Studio #101',
-    rating: 5,
-    comment:
-      'Amazing studio! Very close to the building and super quiet for studying.',
-    date: '2026-10-01',
-  },
-  {
-    id: 'fb-002',
-    studentName: 'Sarah Miller',
-    propertyTitle: 'Green Residence Dorm B',
-    rating: 4,
-    comment:
-      'Great location and friendly roommates. Good internet speed.',
-    date: '2026-09-28',
-  },
-  {
-    id: 'fb-003',
-    studentName: 'Liam Davis',
-    propertyTitle: 'Campus View Studio #101',
-    rating: 5,
-    comment:
-      'The landlord is very responsive and helpful. Highly recommended!',
-    date: '2026-09-10',
-  },
-];
-
-type DateFilterPreset = 'TODAY' | 'WEEK' | 'MONTH' | 'ALL';
+type DateFilterPreset = "TODAY" | "WEEK" | "MONTH" | "ALL";
 
 export default function OwnerDashboardPage() {
   const router = useRouter();
-  const [submissions, setSubmissions] =
-    useState<OwnerSubmission[]>(MOCK_OWNER_SUBMISSIONS);
+  const [listings, setListings] = useState<HostListing[]>([]);
+  const [boostingPlans, setBoostingPlans] = useState<BoostingPlan[] | null>(null);
+  const [token, setToken] = useState<string | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [loadError, setLoadError] = useState<string | null>(null);
+  const [busy, setBusy] = useState(false);
+  const [userEmail, setUserEmail] = useState("");
+  const [reviewSearch, setReviewSearch] = useState("");
+  const [reviewRating, setReviewRating] = useState("all");
+  const [datePreset, setDatePreset] = useState<DateFilterPreset>("ALL");
+  const [newPhotos, setNewPhotos] = useState<PendingPhoto[]>([]);
+  const [removedPhotoIds, setRemovedPhotoIds] = useState<string[]>([]);
+  const [editError, setEditError] = useState<string | null>(null);
+  const [profile, setProfile] = useState<{
+    firstname: string;
+    lastname: string;
+    email: string;
+    phone: string;
+  } | null>(null);
+  const [profileLoading, setProfileLoading] = useState(false);
+  const [profileError, setProfileError] = useState<string | null>(null);
+  const [profileSaving, setProfileSaving] = useState(false);
+  const [profileReload, setProfileReload] = useState(0);
+  const [passwordSaving, setPasswordSaving] = useState(false);
+  const [passwordError, setPasswordError] = useState<string | null>(null);
+  const [passwordSuccess, setPasswordSuccess] = useState<string | null>(null);
+  const [supportSubject, setSupportSubject] = useState("");
+  const [supportMessage, setSupportMessage] = useState("");
+  const [supportNotice, setSupportNotice] = useState<string | null>(null);
+  const supportAddress = process.env.NEXT_PUBLIC_SUPPORT_EMAIL?.trim() ?? "";
+  const supportAddressConfigured = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(supportAddress);
+  const [activeTab, setActiveTab] = useState("Overview");
+  const submissions = useMemo(
+    () => listings.map((listing) => toOwnerSubmission(listing, boostingPlans)),
+    [listings, boostingPlans],
+  );
+  type ReviewView = {
+    name: string;
+    rating: number;
+    listing: string;
+    date: string;
+    comment: string;
+  };
+  const filteredReviews: ReviewView[] = [];
+  const unavailableRelatedData = [
+    ...new Set(submissions.flatMap((item) => item.unavailableRelatedData)),
+  ];
 
-  const [feedbacks, setFeedbacks] =
-    useState<StudentFeedback[]>(MOCK_FEEDBACKS);
+  const refresh = useCallback(async (): Promise<HostListing[] | null> => {
+    setLoading(true);
+    setLoadError(null);
+    try {
+      const {
+        data: { session },
+      } = await supabase.auth.getSession();
+      if (!session) throw new Error("Sign in as a Host to view your listings.");
+      setToken(session.access_token);
+      setUserEmail(session.user.email ?? "");
+      const [loaded, plans] = await Promise.all([
+        loadHostListings(session.access_token),
+        hostRequest<BoostingPlan[]>("/api/boosting_plans", session.access_token).catch(() => null),
+      ]);
+      setListings(loaded);
+      setBoostingPlans(plans);
+      return loaded;
+    } catch (cause) {
+      setListings([]);
+      setLoadError(cause instanceof Error ? cause.message : "Could not load your properties.");
+      return null;
+    } finally {
+      setLoading(false);
+    }
+  }, []);
 
-  const [reviewSearch, setReviewSearch] = useState('');
+  useEffect(() => {
+    void Promise.resolve().then(refresh);
+  }, [refresh]);
 
-  const [reviewRating, setReviewRating] = useState('all');
+  useEffect(() => {
+    if (activeTab !== "Settings - Profile" || !token) return;
+    const controller = new AbortController();
+    void hostRequest<typeof profile>("/api/host/profile", token, { signal: controller.signal })
+      .then(setProfile)
+      .catch((error: unknown) => {
+        if (!controller.signal.aborted)
+          setProfileError(error instanceof Error ? error.message : "Could not load your profile.");
+      })
+      .finally(() => {
+        if (!controller.signal.aborted) setProfileLoading(false);
+      });
+    return () => controller.abort();
+  }, [activeTab, token, profileReload]);
 
-  const [datePreset, setDatePreset] =
-    useState<DateFilterPreset>('ALL');
+  const saveHostProfile = async (event: React.FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+    if (!token || !profile || profileSaving) return;
+    const form = new FormData(event.currentTarget);
+    setProfileSaving(true);
+    setProfileError(null);
+    try {
+      const updated = await hostRequest<typeof profile>("/api/host/profile", token, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          firstname: form.get("firstname"),
+          lastname: form.get("lastname"),
+          phone: form.get("phone"),
+        }),
+      });
+      setProfile(updated);
+      triggerSuccess("Profile updated successfully.");
+    } catch (error) {
+      setProfileError(error instanceof Error ? error.message : "Could not save your profile.");
+    } finally {
+      setProfileSaving(false);
+    }
+  };
 
+  const changeHostPassword = async (event: React.FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+    if (!token || passwordSaving) return;
+    const form = new FormData(event.currentTarget);
+    const currentPassword = String(form.get("currentPassword") ?? "");
+    const newPassword = String(form.get("newPassword") ?? "");
+    const confirmPassword = String(form.get("confirmPassword") ?? "");
+    setPasswordError(null);
+    setPasswordSuccess(null);
+    if (newPassword.length < 8 || newPassword.length > 128) {
+      setPasswordError("Use a new password between 8 and 128 characters.");
+      return;
+    }
+    if (newPassword !== confirmPassword) {
+      setPasswordError("New password and confirmation do not match.");
+      return;
+    }
+    if (newPassword === currentPassword) {
+      setPasswordError("Choose a password different from your current password.");
+      return;
+    }
+    setPasswordSaving(true);
+    try {
+      await hostRequest<{ ok: true }>("/api/host/settings/password", token, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ currentPassword, newPassword, confirmPassword }),
+      });
+      event.currentTarget.reset();
+      setPasswordSuccess("Password changed successfully.");
+    } catch (error) {
+      setPasswordError(error instanceof Error ? error.message : "Could not change your password.");
+    } finally {
+      setPasswordSaving(false);
+    }
+  };
 
-  const filteredReviews = useMemo(() => {
-    const reviews = [
-      {
-        name: "Sarah M.",
-        rating: 5,
-        listing: "Modern Student Apartment",
-        date: "2026-09-28",
-        comment:
-          "Very clean and comfortable place. The location is perfect and close to the university.",
-      },
-      {
-        name: "John K.",
-        rating: 4,
-        listing: "University Residence",
-        date: "2026-09-25",
-        comment:
-          "Good location and the apartment was exactly as described.",
-      },
-      {
-        name: "Maya R.",
-        rating: 5,
-        listing: "Cozy Student Room",
-        date: "2026-09-21",
-        comment:
-          "I really enjoyed my stay. The room was clean and the neighborhood was quiet.",
-      },
-      {
-        name: "Ali H.",
-        rating: 4,
-        listing: "Downtown Student Apartment",
-        date: "2026-09-18",
-        comment:
-          "Nice apartment with good facilities. Very convenient for students.",
-      },
-    ];
+  const submitSupportEmail = (event: React.FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+    if (!supportAddressConfigured) {
+      setSupportNotice("Support email is not configured. Please try again later.");
+      return;
+    }
+    const subject = supportSubject.trim();
+    const message = supportMessage.trim();
+    if (!subject || !message) {
+      setSupportNotice("Enter a subject and message before continuing.");
+      return;
+    }
+    window.location.href = `mailto:${supportAddress}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(message)}`;
+    setSupportNotice("Your email app should open with a draft. Send it there to contact Support.");
+  };
 
-    const now = new Date();
-    const today = new Date(
-      now.getFullYear(),
-      now.getMonth(),
-      now.getDate()
-    );
+  const [successMessage, setSuccessMessage] = useState<string | null>(null);
 
-    return reviews.filter((review) => {
-      const search = reviewSearch.toLowerCase().trim();
+  const [editingListing, setEditingListing] = useState<OwnerSubmission | null>(null);
+  const [editingUniversities, setEditingUniversities] = useState<University[]>([]);
+  const [initialEditingUniversityIds, setInitialEditingUniversityIds] = useState<string[]>([]);
+  const [editingUniversitiesStatus, setEditingUniversitiesStatus] = useState<
+    "loading" | "ready" | "error"
+  >("ready");
+  const [editingUniversitiesError, setEditingUniversitiesError] = useState<string | null>(null);
 
-      const matchesSearch =
-        review.name.toLowerCase().includes(search) ||
-        review.listing.toLowerCase().includes(search) ||
-        review.comment.toLowerCase().includes(search);
+  const [deleteListingId, setDeleteListingId] = useState<string | null>(null);
+  const [photoCleanupRetryId, setPhotoCleanupRetryId] = useState<string | null>(null);
 
-      const matchesRating =
-        reviewRating === "all" ||
-        review.rating === Number(reviewRating);
-
-      const reviewDate = new Date(review.date);
-      const reviewDay = new Date(
-        reviewDate.getFullYear(),
-        reviewDate.getMonth(),
-        reviewDate.getDate()
-      );
-
-      const diffInDays = Math.floor(
-        (today.getTime() - reviewDay.getTime()) /
-        (1000 * 60 * 60 * 24)
-      );
-
-      let matchesDate = true;
-
-      if (datePreset === "TODAY") {
-        matchesDate = diffInDays === 0;
-      } else if (datePreset === "WEEK") {
-        matchesDate = diffInDays >= 0 && diffInDays <= 7;
-      } else if (datePreset === "MONTH") {
-        matchesDate = diffInDays >= 0 && diffInDays <= 30;
-      }
-
-      return (
-        matchesSearch &&
-        matchesRating &&
-        matchesDate
-      );
-    });
-  }, [reviewSearch, reviewRating, datePreset]);
-
-
-  const [successMessage, setSuccessMessage] =
-    useState<string | null>(null);
-
-  const [activeTab, setActiveTab] =
-    useState('Overview');
-
-  const [editingListing, setEditingListing] =
-    useState<OwnerSubmission | null>(null);
-
-  const [expandedAmenities, setExpandedAmenities] =
-    useState<string | null>(null);
-
-  const [deleteListingId, setDeleteListingId] =
-    useState<string | null>(null);
-
-  const triggerSuccess = (msg: string) => {
+  function triggerSuccess(msg: string) {
     setSuccessMessage(msg);
 
     setTimeout(() => {
       setSuccessMessage(null);
     }, 3000);
-  };
+  }
 
-  const handleAddListing = (newListing: OwnerSubmission) => {
-    setSubmissions((prev) => [newListing, ...prev]);
-  };
-
-  const handleUpdateListing = (
-    e: React.FormEvent<HTMLFormElement>
-  ) => {
+  const handleUpdateListing = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-
-    if (!editingListing) return;
-
+    if (!editingListing || !token || busy) return;
     const formData = new FormData(e.currentTarget);
+    const result = validatePropertyEdit({
+      title: String(formData.get("property") ?? "").trim(),
+      property_type: String(formData.get("propertyType") ?? "").toLowerCase(),
+      price: Number(formData.get("price")),
+      description: String(formData.get("description") ?? "").trim() || null,
+      bedrooms: Number(formData.get("bedrooms")),
+      bathrooms: Number(formData.get("bathrooms")),
+      bed_count: Number(formData.get("bedCount")),
+      furnished: formData.get("furnished") === "true",
+      electricity_included: formData.get("electricityIncluded") === "true",
+      kitchen_type: String(formData.get("kitchenType") ?? ""),
+      bathroom_type: String(formData.get("bathroomType") ?? ""),
+      gender: String(formData.get("gender") ?? ""),
+    });
+    if (!result.success) {
+      setEditError(result.error.issues[0]?.message ?? "Check the property details.");
+      return;
+    }
+    if (newPhotos.length) {
+      const photoError = validatePhotoAdditions(
+        newPhotos.map((photo) => photo.file),
+        editingListing.images.length,
+        editingListing.imageLimit ?? -1,
+      );
+      if (photoError) {
+        setEditError(photoError);
+        return;
+      }
+    }
 
-    const updated: OwnerSubmission = {
-      ...editingListing,
+    setBusy(true);
+    setEditError(null);
+    try {
+      await saveListingChanges({
+        propertyId: editingListing.propertyId,
+        token,
+        values: result.data,
+        additions: newPhotos,
+        removals: removedPhotoIds,
+        startingOrder:
+          Math.max(
+            -1,
+            ...editingListing.images
+              .filter((image) => !removedPhotoIds.includes(image.media_id))
+              .map((image) => image.sort_order ?? 0),
+          ) + 1,
+        request: hostRequest,
+      });
+      const universityIds = editingUniversities.map((university) => university.university_id);
+      const initialUniversityIds = [...initialEditingUniversityIds];
+      const universitiesChanged =
+        [...universityIds].sort().join(",") !== initialUniversityIds.sort().join(",");
+      if (editingUniversitiesStatus === "ready" && universitiesChanged) {
+        await hostRequest<{ university_ids: string[] }>(
+          `/api/properties/${encodeURIComponent(editingListing.propertyId)}/universities`,
+          token,
+          {
+            method: "PUT",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ university_ids: universityIds }),
+          },
+        );
+      }
+      const refreshed = await refresh();
+      if (!refreshed)
+        throw new Error(
+          "Changes were saved, but your listings could not be refreshed. Reload the dashboard to confirm them.",
+        );
+      closeEditListing();
+      triggerSuccess("Listing updated successfully.");
+    } catch (cause) {
+      setEditError(cause instanceof Error ? cause.message : "Could not update listing.");
+      const refreshed = await refresh();
+      const latest = refreshed?.find(
+        (item) => item.property.property_id === editingListing.propertyId,
+      );
+      if (latest) {
+        setEditingListing(toOwnerSubmission(latest, boostingPlans));
+        for (const photo of newPhotos) URL.revokeObjectURL(photo.preview);
+        setNewPhotos([]);
+        setRemovedPhotoIds([]);
+      }
+    } finally {
+      setBusy(false);
+    }
+  };
 
-      property:
-        formData.get('property') as string,
-
-      price:
-        Number(formData.get('price')),
-
-      category:
-        formData.get('category') as
-        | 'STUDIO'
-        | 'DORM'
-        | 'SHARED',
-
-      description:
-        formData.get('description') as string,
-
-      propertyType:
-        formData.get('propertyType') as OwnerSubmission['propertyType'],
-
-      roomType:
-        formData.get('roomType') as OwnerSubmission['roomType'],
-
-      location:
-        formData.get('location') as string,
-
-      city:
-        formData.get('city') as string,
-
-      area:
-        formData.get('area') as string,
-
-      university:
-        formData.get('university') as string,
-
-      distanceToUniversity:
-        formData.get('distanceToUniversity') as string,
-
-      beds:
-        Number(formData.get('beds')),
-
-      bathrooms:
-        Number(formData.get('bathrooms')),
-
-      rooms:
-        Number(formData.get('rooms')),
-
-      size:
-        Number(formData.get('size')),
-
-      furnishing:
-        formData.get('furnishing') as
-        | 'Furnished'
-        | 'Unfurnished',
-
-      availableRooms:
-        Number(formData.get('availableRooms')),
-
-      amenities:
-        formData.getAll('amenities') as string[],
-    };
-
-    setSubmissions((prev) =>
-      prev.map((item) =>
-        item.id === updated.id
-          ? updated
-          : item
-      )
-    );
-
+  const closeEditListing = () => {
+    for (const photo of newPhotos) URL.revokeObjectURL(photo.preview);
+    setNewPhotos([]);
+    setRemovedPhotoIds([]);
+    setEditError(null);
+    setEditingUniversities([]);
+    setInitialEditingUniversityIds([]);
+    setEditingUniversitiesStatus("ready");
+    setEditingUniversitiesError(null);
     setEditingListing(null);
+  };
 
-    triggerSuccess(
-      'Listing updated successfully.'
+  const loadEditingUniversities = async (propertyId: string) => {
+    if (!token) {
+      setEditingUniversitiesStatus("error");
+      setEditingUniversitiesError("Sign in as a Host to load university associations.");
+      return;
+    }
+    setEditingUniversitiesStatus("loading");
+    setEditingUniversitiesError(null);
+    try {
+      const universities = await hostRequest<University[]>(
+        `/api/properties/${encodeURIComponent(propertyId)}/universities`,
+        token,
+      );
+      if (!Array.isArray(universities))
+        throw new Error("University associations returned an invalid response.");
+      setEditingUniversities(universities);
+      setInitialEditingUniversityIds(universities.map((university) => university.university_id));
+      setEditingUniversitiesStatus("ready");
+    } catch (cause) {
+      setEditingUniversitiesStatus("error");
+      setEditingUniversitiesError(
+        cause instanceof Error ? cause.message : "Could not load university associations.",
+      );
+    }
+  };
+
+  const openEditListing = (listing: OwnerSubmission) => {
+    setNewPhotos([]);
+    setRemovedPhotoIds([]);
+    setEditError(null);
+    setEditingListing(listing);
+    setEditingUniversities(listing.associatedUniversities);
+    setInitialEditingUniversityIds(
+      listing.associatedUniversities.map((university) => university.university_id),
+    );
+    setEditingUniversitiesError(null);
+    if (listing.unavailableRelatedData.includes("university associations")) {
+      void loadEditingUniversities(listing.propertyId);
+    } else {
+      setEditingUniversitiesStatus("ready");
+    }
+  };
+
+  const addEditPhotos = (files: File[]) => {
+    if (!editingListing) return;
+    const error = validatePhotoAdditions(
+      files,
+      editingListing.images.length + newPhotos.length,
+      editingListing.imageLimit ?? -1,
+    );
+    if (error) {
+      setEditError(error);
+      return;
+    }
+    setEditError(null);
+    setNewPhotos((current) =>
+      current.concat(
+        files.map((file) => ({
+          file,
+          preview: URL.createObjectURL(file),
+          requestId: crypto.randomUUID(),
+        })),
+      ),
     );
   };
+
+  const handleDeleteListing = async () => {
+    if (!deleteListingId || !token || busy) return;
+    setBusy(true);
+    setLoadError(null);
+    try {
+      const result = await hostRequest<{ media_cleanup_pending?: boolean }>(
+        `/api/properties/${encodeURIComponent(deleteListingId)}`,
+        token,
+        { method: "DELETE" },
+      );
+      setDeleteListingId(null);
+      if (result.media_cleanup_pending) {
+        setPhotoCleanupRetryId(deleteListingId);
+        setSuccessMessage("Listing archived. Photo cleanup is pending.");
+      } else {
+        setPhotoCleanupRetryId(null);
+        triggerSuccess("Listing archived successfully.");
+      }
+      await refresh();
+    } catch (cause) {
+      setLoadError(cause instanceof Error ? cause.message : "Could not delete listing.");
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  const retryArchivedPhotoCleanup = async () => {
+    if (!photoCleanupRetryId || !token || busy) return;
+    setBusy(true);
+    try {
+      const result = await hostRequest<{ media_cleanup_pending?: boolean }>(
+        `/api/properties/${encodeURIComponent(photoCleanupRetryId)}`,
+        token,
+        { method: "DELETE" },
+      );
+      if (result.media_cleanup_pending) {
+        setSuccessMessage("Photo cleanup is still pending. You can retry it.");
+      } else {
+        setPhotoCleanupRetryId(null);
+        triggerSuccess("Archived listing photo cleanup completed.");
+      }
+    } catch {
+      setSuccessMessage("The listing is archived. Photo cleanup could not be retried yet.");
+    } finally {
+      setBusy(false);
+    }
+  };
+
   const dateFilteredSubmissions = useMemo(() => {
-    if (datePreset === 'ALL') return submissions;
+    if (datePreset === "ALL") return submissions;
 
     const now = new Date();
 
     return submissions.filter((item) => {
       const itemDate = new Date(item.createdAt);
 
-      const diffInDays = Math.floor(
-        (now.getTime() - itemDate.getTime()) /
-        (1000 * 3600 * 24)
-      );
+      const diffInDays = Math.floor((now.getTime() - itemDate.getTime()) / (1000 * 3600 * 24));
 
-      if (datePreset === 'WEEK') {
+      if (datePreset === "TODAY") {
+        return (
+          itemDate.getFullYear() === now.getFullYear() &&
+          itemDate.getMonth() === now.getMonth() &&
+          itemDate.getDate() === now.getDate()
+        );
+      }
+
+      if (datePreset === "WEEK") {
         return diffInDays >= 0 && diffInDays <= 7;
       }
 
-      if (datePreset === 'MONTH') {
+      if (datePreset === "MONTH") {
         return diffInDays >= 0 && diffInDays <= 30;
       }
 
@@ -505,127 +618,129 @@ export default function OwnerDashboardPage() {
     });
   }, [submissions, datePreset]);
 
-  const dateFilteredFeedbacks = useMemo(() => {
-    if (datePreset === 'ALL') return feedbacks;
-
-    const now = new Date('2026-10-01');
-
-    return feedbacks.filter((fb) => {
-      const fbDate = new Date(fb.date);
-
-      const diffInDays = Math.floor(
-        (now.getTime() - fbDate.getTime()) /
-        (1000 * 3600 * 24)
-      );
-
-      if (datePreset === 'TODAY') return diffInDays === 0;
-      if (datePreset === 'WEEK') return diffInDays <= 7;
-      if (datePreset === 'MONTH') return diffInDays <= 30;
-
-      return true;
-    });
-  }, [feedbacks, datePreset]);
-
-  const averageRating = useMemo(() => {
-    if (dateFilteredFeedbacks.length === 0) {
-      return '0.0';
-    }
-
-    const sum = dateFilteredFeedbacks.reduce(
-      (acc, curr) => acc + curr.rating,
-      0
-    );
-
-    return (
-      sum / dateFilteredFeedbacks.length
-    ).toFixed(1);
-  }, [dateFilteredFeedbacks]);
-
   const totalListings = dateFilteredSubmissions.length;
 
-  const activeListings = dateFilteredSubmissions.filter(
-    (s) => s.status === 'Active'
-  ).length;
+  const activeListings = dateFilteredSubmissions.filter((s) => s.status === "Active").length;
+  const boostStatusUnavailable = dateFilteredSubmissions.some((item) =>
+    item.unavailableRelatedData.includes("boost status"),
+  );
 
   const pendingListings = dateFilteredSubmissions.filter(
-    (s) => s.status === 'Pending Review'
+    (s) => s.status === "Pending Review",
   ).length;
 
   return (
     <div className="flex flex-col md:flex-row min-h-screen bg-brand-light text-brand-navy w-full overflow-x-hidden relative">
-
-
       <OwnerSidebar
-        activeTab={activeTab}
-        setActiveTab={setActiveTab}
+        activeTab={activeTab.startsWith("Settings") ? "Settings" : activeTab}
+        setActiveTab={(tab) => setActiveTab(tab === "Settings" ? "Settings - Profile" : tab)}
+        userEmail={userEmail}
       />
 
       <main className="flex-1 flex flex-col min-w-0">
-
         <div className="p-4 sm:p-8 space-y-6 max-w-[1600px] w-full mx-auto flex-1 flex flex-col">
-
-
           {successMessage && (
-            <div className="bg-emerald-50 border border-emerald-200 text-emerald-800 px-4 py-3 rounded-2xl text-xs font-bold shadow-sm flex items-center justify-between shrink-0">
+            <div
+              className={`border px-4 py-3 rounded-2xl text-xs font-bold shadow-sm flex items-center justify-between shrink-0 ${photoCleanupRetryId ? "bg-amber-50 border-amber-200 text-amber-800" : "bg-emerald-50 border-emerald-200 text-emerald-800"}`}
+            >
               <span>✓ {successMessage}</span>
 
+              {photoCleanupRetryId && (
+                <button
+                  type="button"
+                  disabled={busy}
+                  onClick={() => void retryArchivedPhotoCleanup()}
+                  className="underline disabled:opacity-50"
+                >
+                  {busy ? "Retrying…" : "Retry photo cleanup"}
+                </button>
+              )}
+
               <button
+                type="button"
+                disabled={Boolean(photoCleanupRetryId)}
                 onClick={() => setSuccessMessage(null)}
-                className="text-emerald-700 hover:text-emerald-900"
+                className="text-current hover:opacity-70 disabled:opacity-50"
+                aria-label="Dismiss message"
               >
                 <X className="w-4 h-4" />
               </button>
             </div>
           )}
 
+          {loading && (
+            <div
+              role="status"
+              className="rounded-2xl border border-brand-slate/15 bg-white p-4 text-sm text-brand-slate"
+            >
+              Loading your properties…
+            </div>
+          )}
+          {loadError && (
+            <div
+              role="alert"
+              className="rounded-2xl border border-rose-200 bg-rose-50 p-4 text-sm text-rose-700"
+            >
+              {loadError}{" "}
+              <button
+                type="button"
+                onClick={() => void refresh()}
+                className="ml-2 font-bold underline"
+              >
+                Retry
+              </button>
+            </div>
+          )}
+          {!loadError && unavailableRelatedData.length > 0 && (
+            <div
+              role="status"
+              className="rounded-2xl border border-amber-200 bg-amber-50 p-4 text-sm text-amber-900"
+            >
+              Some listing information is unavailable ({unavailableRelatedData.join(", ")}). Your
+              properties are still shown; retry to reload these details.{" "}
+              <button type="button" onClick={() => void refresh()} className="font-bold underline">
+                Retry
+              </button>
+            </div>
+          )}
 
           <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 bg-white p-5 rounded-2xl border border-brand-slate/15 shadow-sm shrink-0">
-
             <div>
               <h2 className="text-xl font-bold text-brand-navy">
-                {activeTab === 'My Listings'
-                  ? 'My Properties & Dorms'
-                 
-                    : activeTab === 'Review' ||
-                      activeTab === 'Reviews' ||
-                      activeTab === 'Review Submissions'
-                      ? 'Student Feedbacks & Reviews'
-                      : activeTab.startsWith('Settings')
-                        ? 'Owner Settings'
-                        : 'Welcome back, Owner!'}
+                {activeTab === "My Listings"
+                  ? "My Properties & Dorms"
+                  : activeTab === "Review" ||
+                      activeTab === "Reviews" ||
+                      activeTab === "Review Submissions"
+                    ? "Student Feedbacks & Reviews"
+                    : activeTab.startsWith("Settings")
+                      ? "Owner Settings"
+                      : "Welcome back, Owner!"}
               </h2>
 
               <p className="text-xs text-brand-slate mt-1">
-                {activeTab === 'My Listings'
-                  ? 'Manage, edit or delete your student housing units and dorms.'
-              
-                    : activeTab === 'Review' ||
-                      activeTab === 'Reviews' ||
-                      activeTab === 'Review Submissions'
-                      ? 'Read ratings and reviews left by students for your properties.'
-                      : activeTab === 'Settings - Profile'
-                        ? 'Update your personal details, contact number, and avatar.'
-                        : activeTab === 'Settings - Notifications'
-                          ? 'Choose how and when you want to receive alerts and summaries.'
-                          : activeTab === 'Settings - Listing Preferences'
-                            ? 'Set default rules and display preferences for your properties.'
-                            : activeTab === 'Settings - Security'
-                              ? 'Manage your password, two-factor authentication, and active sessions.'
-                              : activeTab === 'Settings - Appearance'
-                                ? 'Customize your display theme and language settings.'
-                                : activeTab === 'Settings - Support'
-                                  ? 'Get in touch with Maskanny support or browse FAQs.'
-                                  : 'Here is what is happening with your properties.'}
+                {activeTab === "My Listings"
+                  ? "Manage, edit or delete your student housing units and dorms."
+                  : activeTab === "Review" ||
+                      activeTab === "Reviews" ||
+                      activeTab === "Review Submissions"
+                    ? "Read ratings and reviews left by students for your properties."
+                    : activeTab === "Settings - Profile"
+                      ? "Update your personal details and contact number."
+                      : activeTab === "Settings - Security"
+                        ? "Change your Maskanny account password."
+                        : activeTab === "Settings - Support"
+                          ? "Contact the Maskanny support team."
+                          : "Here is what is happening with your properties."}
               </p>
             </div>
 
-
             <div className="flex items-center gap-3 self-start sm:self-auto">
-
               <button
                 type="button"
-                onClick={() => { router.push("/owner/BoostingPlan") }
-                }
+                onClick={() => {
+                  setActiveTab("My Listings");
+                }}
                 className="inline-flex items-center justify-center gap-2
       bg-brand-gold text-brand-navy px-4 py-2.5 rounded-xl
       text-sm font-bold hover:bg-brand-gold/90
@@ -635,69 +750,48 @@ export default function OwnerDashboardPage() {
                 Boost Now
               </button>
 
-              {!activeTab.startsWith('Settings') &&
-                activeTab !== 'Add Listing' && (
-                  <div className="inline-flex p-1 bg-brand-light rounded-xl border border-brand-slate/10 text-xs font-semibold">
-
-                    {[
-                      { id: 'ALL', label: 'All Time' },
-                      { id: 'TODAY', label: 'Today' },
-                      { id: 'WEEK', label: 'This Week' },
-                      { id: 'MONTH', label: 'This Month' },
-                    ].map((preset) => (
-                      <button
-                        key={preset.id}
-                        onClick={() =>
-                          setDatePreset(preset.id as DateFilterPreset)
-                        }
-                        className={`px-3 py-1.5 rounded-lg transition-all ${datePreset === preset.id
-                          ? 'bg-white text-brand-navy shadow-sm font-bold'
-                          : 'text-brand-slate hover:text-brand-navy'
-                          }`}
-                      >
-                        {preset.label}
-                      </button>
-                    ))}
-                  </div>
-                )}
+              {!activeTab.startsWith("Settings") && activeTab !== "Add Listing" && (
+                <div className="inline-flex p-1 bg-brand-light rounded-xl border border-brand-slate/10 text-xs font-semibold">
+                  {[
+                    { id: "ALL", label: "All Time" },
+                    { id: "TODAY", label: "Today" },
+                    { id: "WEEK", label: "This Week" },
+                    { id: "MONTH", label: "This Month" },
+                  ].map((preset) => (
+                    <button
+                      key={preset.id}
+                      onClick={() => setDatePreset(preset.id as DateFilterPreset)}
+                      className={`px-3 py-1.5 rounded-lg transition-all ${
+                        datePreset === preset.id
+                          ? "bg-white text-brand-navy shadow-sm font-bold"
+                          : "text-brand-slate hover:text-brand-navy"
+                      }`}
+                    >
+                      {preset.label}
+                    </button>
+                  ))}
+                </div>
+              )}
             </div>
           </div>
 
-
-          {activeTab.startsWith('Settings') && (
+          {activeTab.startsWith("Settings") && (
             <div className="bg-white rounded-2xl border border-brand-slate/15 shadow-sm p-3">
-
               <div className="flex flex-wrap gap-2">
-
                 {[
                   {
-                    id: 'Settings - Profile',
-                    label: 'Profile & Account',
+                    id: "Settings - Profile",
+                    label: "Profile & Account",
                     icon: User,
                   },
                   {
-                    id: 'Settings - Notifications',
-                    label: 'Notifications',
-                    icon: Bell,
-                  },
-                  {
-                    id: 'Settings - Listing Preferences',
-                    label: 'Listing',
-                    icon: Sliders,
-                  },
-                  {
-                    id: 'Settings - Security',
-                    label: 'Security',
+                    id: "Settings - Security",
+                    label: "Security",
                     icon: Shield,
                   },
                   {
-                    id: 'Settings - Appearance',
-                    label: 'Appearance',
-                    icon: Globe,
-                  },
-                  {
-                    id: 'Settings - Support',
-                    label: 'Support',
+                    id: "Settings - Support",
+                    label: "Support",
                     icon: HelpCircle,
                   },
                 ].map((item) => {
@@ -707,89 +801,70 @@ export default function OwnerDashboardPage() {
                     <button
                       key={item.id}
                       type="button"
-                      onClick={() =>
-                        setActiveTab(item.id)
-                      }
-                      className={`flex items-center gap-2 px-4 py-2.5 rounded-xl text-xs font-bold transition-all ${activeTab === item.id
-                        ? 'bg-brand-navy text-white shadow-sm'
-                        : 'text-brand-slate hover:bg-brand-light hover:text-brand-navy'
-                        }`}
+                      onClick={() => setActiveTab(item.id)}
+                      className={`flex items-center gap-2 px-4 py-2.5 rounded-xl text-xs font-bold transition-all ${
+                        activeTab === item.id
+                          ? "bg-brand-navy text-white shadow-sm"
+                          : "text-brand-slate hover:bg-brand-light hover:text-brand-navy"
+                      }`}
                     >
                       <Icon className="w-4 h-4 shrink-0" />
                       {item.label}
                     </button>
                   );
                 })}
-
               </div>
             </div>
           )}
 
-
-
-          {activeTab === 'Overview' ||
-            activeTab === 'Dashboard' ? (
-
-
-
+          {activeTab === "Overview" || activeTab === "Dashboard" ? (
             <div className="space-y-6">
-
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
-
-                <MetricCard
-                  title="Total Listings"
-                  value={totalListings.toString()}
-                  change="+2"
-                  isPositive={true}
-                />
+                <MetricCard title="Total Listings" value={totalListings.toString()} />
 
                 <MetricCard
                   title="Active Listings"
-                  value={activeListings.toString()}
-                  change="Published"
-                  isPositive={true}
+                  value={boostStatusUnavailable ? "—" : activeListings.toString()}
+                  subtitle={boostStatusUnavailable ? "Boost status unavailable" : "Live"}
+                  isPositive={!boostStatusUnavailable}
                 />
 
                 <MetricCard
                   title="Pending Listings"
                   value={pendingListings.toString()}
-                  subtitle={
-                    pendingListings > 0
-                      ? 'Under review'
-                      : 'All active'
-                  }
+                  subtitle={pendingListings > 0 ? "Under review" : "None pending"}
                   isPositive={true}
                 />
 
-                <MetricCard
-                  title="Reviews & Average"
-                  value={`${dateFilteredFeedbacks.length}`}
-                  change={`${averageRating} ★`}
-                  isPositive={true}
-                />
-
+                <MetricCard title="Reviews & Average" value="—" />
               </div>
 
               <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-
                 <div className="lg:col-span-2">
-                  <AnalyticsChart />
+                  <AnalyticsChart token={token} period={datePreset} />
                 </div>
 
                 <div>
-                  <CategoryDonuts />
+                  <CategoryDonuts
+                    counts={{
+                      active: activeListings,
+                      pending: pendingListings,
+                      approved: dateFilteredSubmissions.filter(
+                        (item) => item.approvalStatus === "approved" && !item.live,
+                      ).length,
+                      rejected: dateFilteredSubmissions.filter(
+                        (item) => item.approvalStatus === "rejected",
+                      ).length,
+                    }}
+                  />
                 </div>
-
               </div>
 
               <div className="space-y-2">
-
                 <div className="flex items-center justify-between">
-
                   <h3 className="text-xs font-bold text-brand-navy uppercase tracking-wider">
                     Your Properties & Admin Status
                   </h3>
-
                 </div>
 
                 <RecentSubmissions
@@ -797,23 +872,15 @@ export default function OwnerDashboardPage() {
                   activeCategory="ALL"
                   submissions={dateFilteredSubmissions}
                 />
-
               </div>
-
             </div>
-
-          ) : activeTab === 'My Listings' ? (
-
-
-
+          ) : activeTab === "My Listings" ? (
             <div className="space-y-5">
-
-
               <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
                 <button
-                  onClick={() =>{ 
-                    setActiveTab('Add Listing');
-                    router.push("/AddListing")
+                  onClick={() => {
+                    setActiveTab("Add Listing");
+                    router.push("/AddListing");
                   }}
                   className="inline-flex items-center justify-center gap-2
         bg-brand-navy text-white px-4 py-2.5 rounded-xl
@@ -823,200 +890,137 @@ export default function OwnerDashboardPage() {
                   <Plus className="w-4 h-4" />
                   Add New Listing
                 </button>
-
               </div>
 
-
-
-
               <div className="grid grid-cols-1 xl:grid-cols-2 gap-5">
-
                 {dateFilteredSubmissions.map((item) => (
-
                   <div
                     key={item.id}
                     className="bg-white rounded-2xl border
           border-brand-slate/15 shadow-sm overflow-hidden
           hover:shadow-md transition-all text-sm"
                   >
-
-
-
                     <div className="relative h-52">
-
-                      <img
-                        src={item.imageUrl}
-                        alt={item.property}
-                        className="w-full h-full object-cover"
-                      />
-
-
+                      {item.imageUrl ? (
+                        <img
+                          src={item.imageUrl}
+                          alt={item.property}
+                          className="w-full h-full object-cover"
+                        />
+                      ) : (
+                        <div className="flex h-full flex-col items-center justify-center gap-2 bg-brand-light text-brand-slate">
+                          <Home
+                            className="h-12 w-12"
+                            aria-label={
+                              item.unavailableRelatedData.includes("photos")
+                                ? "Photos unavailable"
+                                : "No photo uploaded"
+                            }
+                          />
+                          {item.unavailableRelatedData.includes("photos") && (
+                            <span className="text-xs">Photos unavailable</span>
+                          )}
+                        </div>
+                      )}
 
                       <span
                         className={`absolute top-3 left-3 px-3 py-1
-              rounded-full text-[11px] text-sm font-bold ${item.status === 'Active'
-                            ? 'bg-emerald-50 text-emerald-700'
-                            : 'bg-amber-50 text-amber-700'
-                          }`}
+              rounded-full text-[11px] text-sm font-bold ${
+                item.status === "Active"
+                  ? "bg-emerald-50 text-emerald-700"
+                  : "bg-amber-50 text-amber-700"
+              }`}
                       >
-                        {item.status}
+                        Moderation: {item.approvalStatus}
                       </span>
 
-
-
-                      <span className="absolute top-3 right-3 px-3 py-1
+                      <span
+                        className="absolute top-3 right-3 px-3 py-1
               rounded-full bg-white/90 backdrop-blur-sm
               text-[11px] font-bold text-brand-navy"
                       >
                         {item.propertyType}
                       </span>
-
                     </div>
 
-
-
-
                     <div className="p-5 space-y-4">
-
-
-
                       <div className="flex items-start justify-between gap-4">
-
                         <div>
-                          <h4 className="text-base font-bold text-brand-navy">
-                            {item.property}
-                          </h4>
+                          <h4 className="text-base font-bold text-brand-navy">{item.property}</h4>
 
                           <div className="flex items-center gap-1.5 mt-1">
-
                             <MapPin className="w-3.5 h-3.5 text-brand-slate" />
 
-                            <span className="text-xs text-brand-slate">
-                              {item.area}, {item.city}
-                            </span>
-
+                            <span className="text-xs text-brand-slate">{item.location}</span>
                           </div>
                         </div>
 
                         <div className="text-right shrink-0">
+                          <p className="text-lg font-bold text-brand-navy">${item.price}</p>
 
-                          <p className="text-lg font-bold text-brand-navy">
-                            ${item.price}
-                          </p>
-
-                          <p className="text-[11px] text-brand-slate">
-                            / month
-                          </p>
-
+                          <p className="text-[11px] text-brand-slate">/ month</p>
                         </div>
-
                       </div>
-
-
-
-
-                      <div className="flex items-center justify-between
-              rounded-xl bg-brand-light/60 p-3"
-                      >
-
-                        <div>
-                          <p className="text-xs text-brand-slate">
-                            Nearby University
-                          </p>
-
-                          <p className="text-xs font-semibold text-brand-navy mt-0.5">
-                            {item.university}
-                          </p>
-                        </div>
-
-                        <span className="text-xs font-bold text-brand-navy">
-                          {item.distanceToUniversity}
-                        </span>
-
-                      </div>
-
-
-
 
                       <div className="grid grid-cols-4 gap-2">
-
-                        <div className="rounded-xl border
+                        <div
+                          className="rounded-xl border
                 border-brand-slate/10 p-3 text-center"
                         >
                           <BedDouble className="w-4 h-4 mx-auto text-brand-slate" />
 
-                          <p className="text-sm font-bold text-brand-navy mt-1">
-                            {item.beds}
-                          </p>
+                          <p className="text-sm font-bold text-brand-navy mt-1">{item.beds}</p>
 
-                          <p className="text-xs text-brand-slate">
-                            Beds
-                          </p>
+                          <p className="text-xs text-brand-slate">Beds</p>
                         </div>
 
-
-                        <div className="rounded-xl border
+                        <div
+                          className="rounded-xl border
                 border-brand-slate/10 p-3 text-center"
                         >
                           <Bath className="w-4 h-4 mx-auto text-brand-slate" />
 
-                          <p className="text-sm font-bold text-brand-navy mt-1">
-                            {item.bathrooms}
-                          </p>
+                          <p className="text-sm font-bold text-brand-navy mt-1">{item.bathrooms}</p>
 
-                          <p className="text-xs text-brand-slate">
-                            Baths
-                          </p>
+                          <p className="text-xs text-brand-slate">Baths</p>
                         </div>
 
-
-                        <div className="rounded-xl border
+                        <div
+                          className="rounded-xl border
                 border-brand-slate/10 p-3 text-center"
                         >
                           <Home className="w-4 h-4 mx-auto text-brand-slate" />
 
-                          <p className="text-sm font-bold text-brand-navy mt-1">
-                            {item.rooms}
-                          </p>
+                          <p className="text-sm font-bold text-brand-navy mt-1">{item.rooms}</p>
 
-                          <p className="text-xs text-brand-slate">
-                            Rooms
-                          </p>
+                          <p className="text-xs text-brand-slate">Bedrooms</p>
                         </div>
 
-
-                        <div className="rounded-xl border
+                        <div
+                          className="rounded-xl border
                 border-brand-slate/10 p-3 text-center"
                         >
-                          <Maximize className="w-4 h-4 mx-auto text-brand-slate" />
+                          <User className="w-4 h-4 mx-auto text-brand-slate" />
 
                           <p className="text-sm font-bold text-brand-navy mt-1">
-                            {item.size}
+                            {item.gender === "boys"
+                              ? "Boys"
+                              : item.gender === "girls"
+                                ? "Girls"
+                                : item.gender === "mixed"
+                                  ? "Mixed"
+                                  : "—"}
                           </p>
 
-                          <p className="text-xs text-brand-slate">
-                            m²
-                          </p>
+                          <p className="text-xs text-brand-slate">Gender</p>
                         </div>
-
                       </div>
 
-
-
-
                       <div>
-
-                        <p className="text-sm font-bold text-brand-navy mb-2">
-                          Amenities
-                        </p>
+                        <p className="text-sm font-bold text-brand-navy mb-2">Amenities</p>
 
                         <div className="flex flex-wrap gap-1.5">
-
-                          {(expandedAmenities === item.id
-                            ? item.amenities
-                            : item.amenities.slice(0, 5)
-                          ).map((amenity) => (
-
+                          {item.amenities.map((amenity) => (
                             <span
                               key={amenity}
                               className="px-2.5 py-1 rounded-lg bg-brand-light
@@ -1024,77 +1028,34 @@ export default function OwnerDashboardPage() {
                             >
                               {amenity}
                             </span>
-
                           ))}
-
-
-                          {item.amenities.length > 5 && (
-
-                            <button
-                              type="button"
-                              onClick={() =>
-                                setExpandedAmenities(
-                                  expandedAmenities === item.id
-                                    ? null
-                                    : item.id
-                                )
-                              }
-                              className="inline-flex items-center gap-1
-      px-2.5 py-1 rounded-lg
-      bg-brand-navy/5 text-brand-navy
-      text-[10px] font-bold hover:bg-brand-navy/10"
-                            >
-
-                              {expandedAmenities === item.id ? (
-                                <>
-                                  Show Less
-                                  <ChevronUp className="w-3 h-3" />
-                                </>
-                              ) : (
-                                <>
-                                  +{item.amenities.length - 5} more
-                                  <ChevronDown className="w-3 h-3" />
-                                </>
-                              )}
-
-                            </button>
-
+                          {item.amenities.length === 0 && (
+                            <span className="text-xs text-brand-slate">
+                              Property features unavailable
+                            </span>
                           )}
-
                         </div>
-
                       </div>
 
-
-
-                      <div className="flex items-center justify-between
-              border-t border-brand-slate/10 pt-4"
-                      >
-
-                        <div>
-                          <p className="text-sm text-brand-slate">
-                            Available Rooms
-                          </p>
-
-                          <p className="text-xs font-bold text-brand-navy mt-0.5">
-                            {item.availableRooms} available
-                          </p>
-                        </div>
-
-                        <p className="text-xs text-brand-slate">
-                          {item.furnishing}
-                        </p>
-
+                      <div className="flex items-center justify-between border-t border-brand-slate/10 pt-3 text-xs">
+                        <span className="text-brand-slate">Public visibility</span>
+                        <strong
+                          className={
+                            item.visibilityStatus === "Unavailable"
+                              ? "text-amber-700"
+                              : item.live
+                                ? "text-emerald-700"
+                                : "text-brand-slate"
+                          }
+                        >
+                          {item.visibilityStatus}
+                        </strong>
                       </div>
-
-
-
 
                       <div className="flex gap-2 pt-1">
-
                         <button
                           type="button"
-                          onClick={() => setEditingListing(item)}
+                          onClick={() => openEditListing(item)}
                           className="flex-1 inline-flex items-center
                 justify-center gap-1.5 px-3 py-2.5
                 bg-brand-light text-brand-navy
@@ -1115,767 +1076,513 @@ export default function OwnerDashboardPage() {
                           <Trash2 className="w-3.5 h-3.5" />
                           Delete
                         </button>
-
+                        {item.canBoost && (
+                          <button
+                            type="button"
+                            onClick={() => router.push(boostHref(item.propertyId))}
+                            className="inline-flex items-center gap-1 px-3 py-1.5 bg-brand-gold text-brand-navy hover:bg-brand-gold/90 rounded-xl text-xs font-bold transition-all"
+                          >
+                            <Rocket className="w-3.5 h-3.5" />
+                            Boost
+                          </button>
+                        )}
                       </div>
-
                     </div>
-
                   </div>
-
                 ))}
 
+                {!loading && !loadError && dateFilteredSubmissions.length === 0 && (
+                  <div className="col-span-full rounded-2xl border border-brand-slate/15 bg-white p-8 text-center text-sm text-brand-slate">
+                    {submissions.length === 0
+                      ? "You have no properties yet. Add your first listing to submit it for review."
+                      : "No listings match the selected date filter."}
+                  </div>
+                )}
               </div>
-
             </div>
-          ) : activeTab === 'Review' ||
-          activeTab === 'Reviews' ||
-          activeTab === 'Review Submissions' ? (
+          ) : activeTab === "Review" ||
+            activeTab === "Reviews" ||
+            activeTab === "Review Submissions" ? (
+            <div className="space-y-5">
+              <div className="grid grid-cols-1 gap-5 lg:grid-cols-3">
+                <div className="rounded-2xl border border-brand-slate/10 bg-white p-5 shadow-sm">
+                  <p className="text-xs font-medium text-brand-slate">Average Rating</p>
 
-          <div className="space-y-5">
-
-
-            <div className="grid grid-cols-1 gap-5 lg:grid-cols-3">
-
-              <div className="rounded-2xl border border-brand-slate/10 bg-white p-5 shadow-sm">
-                <p className="text-xs font-medium text-brand-slate">
-                  Average Rating
-                </p>
-
-                <div className="mt-3 flex items-center gap-3">
-                  <div>
-                    <span className="text-3xl font-bold text-brand-navy">
-                      4.8
-                    </span>
-                    <span className="text-xs text-brand-slate"> / 5</span>
-                  </div>
-
-                  <div className="flex gap-0.5 text-brand-gold">
-                    {[1, 2, 3, 4, 5].map((star) => (
-                      <Star
-                        key={star}
-                        className="h-4 w-4 fill-current"
-                      />
-                    ))}
-                  </div>
-                </div>
-
-                <p className="mt-1 text-xs text-brand-slate">
-                  Based on 48 reviews
-                </p>
-              </div>
-
-
-              <div className="rounded-2xl border border-brand-slate/10 bg-white p-5 shadow-sm lg:col-span-2">
-                <div className="mb-4 flex items-center justify-between">
-                  <h2 className="text-sm font-semibold text-brand-navy">
-                    Rating Distribution
-                  </h2>
-
-                  <BarChart3 className="h-4 w-4 text-brand-slate" />
-                </div>
-
-                <div className="space-y-2.5">
-                  {[
-                    { stars: 5, count: 32, percentage: 67 },
-                    { stars: 4, count: 10, percentage: 21 },
-                    { stars: 3, count: 4, percentage: 8 },
-                    { stars: 2, count: 1, percentage: 2 },
-                    { stars: 1, count: 1, percentage: 2 },
-                  ].map((rating) => (
-                    <div
-                      key={rating.stars}
-                      className="flex items-center gap-2.5"
-                    >
-                      <div className="flex w-12 items-center gap-1 text-xs text-brand-slate">
-                        <span>{rating.stars}</span>
-
-                        <Star className="h-3 w-3 fill-brand-gold text-brand-gold" />
-                      </div>
-
-                      <div className="h-1.5 flex-1 overflow-hidden rounded-full bg-brand-light">
-                        <div
-                          className="h-full rounded-full bg-brand-gold"
-                          style={{
-                            width: `${rating.percentage}%`,
-                          }}
-                        />
-                      </div>
-
-                      <span className="w-6 text-right text-xs font-medium text-brand-slate">
-                        {rating.count}
-                      </span>
+                  <div className="mt-3 flex items-center gap-3">
+                    <div>
+                      <span className="text-3xl font-bold text-brand-navy">—</span>
+                      <span className="text-xs text-brand-slate"> / 5</span>
                     </div>
-                  ))}
-                </div>
-              </div>
-            </div>
 
+                    <div className="flex gap-0.5 text-brand-slate/30">
+                      {[1, 2, 3, 4, 5].map((star) => (
+                        <Star key={star} className="h-4 w-4" />
+                      ))}
+                    </div>
+                  </div>
 
-            <div className="rounded-2xl border border-brand-slate/10 bg-white p-3 shadow-sm">
-              <div className="flex flex-col gap-2.5 md:flex-row">
-
-                <div className="relative flex-1">
-                  <Search className="absolute left-3 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-brand-slate" />
-
-                  <input
-                    type="text"
-                    value={reviewSearch}
-                    onChange={(e) => setReviewSearch(e.target.value)}
-                    placeholder="Search reviews..."
-                    className="w-full rounded-xl border border-brand-slate/15 bg-brand-light/30 py-2 pl-9 pr-3 text-xs text-brand-navy outline-none transition focus:border-brand-gold focus:ring-2 focus:ring-brand-gold/20"
-                  />
+                  <p className="mt-1 text-xs text-brand-slate">Review data unavailable</p>
                 </div>
 
+                <div className="rounded-2xl border border-brand-slate/10 bg-white p-5 shadow-sm lg:col-span-2">
+                  <div className="mb-4 flex items-center justify-between">
+                    <h2 className="text-sm font-semibold text-brand-navy">Rating Distribution</h2>
 
-                <select
-                  value={reviewRating}
-                  onChange={(e) => setReviewRating(e.target.value)}
-                  className="rounded-xl border border-brand-slate/15 bg-white px-3 py-2 text-xs text-brand-navy outline-none transition focus:border-brand-gold focus:ring-2 focus:ring-brand-gold/20">
+                    <BarChart3 className="h-4 w-4 text-brand-slate" />
+                  </div>
 
-                  <option value="all">All ratings</option>
-                  <option value="5">5 Stars</option>
-                  <option value="4">4 Stars</option>
-                  <option value="3">3 Stars</option>
-                  <option value="2">2 Stars</option>
-                  <option value="1">1 Star</option>
-                </select>
-              </div>
-            </div>
+                  <div className="space-y-2.5">
+                    {[{ stars: 5 }, { stars: 4 }, { stars: 3 }, { stars: 2 }, { stars: 1 }].map(
+                      (rating) => (
+                        <div key={rating.stars} className="flex items-center gap-2.5">
+                          <div className="flex w-12 items-center gap-1 text-xs text-brand-slate">
+                            <span>{rating.stars}</span>
 
+                            <Star className="h-3 w-3 fill-brand-gold text-brand-gold" />
+                          </div>
 
-            <div className="space-y-3">
-
-              {filteredReviews.map((review, index) => (
-                <div
-                  key={index}
-                  className="rounded-2xl border border-brand-slate/10 bg-white p-4 shadow-sm transition hover:shadow-md"
-                >
-                  <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
-
-                    <div className="flex gap-3">
-
-                      <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-brand-navy text-xs font-semibold text-white">
-                        {review.name
-                          .split(" ")
-                          .map((word) => word[0])
-                          .join("")}
-                      </div>
-
-                      <div>
-
-                        <h3 className="text-sm font-semibold text-brand-navy">
-                          {review.name}
-                        </h3>
-
-
-                        <div className="mt-1 flex gap-0.5">
-                          {[1, 2, 3, 4, 5].map((star) => (
-                            <Star
-                              key={star}
-                              className={`h-3.5 w-3.5 ${star <= review.rating
-                                ? "fill-brand-gold text-brand-gold"
-                                : "text-brand-slate/20"
-                                }`}
+                          <div className="h-1.5 flex-1 overflow-hidden rounded-full bg-brand-light">
+                            <div
+                              className="h-full rounded-full bg-brand-gold"
+                              style={{
+                                width: "0%",
+                              }}
                             />
-                          ))}
+                          </div>
+
+                          <span className="w-6 text-right text-xs font-medium text-brand-slate">
+                            —
+                          </span>
+                        </div>
+                      ),
+                    )}
+                  </div>
+                </div>
+              </div>
+
+              <div className="rounded-2xl border border-brand-slate/10 bg-white p-3 shadow-sm">
+                <div className="flex flex-col gap-2.5 md:flex-row">
+                  <div className="relative flex-1">
+                    <Search className="absolute left-3 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-brand-slate" />
+
+                    <input
+                      type="text"
+                      value={reviewSearch}
+                      disabled
+                      onChange={(e) => setReviewSearch(e.target.value)}
+                      placeholder="Search reviews..."
+                      className="w-full rounded-xl border border-brand-slate/15 bg-brand-light/30 py-2 pl-9 pr-3 text-xs text-brand-navy outline-none transition focus:border-brand-gold focus:ring-2 focus:ring-brand-gold/20"
+                    />
+                  </div>
+
+                  <select
+                    value={reviewRating}
+                    disabled
+                    onChange={(e) => setReviewRating(e.target.value)}
+                    className="rounded-xl border border-brand-slate/15 bg-white px-3 py-2 text-xs text-brand-navy outline-none transition focus:border-brand-gold focus:ring-2 focus:ring-brand-gold/20"
+                  >
+                    <option value="all">All ratings</option>
+                    <option value="5">5 Stars</option>
+                    <option value="4">4 Stars</option>
+                    <option value="3">3 Stars</option>
+                    <option value="2">2 Stars</option>
+                    <option value="1">1 Star</option>
+                  </select>
+                </div>
+              </div>
+
+              <div className="space-y-3">
+                {filteredReviews.map((review, index) => (
+                  <div
+                    key={index}
+                    className="rounded-2xl border border-brand-slate/10 bg-white p-4 shadow-sm transition hover:shadow-md"
+                  >
+                    <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+                      <div className="flex gap-3">
+                        <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-brand-navy text-xs font-semibold text-white">
+                          {review.name
+                            .split(" ")
+                            .map((word) => word[0])
+                            .join("")}
                         </div>
 
+                        <div>
+                          <h3 className="text-sm font-semibold text-brand-navy">{review.name}</h3>
 
-                        <p className="mt-2 text-xs leading-5 text-brand-slate">
-                          {review.comment}
-                        </p>
+                          <div className="mt-1 flex gap-0.5">
+                            {[1, 2, 3, 4, 5].map((star) => (
+                              <Star
+                                key={star}
+                                className={`h-3.5 w-3.5 ${
+                                  star <= review.rating
+                                    ? "fill-brand-gold text-brand-gold"
+                                    : "text-brand-slate/20"
+                                }`}
+                              />
+                            ))}
+                          </div>
+
+                          <p className="mt-2 text-xs leading-5 text-brand-slate">
+                            {review.comment}
+                          </p>
+                        </div>
                       </div>
+
+                      <span className="shrink-0 text-[11px] font-medium text-brand-slate">
+                        {review.date}
+                      </span>
                     </div>
 
+                    <div className="mt-3 border-t border-brand-slate/10 pt-3">
+                      <p className="text-[11px] text-brand-slate">Listing</p>
 
-                    <span className="shrink-0 text-[11px] font-medium text-brand-slate">
-                      {review.date}
-                    </span>
+                      <p className="mt-0.5 text-xs font-semibold text-brand-navy">
+                        {review.listing}
+                      </p>
+                    </div>
                   </div>
+                ))}
+                {filteredReviews.length === 0 && (
+                  <div className="rounded-2xl border border-brand-slate/10 bg-white p-8 text-center">
+                    <Search className="mx-auto h-6 w-6 text-brand-slate/50" />
 
-
-                  <div className="mt-3 border-t border-brand-slate/10 pt-3">
-                    <p className="text-[11px] text-brand-slate">
-                      Listing
-                    </p>
-
-                    <p className="mt-0.5 text-xs font-semibold text-brand-navy">
-                      {review.listing}
-                    </p>
-                  </div>
-                </div>
-              ))}
-              {filteredReviews.length === 0 && (
-                <div className="rounded-2xl border border-brand-slate/10 bg-white p-8 text-center">
-                  <Search className="mx-auto h-6 w-6 text-brand-slate/50" />
-
-                  <p className="mt-2 text-sm font-semibold text-brand-navy">
-                    No reviews found
-                  </p>
-
-                  <p className="mt-1 text-xs text-brand-slate">
-                    Try a different search term or rating.
-                  </p>
-                </div>
-              )}
-            </div>
-          </div>
-
-          ) : activeTab === 'Settings - Profile' ? (
-          <div className="bg-white rounded-2xl border border-brand-slate/10 p-6 shadow-sm max-w-4xl mx-auto w-full">
-
-            <div className="flex items-center gap-3 pb-5 border-b border-brand-slate/10">
-              <div className="w-10 h-10 rounded-xl bg-brand-navy/5 text-brand-navy flex items-center justify-center">
-                <User className="w-5 h-5" />
-              </div>
-
-              <div>
-                <h3 className="text-base font-bold text-brand-navy">
-                  Profile & Account
-                </h3>
-                <p className="text-xs text-brand-slate mt-0.5">
-                  Manage your personal and contact information.
-                </p>
-              </div>
-            </div>
-
-            <form
-              onSubmit={(e) => {
-                e.preventDefault();
-                triggerSuccess("Profile updated successfully.");
-              }}
-              className="mt-6 space-y-6"
-            >
-
-              <div className="flex items-center gap-4">
-                <div className="w-16 h-16 rounded-full bg-brand-navy text-white flex items-center justify-center text-base font-bold">
-                  OW
-                </div>
-
-                <div>
-                  <input
-                    id="avatar-upload"
-                    type="file"
-                    accept="image/png,image/jpeg,image/gif"
-                    className="hidden"
-                    onChange={(e) => {
-                      if (e.target.files?.[0]) {
-                        triggerSuccess("Avatar selected successfully.");
-                      }
-                    }}
-                  />
-
-                  <label
-                    htmlFor="avatar-upload"
-                    className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-brand-light border border-brand-slate/10 text-sm font-semibold text-brand-navy cursor-pointer hover:bg-brand-slate/10 active:scale-[0.98] transition"
-                  >
-                    <Upload className="w-4 h-4" />
-                    Change Avatar
-                  </label>
-
-                  <p className="mt-1.5 text-xs text-brand-slate">
-                    JPG, PNG or GIF • Max 2MB
-                  </p>
-                </div>
-              </div>
-
-
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
-                <div>
-                  <label className="block text-xs font-semibold text-brand-navy mb-2">
-                    Full Name
-                  </label>
-
-                  <input
-                    type="text"
-                    defaultValue="Owner Workspace"
-                    className="w-full px-3.5 py-3 rounded-xl border border-brand-slate/15 text-sm text-brand-navy outline-none focus:border-brand-navy focus:ring-2 focus:ring-brand-navy/10 transition"
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-xs font-semibold text-brand-navy mb-2">
-                    Email Address
-                  </label>
-
-                  <input
-                    type="email"
-                    defaultValue="owner@maskanny.com"
-                    className="w-full px-3.5 py-3 rounded-xl border border-brand-slate/15 text-sm text-brand-navy outline-none focus:border-brand-navy focus:ring-2 focus:ring-brand-navy/10 transition"
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-xs font-semibold text-brand-navy mb-2">
-                    Phone Number
-                  </label>
-
-                  <input
-                    type="tel"
-                    placeholder="+961 XX XXX XXX"
-                    className="w-full px-3.5 py-3 rounded-xl border border-brand-slate/15 text-sm text-brand-navy outline-none focus:border-brand-navy focus:ring-2 focus:ring-brand-navy/10 transition"
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-xs font-semibold text-brand-navy mb-2">
-                    Account Type
-                  </label>
-
-                  <input
-                    type="text"
-                    value="Property Owner"
-                    disabled
-                    className="w-full px-3.5 py-3 rounded-xl border border-brand-slate/10 bg-brand-light text-sm text-brand-slate"
-                  />
-                </div>
-              </div>
-
-
-              <div className="flex justify-end border-t border-brand-slate/10 pt-5">
-                <button
-                  type="submit"
-                  className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-brand-navy text-white text-sm font-semibold hover:bg-brand-navy/90 active:scale-[0.98] transition shadow-sm"
-                >
-                  <Check className="w-4 h-4" />
-                  Save Changes
-                </button>
-              </div>
-            </form>
-          </div>
-
-          ) : activeTab === "Settings - Notifications" ? (
-
-          <div className="bg-white rounded-2xl border border-brand-slate/10 p-6 shadow-sm max-w-4xl mx-auto w-full">
-
-            <div className="flex items-center gap-3 pb-5 border-b border-brand-slate/10">
-              <div className="w-10 h-10 rounded-xl bg-brand-navy/5 text-brand-navy flex items-center justify-center">
-                <Bell className="w-5 h-5" />
-              </div>
-
-              <div>
-                <h3 className="text-base font-bold text-brand-navy">
-                  Notifications
-                </h3>
-                <p className="text-xs text-brand-slate mt-0.5">
-                  Choose which updates you want to receive.
-                </p>
-              </div>
-            </div>
-
-            <form
-              onSubmit={(e) => {
-                e.preventDefault();
-                triggerSuccess("Notification preferences saved.");
-              }}
-              className="mt-6 space-y-3"
-            >
-              {[
-                {
-                  label: "New student inquiries",
-                  desc: "Get notified when a student contacts you.",
-                },
-                {
-                  label: "New reviews & ratings",
-                  desc: "Receive an alert when a student leaves feedback.",
-                },
-                {
-                  label: "Listing status updates",
-                  desc: "Know when your listing is approved or rejected.",
-                },
-                {
-                  label: "Weekly performance summary",
-                  desc: "Receive a weekly overview of your listings.",
-                },
-              ].map((item) => (
-                <label
-                  key={item.label}
-                  className="flex items-center justify-between gap-5 p-4 rounded-xl border border-brand-slate/10 hover:bg-brand-light/40 transition cursor-pointer"
-                >
-                  <div>
-                    <p className="text-sm font-semibold text-brand-navy">
-                      {item.label}
+                    <p className="mt-2 text-sm font-semibold text-brand-navy">
+                      Review data unavailable
                     </p>
 
                     <p className="mt-1 text-xs text-brand-slate">
-                      {item.desc}
+                      Student reviews are not available from the current Host API.
                     </p>
                   </div>
-
-                  <input
-                    type="checkbox"
-                    defaultChecked
-                    className="w-4 h-4 accent-brand-navy cursor-pointer shrink-0"
-                  />
-                </label>
-              ))}
-
-              <div className="flex justify-end border-t border-brand-slate/10 pt-5">
-                <button
-                  type="submit"
-                  className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-brand-navy text-white text-sm font-semibold hover:bg-brand-navy/90 active:scale-[0.98] transition shadow-sm"
-                >
-                  <Check className="w-4 h-4" />
-                  Save Preferences
-                </button>
-              </div>
-            </form>
-          </div>
-
-          ) : activeTab === "Settings - Listing Preferences" ? (
-
-          <div className="bg-white rounded-2xl border border-brand-slate/10 p-6 shadow-sm max-w-4xl mx-auto w-full">
-            {/* Header */}
-            <div className="flex items-center gap-3 pb-5 border-b border-brand-slate/10">
-              <div className="w-10 h-10 rounded-xl bg-brand-navy/5 text-brand-navy flex items-center justify-center">
-                <Sliders className="w-5 h-5" />
-              </div>
-
-              <div>
-                <h3 className="text-base font-bold text-brand-navy">
-                  Listing Preferences
-                </h3>
-                <p className="text-xs text-brand-slate mt-0.5">
-                  Configure your default listing settings.
-                </p>
+                )}
               </div>
             </div>
-
-            <form
-              onSubmit={(e) => {
-                e.preventDefault();
-                triggerSuccess("Listing preferences saved.");
-              }}
-              className="mt-6 space-y-5"
-            >
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
-                <div>
-                  <label className="block text-xs font-semibold text-brand-navy mb-2">
-                    Default Listing Visibility
-                  </label>
-
-                  <select className="w-full px-3.5 py-3 rounded-xl border border-brand-slate/15 bg-white text-sm text-brand-navy outline-none focus:border-brand-navy transition">
-                    <option>Public</option>
-                    <option>Private</option>
-                    <option>Admin Review Only</option>
-                  </select>
+          ) : activeTab === "Settings - Profile" ? (
+            <div className="bg-white rounded-2xl border border-brand-slate/10 p-6 shadow-sm max-w-4xl mx-auto w-full">
+              <div className="flex items-center gap-3 pb-5 border-b border-brand-slate/10">
+                <div className="w-10 h-10 rounded-xl bg-brand-navy/5 text-brand-navy flex items-center justify-center">
+                  <User className="w-5 h-5" />
                 </div>
-
                 <div>
-                  <label className="block text-xs font-semibold text-brand-navy mb-2">
-                    Preferred Contact Channel
-                  </label>
-
-                  <select className="w-full px-3.5 py-3 rounded-xl border border-brand-slate/15 bg-white text-sm text-brand-navy outline-none focus:border-brand-navy transition">
-                    <option>In-App Chat & WhatsApp</option>
-                    <option>In-App Chat Only</option>
-                    <option>Phone / WhatsApp Only</option>
-                  </select>
+                  <h3 className="text-base font-bold text-brand-navy">Profile &amp; Account</h3>
+                  <p className="text-xs text-brand-slate mt-0.5">
+                    Manage your personal and contact information.
+                  </p>
                 </div>
               </div>
-
-              {[
-                {
-                  title: "Automatically mark listing as full",
-                  description:
-                    "Automatically update the status when capacity is reached.",
-                },
-                {
-                  title: "Accept student inquiries",
-                  description:
-                    "Allow students to contact you through Maskanny.",
-                },
-              ].map((item) => (
-                <label
-                  key={item.title}
-                  className="flex items-center justify-between gap-5 p-4 rounded-xl border border-brand-slate/10 hover:bg-brand-light/40 transition cursor-pointer"
+              {profileLoading || (!profile && !profileError && (!!token || loading)) ? (
+                <p role="status" className="mt-5 text-sm text-brand-slate">
+                  Loading your profile…
+                </p>
+              ) : !token ? (
+                <p role="alert" className="mt-5 text-sm text-rose-700">
+                  Sign in as a Host to load your profile.
+                </p>
+              ) : profileError && !profile ? (
+                <div className="mt-5" role="alert">
+                  <p className="text-sm text-rose-700">{profileError}</p>
+                  <button
+                    type="button"
+                    className="mt-2 text-sm font-semibold underline"
+                    onClick={() => {
+                      setProfileError(null);
+                      setProfileLoading(true);
+                      setProfileReload((value) => value + 1);
+                    }}
+                  >
+                    Try again
+                  </button>
+                </div>
+              ) : profile ? (
+                <form
+                  key={`${profile.firstname}:${profile.lastname}:${profile.phone}`}
+                  onSubmit={saveHostProfile}
+                  className="mt-6 space-y-6"
                 >
-                  <div>
-                    <p className="text-sm font-semibold text-brand-navy">
-                      {item.title}
+                  {profileError && (
+                    <p
+                      role="alert"
+                      className="rounded-xl bg-rose-50 border border-rose-200 p-3 text-sm text-rose-700"
+                    >
+                      {profileError}
                     </p>
-
-                    <p className="text-xs text-brand-slate mt-1">
-                      {item.description}
-                    </p>
+                  )}
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+                    <div>
+                      <label
+                        htmlFor="host-firstname"
+                        className="block text-xs font-semibold text-brand-navy mb-2"
+                      >
+                        First Name
+                      </label>
+                      <input
+                        id="host-firstname"
+                        name="firstname"
+                        type="text"
+                        required
+                        maxLength={100}
+                        defaultValue={profile.firstname}
+                        disabled={profileSaving}
+                        className="w-full px-3.5 py-3 rounded-xl border border-brand-slate/15 text-sm text-brand-navy outline-none focus:border-brand-navy focus:ring-2 focus:ring-brand-navy/10 disabled:bg-brand-light"
+                      />
+                    </div>
+                    <div>
+                      <label
+                        htmlFor="host-lastname"
+                        className="block text-xs font-semibold text-brand-navy mb-2"
+                      >
+                        Last Name
+                      </label>
+                      <input
+                        id="host-lastname"
+                        name="lastname"
+                        type="text"
+                        required
+                        maxLength={100}
+                        defaultValue={profile.lastname}
+                        disabled={profileSaving}
+                        className="w-full px-3.5 py-3 rounded-xl border border-brand-slate/15 text-sm text-brand-navy outline-none focus:border-brand-navy focus:ring-2 focus:ring-brand-navy/10 disabled:bg-brand-light"
+                      />
+                    </div>
+                    <div>
+                      <label
+                        htmlFor="host-email"
+                        className="block text-xs font-semibold text-brand-navy mb-2"
+                      >
+                        Email Address
+                      </label>
+                      <input
+                        id="host-email"
+                        type="email"
+                        value={profile.email}
+                        readOnly
+                        aria-readonly="true"
+                        className="w-full px-3.5 py-3 rounded-xl border border-brand-slate/15 bg-brand-light text-sm text-brand-slate"
+                      />
+                    </div>
+                    <div>
+                      <label
+                        htmlFor="host-phone"
+                        className="block text-xs font-semibold text-brand-navy mb-2"
+                      >
+                        Phone Number
+                      </label>
+                      <input
+                        id="host-phone"
+                        name="phone"
+                        type="tel"
+                        required
+                        pattern="(01|03|05|70|71|76|78|79|81)[0-9]{6}"
+                        maxLength={8}
+                        placeholder="70123456"
+                        defaultValue={profile.phone}
+                        disabled={profileSaving}
+                        className="w-full px-3.5 py-3 rounded-xl border border-brand-slate/15 text-sm text-brand-navy outline-none focus:border-brand-navy focus:ring-2 focus:ring-brand-navy/10 disabled:bg-brand-light"
+                      />
+                    </div>
                   </div>
-
-                  <input
-                    type="checkbox"
-                    defaultChecked
-                    className="w-4 h-4 accent-brand-navy cursor-pointer"
-                  />
-                </label>
-              ))}
-
-              <div className="flex justify-end border-t border-brand-slate/10 pt-5">
-                <button
-                  type="submit"
-                  className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-brand-navy text-white text-sm font-semibold hover:bg-brand-navy/90 active:scale-[0.98] transition shadow-sm"
-                >
-                  <Check className="w-4 h-4" />
-                  Save Settings
-                </button>
-              </div>
-            </form>
-          </div>
-
+                  <div className="flex justify-end border-t border-brand-slate/10 pt-5">
+                    <button
+                      type="submit"
+                      disabled={profileSaving}
+                      className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-brand-navy text-white text-sm font-semibold hover:bg-brand-navy/90 transition shadow-sm disabled:opacity-60"
+                    >
+                      <Check className="w-4 h-4" />
+                      {profileSaving ? "Saving…" : "Save Changes"}
+                    </button>
+                  </div>
+                </form>
+              ) : (
+                <p role="alert" className="mt-5 text-sm text-rose-700">
+                  Profile data is unavailable.
+                </p>
+              )}
+            </div>
           ) : activeTab === "Settings - Security" ? (
-
-          <div className="bg-white rounded-2xl border border-brand-slate/10 p-6 shadow-sm max-w-4xl mx-auto w-full">
-
-            <div className="flex items-center gap-3 pb-5 border-b border-brand-slate/10">
-              <div className="w-10 h-10 rounded-xl bg-brand-navy/5 text-brand-navy flex items-center justify-center">
-                <Shield className="w-5 h-5" />
+            <div className="bg-white rounded-2xl border border-brand-slate/10 p-6 shadow-sm max-w-4xl mx-auto w-full">
+              <div className="flex items-center gap-3 pb-5 border-b border-brand-slate/10">
+                <div className="w-10 h-10 rounded-xl bg-brand-navy/5 text-brand-navy flex items-center justify-center">
+                  <Shield className="w-5 h-5" />
+                </div>
+                <div>
+                  <h3 className="text-base font-bold text-brand-navy">Security</h3>
+                  <p className="text-xs text-brand-slate mt-0.5">
+                    Change your account password securely.
+                  </p>
+                </div>
               </div>
-
-              <div>
-                <h3 className="text-base font-bold text-brand-navy">
-                  Security
-                </h3>
-                <p className="text-xs text-brand-slate mt-0.5">
-                  Keep your Maskanny account secure.
-                </p>
-              </div>
+              <form onSubmit={changeHostPassword} className="mt-6 space-y-5">
+                {passwordError && (
+                  <p
+                    role="alert"
+                    className="rounded-xl bg-rose-50 border border-rose-200 p-3 text-sm text-rose-700"
+                  >
+                    {passwordError}
+                  </p>
+                )}
+                {passwordSuccess && (
+                  <p
+                    role="status"
+                    className="rounded-xl bg-emerald-50 border border-emerald-200 p-3 text-sm text-emerald-700"
+                  >
+                    {passwordSuccess}
+                  </p>
+                )}
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+                  <div>
+                    <label
+                      htmlFor="host-current-password"
+                      className="block text-xs font-semibold text-brand-navy mb-2"
+                    >
+                      Current Password
+                    </label>
+                    <input
+                      id="host-current-password"
+                      name="currentPassword"
+                      type="password"
+                      autoComplete="current-password"
+                      required
+                      maxLength={128}
+                      disabled={passwordSaving}
+                      className="w-full px-3.5 py-3 rounded-xl border border-brand-slate/15 text-sm outline-none focus:border-brand-navy focus:ring-2 focus:ring-brand-navy/10 disabled:bg-brand-light"
+                    />
+                  </div>
+                  <div>
+                    <label
+                      htmlFor="host-new-password"
+                      className="block text-xs font-semibold text-brand-navy mb-2"
+                    >
+                      New Password
+                    </label>
+                    <input
+                      id="host-new-password"
+                      name="newPassword"
+                      type="password"
+                      autoComplete="new-password"
+                      required
+                      minLength={8}
+                      maxLength={128}
+                      disabled={passwordSaving}
+                      className="w-full px-3.5 py-3 rounded-xl border border-brand-slate/15 text-sm outline-none focus:border-brand-navy focus:ring-2 focus:ring-brand-navy/10 disabled:bg-brand-light"
+                    />
+                  </div>
+                  <div>
+                    <label
+                      htmlFor="host-confirm-password"
+                      className="block text-xs font-semibold text-brand-navy mb-2"
+                    >
+                      Confirm New Password
+                    </label>
+                    <input
+                      id="host-confirm-password"
+                      name="confirmPassword"
+                      type="password"
+                      autoComplete="new-password"
+                      required
+                      minLength={8}
+                      maxLength={128}
+                      disabled={passwordSaving}
+                      className="w-full px-3.5 py-3 rounded-xl border border-brand-slate/15 text-sm outline-none focus:border-brand-navy focus:ring-2 focus:ring-brand-navy/10 disabled:bg-brand-light"
+                    />
+                  </div>
+                </div>
+                <div className="flex justify-end border-t border-brand-slate/10 pt-5">
+                  <button
+                    type="submit"
+                    disabled={passwordSaving}
+                    className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-brand-navy text-white text-sm font-semibold hover:bg-brand-navy/90 transition shadow-sm disabled:opacity-60"
+                  >
+                    <Shield className="w-4 h-4" />
+                    {passwordSaving ? "Updating…" : "Update Password"}
+                  </button>
+                </div>
+              </form>
             </div>
-
-            <form
-              onSubmit={(e) => {
-                e.preventDefault();
-
-                triggerSuccess("Security settings updated.");
-              }}
-              className="mt-6 space-y-5"
-            >
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
-                <div>
-                  <label className="block text-xs font-semibold text-brand-navy mb-2">
-                    Current Password
-                  </label>
-
-                  <input
-                    type="password"
-                    placeholder="••••••••"
-                    className="w-full px-3.5 py-3 rounded-xl border border-brand-slate/15 text-sm outline-none focus:border-brand-navy focus:ring-2 focus:ring-brand-navy/10 transition"
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-xs font-semibold text-brand-navy mb-2">
-                    New Password
-                  </label>
-
-                  <input
-                    type="password"
-                    placeholder="••••••••"
-                    className="w-full px-3.5 py-3 rounded-xl border border-brand-slate/15 text-sm outline-none focus:border-brand-navy focus:ring-2 focus:ring-brand-navy/10 transition"
-                  />
-                </div>
-              </div>
-
-              <label className="flex items-center justify-between gap-5 p-4 rounded-xl border border-brand-slate/10 hover:bg-brand-light/40 transition cursor-pointer">
-                <div>
-                  <p className="text-sm font-semibold text-brand-navy">
-                    Two-Factor Authentication
-                  </p>
-
-                  <p className="text-xs text-brand-slate mt-1">
-                    Add an extra layer of security to your account.
-                  </p>
-                </div>
-
-                <input
-                  type="checkbox"
-                  className="w-4 h-4 accent-brand-navy cursor-pointer"
-                />
-              </label>
-
-              <div className="flex items-center justify-between p-4 rounded-xl bg-brand-light/40 border border-brand-slate/10">
-                <div>
-                  <p className="text-sm font-semibold text-brand-navy">
-                    Current Session
-                  </p>
-
-                  <p className="text-xs text-brand-slate mt-1">
-                    Chrome on Windows
-                  </p>
-                </div>
-
-                <span className="px-3 py-1.5 rounded-full bg-emerald-50 text-emerald-600 text-xs font-bold">
-                  Active
-                </span>
-              </div>
-
-              <div className="flex justify-end border-t border-brand-slate/10 pt-5">
-                <button
-                  type="submit"
-                  className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-brand-navy text-white text-sm font-semibold hover:bg-brand-navy/90 active:scale-[0.98] transition shadow-sm"
-                >
-                  <Shield className="w-4 h-4" />
-                  Update Security
-                </button>
-              </div>
-            </form>
-          </div>
-
-          ) : activeTab === "Settings - Appearance" ? (
-
-          <div className="bg-white rounded-2xl border border-brand-slate/10 p-6 shadow-sm max-w-4xl mx-auto w-full">
-
-            <div className="flex items-center gap-3 pb-5 border-b border-brand-slate/10">
-              <div className="w-10 h-10 rounded-xl bg-brand-navy/5 text-brand-navy flex items-center justify-center">
-                <Globe className="w-5 h-5" />
-              </div>
-
-              <div>
-                <h3 className="text-base font-bold text-brand-navy">
-                  Appearance
-                </h3>
-
-                <p className="text-xs text-brand-slate mt-0.5">
-                  Customize your dashboard language and theme.
-                </p>
-              </div>
-            </div>
-
-            <form
-              onSubmit={(e) => {
-                e.preventDefault();
-                triggerSuccess("Appearance settings saved.");
-              }}
-              className="mt-6 space-y-5"
-            >
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
-                <div>
-                  <label className="block text-xs font-semibold text-brand-navy mb-2">
-                    Language
-                  </label>
-
-                  <select className="w-full px-3.5 py-3 rounded-xl border border-brand-slate/15 bg-white text-sm text-brand-navy outline-none focus:border-brand-navy transition">
-                    <option>English</option>
-                    <option>العربية</option>
-                  </select>
-                </div>
-
-                <div>
-                  <label className="block text-xs font-semibold text-brand-navy mb-2">
-                    Theme
-                  </label>
-
-                  <select className="w-full px-3.5 py-3 rounded-xl border border-brand-slate/15 bg-white text-sm text-brand-navy outline-none focus:border-brand-navy transition">
-                    <option>Light Mode</option>
-                    <option>System Default</option>
-                    <option>Dark Mode</option>
-                  </select>
-                </div>
-              </div>
-
-              <div className="flex justify-end border-t border-brand-slate/10 pt-5">
-                <button
-                  type="submit"
-                  className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-brand-navy text-white text-sm font-semibold hover:bg-brand-navy/90 active:scale-[0.98] transition shadow-sm"
-                >
-                  <Check className="w-4 h-4" />
-                  Save Appearance
-                </button>
-              </div>
-            </form>
-          </div>
-
           ) : activeTab === "Settings - Support" ? (
-
-          <div className="bg-white rounded-2xl border border-brand-slate/10 p-6 shadow-sm max-w-4xl mx-auto w-full">
-
-            <div className="flex items-center gap-3 pb-5 border-b border-brand-slate/10">
-              <div className="w-10 h-10 rounded-xl bg-brand-navy/5 text-brand-navy flex items-center justify-center">
-                <HelpCircle className="w-5 h-5" />
-              </div>
-
-              <div>
-                <h3 className="text-base font-bold text-brand-navy">
-                  Help & Support
-                </h3>
-
-                <p className="text-xs text-brand-slate mt-0.5">
-                  Get help with your Maskanny owner account.
-                </p>
-              </div>
-            </div>
-
-            <div className="mt-6 grid grid-cols-1 md:grid-cols-2 gap-4">
-              <button
-                type="button"
-                onClick={() => triggerSuccess("Support request created.")}
-                className="text-left p-5 rounded-xl border border-brand-slate/10 hover:bg-brand-light/40 hover:border-brand-slate/20 active:scale-[0.99] transition"
-              >
-                <div className="w-9 h-9 rounded-lg bg-brand-navy/5 flex items-center justify-center mb-3">
-                  <HelpCircle className="w-4 h-4 text-brand-navy" />
+            <div className="bg-white rounded-2xl border border-brand-slate/10 p-6 shadow-sm max-w-4xl mx-auto w-full">
+              <div className="flex items-center gap-3 pb-5 border-b border-brand-slate/10">
+                <div className="w-10 h-10 rounded-xl bg-brand-navy/5 text-brand-navy flex items-center justify-center">
+                  <HelpCircle className="w-5 h-5" />
                 </div>
-
-                <p className="text-sm font-semibold text-brand-navy">
-                  Contact Support
-                </p>
-
-                <p className="mt-1.5 text-xs leading-5 text-brand-slate">
-                  Contact the Maskanny support team for help with your account or listings.
-                </p>
-
-                <span className="inline-block mt-4 text-xs font-semibold text-brand-navy">
-                  Contact Team →
-                </span>
-              </button>
-
-              <button
-                type="button"
-                onClick={() => triggerSuccess("Bug report form opened.")}
-                className="text-left p-5 rounded-xl border border-brand-slate/10 hover:bg-brand-light/40 hover:border-brand-slate/20 active:scale-[0.99] transition"
-              >
-                <div className="w-9 h-9 rounded-lg bg-brand-navy/5 flex items-center justify-center mb-3">
-                  <AlertCircle className="w-4 h-4 text-brand-navy" />
+                <div>
+                  <h3 className="text-base font-bold text-brand-navy">Help &amp; Support</h3>
+                  <p className="text-xs text-brand-slate mt-0.5">
+                    Get help with your Maskanny Host account.
+                  </p>
                 </div>
-
-                <p className="text-sm font-semibold text-brand-navy">
-                  Report a Problem
+              </div>
+              <form onSubmit={submitSupportEmail} className="mt-6 space-y-4">
+                <div>
+                  <label
+                    htmlFor="host-support-subject"
+                    className="block text-xs font-semibold text-brand-navy mb-2"
+                  >
+                    Subject
+                  </label>
+                  <input
+                    id="host-support-subject"
+                    value={supportSubject}
+                    onChange={(event) => setSupportSubject(event.target.value)}
+                    required
+                    maxLength={160}
+                    className="w-full px-3.5 py-3 rounded-xl border border-brand-slate/15 text-sm text-brand-navy outline-none focus:border-brand-navy focus:ring-2 focus:ring-brand-navy/10"
+                  />
+                </div>
+                <div>
+                  <label
+                    htmlFor="host-support-message"
+                    className="block text-xs font-semibold text-brand-navy mb-2"
+                  >
+                    Message
+                  </label>
+                  <textarea
+                    id="host-support-message"
+                    value={supportMessage}
+                    onChange={(event) => setSupportMessage(event.target.value)}
+                    required
+                    maxLength={5000}
+                    rows={5}
+                    className="w-full px-3.5 py-3 rounded-xl border border-brand-slate/15 text-sm text-brand-navy outline-none focus:border-brand-navy focus:ring-2 focus:ring-brand-navy/10"
+                  />
+                </div>
+                {supportNotice && (
+                  <p role="status" className="text-sm text-brand-slate">
+                    {supportNotice}
+                  </p>
+                )}
+                {!supportAddressConfigured && (
+                  <p className="text-sm text-amber-800 bg-amber-50 border border-amber-200 rounded-xl p-3">
+                    Support email is not configured. Please try again later.
+                  </p>
+                )}
+                <div className="flex justify-end border-t border-brand-slate/10 pt-5">
+                  <button
+                    type="submit"
+                    disabled={!supportAddressConfigured}
+                    className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-brand-navy text-white text-sm font-semibold hover:bg-brand-navy/90 transition shadow-sm disabled:opacity-50"
+                  >
+                    <HelpCircle className="w-4 h-4" />
+                    Continue to Email
+                  </button>
+                </div>
+              </form>
+              <div className="mt-5 rounded-xl bg-brand-navy p-5 text-white">
+                <p className="text-sm font-semibold">Need quick help?</p>
+                <p className="mt-1 text-xs leading-5 text-white/70">
+                  Our support team can help with listings, account settings, and Host verification.
                 </p>
-
-                <p className="mt-1.5 text-xs leading-5 text-brand-slate">
-                  Report a technical issue or send feedback about the dashboard.
-                </p>
-
-                <span className="inline-block mt-4 text-xs font-semibold text-brand-navy">
-                  Report Issue →
-                </span>
-              </button>
+              </div>
             </div>
-
-            <div className="mt-5 rounded-xl bg-brand-navy p-5 text-white">
-              <p className="text-sm font-semibold">
-                Need quick help?
-              </p>
-
-              <p className="mt-1 text-xs leading-5 text-white/70">
-                Our support team can help with listings, account settings, and owner verification.
-              </p>
-            </div>
-          </div>
-
           ) : null}
         </div>
       </main>
 
       {editingListing && (
         <div className="fixed inset-0 z-50 bg-brand-navy/40 backdrop-blur-sm flex items-center justify-center p-4">
-
           <div className="bg-white rounded-2xl shadow-2xl border border-brand-slate/15 w-full max-w-4xl max-h-[90vh] overflow-hidden">
-
-
-
             <div className="flex items-center justify-between px-6 py-5 border-b border-brand-slate/10">
-
               <div>
-                <h3 className="text-lg font-bold text-brand-navy">
-                  Edit Listing
-                </h3>
+                <h3 className="text-lg font-bold text-brand-navy">Edit Listing</h3>
 
                 <p className="text-xs text-brand-slate mt-1">
                   Update all information about your property.
@@ -1884,34 +1591,23 @@ export default function OwnerDashboardPage() {
 
               <button
                 type="button"
-                onClick={() => setEditingListing(null)}
+                disabled={busy}
+                onClick={closeEditListing}
                 className="p-2 rounded-xl hover:bg-brand-light transition"
               >
                 <X className="w-5 h-5 text-brand-slate" />
               </button>
-
             </div>
-
-
-
 
             <form
               onSubmit={handleUpdateListing}
               className="overflow-y-auto max-h-[calc(90vh-145px)] p-6 space-y-6"
             >
-
-
-
               <section>
-
-                <h4 className="text-sm font-bold text-brand-navy mb-4">
-                  Basic Information
-                </h4>
+                <h4 className="text-sm font-bold text-brand-navy mb-4">Basic Information</h4>
 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-
                   <div className="md:col-span-2">
-
                     <label className="block text-xs font-bold text-brand-navy mb-1.5">
                       Property / Dorm Name
                     </label>
@@ -1922,12 +1618,9 @@ export default function OwnerDashboardPage() {
                       required
                       className="w-full px-3.5 py-3 rounded-xl border border-brand-slate/20 text-sm text-brand-navy outline-none focus:border-brand-navy focus:ring-2 focus:ring-brand-navy/10"
                     />
-
                   </div>
 
-
                   <div>
-
                     <label className="block text-xs font-bold text-brand-navy mb-1.5">
                       Property Type
                     </label>
@@ -1940,33 +1633,10 @@ export default function OwnerDashboardPage() {
                       <option>Apartment</option>
                       <option>Dorm</option>
                       <option>Studio</option>
-                      <option>Shared Apartment</option>
                     </select>
-
                   </div>
 
-
                   <div>
-
-                    <label className="block text-xs font-bold text-brand-navy mb-1.5">
-                      Room Type
-                    </label>
-
-                    <select
-                      name="roomType"
-                      defaultValue={editingListing.roomType}
-                      className="w-full px-3.5 py-3 rounded-xl border border-brand-slate/20 bg-white text-sm text-brand-navy outline-none"
-                    >
-                      <option>Private Room</option>
-                      <option>Shared Room</option>
-                      <option>Studio</option>
-                    </select>
-
-                  </div>
-
-
-                  <div>
-
                     <label className="block text-xs font-bold text-brand-navy mb-1.5">
                       Monthly Price ($)
                     </label>
@@ -1974,15 +1644,15 @@ export default function OwnerDashboardPage() {
                     <input
                       name="price"
                       type="number"
+                      min="0.01"
+                      step="any"
                       defaultValue={editingListing.price}
                       required
                       className="w-full px-3.5 py-3 rounded-xl border border-brand-slate/20 text-sm text-brand-navy outline-none"
                     />
-
                   </div>
 
                   <div className="md:col-span-2">
-
                     <label className="block text-sm font-bold text-brand-navy mb-1.5">
                       Description
                     </label>
@@ -1993,304 +1663,256 @@ export default function OwnerDashboardPage() {
                       rows={4}
                       className="w-full px-3.5 py-3 rounded-xl border border-brand-slate/20 text-sm text-brand-navy outline-none resize-none"
                     />
-
                   </div>
-
                 </div>
-
               </section>
 
-
-
-
               <section className="border-t border-brand-slate/10 pt-6">
+                <h4 className="text-sm font-bold text-brand-navy mb-4">Property Details</h4>
 
-                <h4 className="text-sm font-bold text-brand-navy mb-4">
-                  Location
-                </h4>
-
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <div>
-                    <label className="block text-sm font-bold text-brand-navy mb-1.5">
-                      Address
+                    <label className="block text-xs font-bold text-brand-navy mb-1.5">
+                      Bedrooms
                     </label>
-
                     <input
-                      name="location"
-                      defaultValue={editingListing.location}
-                      className="w-full px-3.5 py-3 rounded-xl border border-brand-slate/20 text-sm"
-                    />
-                  </div>
-
-
-                  <div>
-                    <label className="block text-sm font-bold text-brand-navy mb-1.5">
-                      City
-                    </label>
-
-                    <input
-                      name="city"
-                      defaultValue={editingListing.city}
-                      className="w-full px-3.5 py-3 rounded-xl border border-brand-slate/20 text-sm"
-                    />
-                  </div>
-
-
-                  <div>
-                    <label className="block text-sm font-bold text-brand-navy mb-1.5">
-                      Area
-                    </label>
-
-                    <input
-                      name="area"
-                      defaultValue={editingListing.area}
-                      className="w-full px-3.5 py-3 rounded-xl border border-brand-slate/20 text-sm"
-                    />
-                  </div>
-
-
-                  <div>
-                    <label className="block text-sm font-bold text-brand-navy mb-1.5">
-                      Nearby University
-                    </label>
-
-                    <input
-                      name="university"
-                      defaultValue={editingListing.university}
-                      className="w-full px-3.5 py-3 rounded-xl border border-brand-slate/20 text-sm"
-                    />
-                  </div>
-
-
-                  <div>
-                    <label className="block text-sm font-bold text-brand-navy mb-1.5">
-                      Distance to University
-                    </label>
-
-                    <input
-                      name="distanceToUniversity"
-                      defaultValue={editingListing.distanceToUniversity}
-                      placeholder="e.g. 7 min"
-                      className="w-full px-3.5 py-3 rounded-xl border border-brand-slate/20 text-sm"
-                    />
-                  </div>
-
-                </div>
-
-              </section>
-
-
-
-              <section className="border-t border-brand-slate/10 pt-6">
-
-                <h4 className="text-sm font-bold text-brand-navy mb-4">
-                  Property Details
-                </h4>
-
-                <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-
-                  <div>
-                    <label className="block text-sm font-bold mb-1.5">
-                      Beds
-                    </label>
-
-                    <input
-                      name="beds"
+                      name="bedrooms"
                       type="number"
                       min="0"
-                      defaultValue={editingListing.beds}
-                      className="w-full px-3 py-3 rounded-xl border border-brand-slate/20 text-sm"
+                      step="1"
+                      defaultValue={editingListing.rooms}
+                      required
+                      className="w-full px-3.5 py-3 rounded-xl border border-brand-slate/20 text-sm text-brand-navy"
                     />
                   </div>
-
-
                   <div>
-                    <label className="block text-sm font-bold mb-1.5">
+                    <label className="block text-xs font-bold text-brand-navy mb-1.5">
                       Bathrooms
                     </label>
-
                     <input
                       name="bathrooms"
                       type="number"
                       min="0"
+                      step="1"
                       defaultValue={editingListing.bathrooms}
-                      className="w-full px-3 py-3 rounded-xl border border-brand-slate/20 text-sm"
+                      required
+                      className="w-full px-3.5 py-3 rounded-xl border border-brand-slate/20 text-sm text-brand-navy"
                     />
                   </div>
-
-
                   <div>
-                    <label className="block text-xs font-semibold text-brand-slate mb-2">
-                      Rooms
+                    <label className="block text-xs font-bold text-brand-navy mb-1.5">
+                      Bed count
                     </label>
-
                     <input
-                      type="number"
-                      name="rooms"
-                      min="1"
-                      placeholder="3"
-                      className="w-full px-4 py-3 rounded-xl border border-brand-slate/20
-      text-sm text-brand-navy
-      focus:outline-none focus:ring-2 focus:ring-brand-navy/20"
-                    />
-                  </div>
-
-                  <div>
-                    <label className="block text-sm font-bold mb-1.5">
-                      Size (m²)
-                    </label>
-
-                    <input
-                      name="size"
+                      name="bedCount"
                       type="number"
                       min="0"
-                      defaultValue={editingListing.size}
-                      className="w-full px-3 py-3 rounded-xl border border-brand-slate/20 text-sm"
+                      step="1"
+                      defaultValue={editingListing.beds}
+                      required
+                      className="w-full px-3.5 py-3 rounded-xl border border-brand-slate/20 text-sm text-brand-navy"
                     />
                   </div>
-
-
                   <div>
-                    <label className="block text-sm font-bold mb-1.5">
-                      Available Rooms
+                    <label className="block text-xs font-bold text-brand-navy mb-1.5">
+                      Furnished
                     </label>
-
-                    <input
-                      name="availableRooms"
-                      type="number"
-                      min="0"
-                      defaultValue={editingListing.availableRooms}
-                      className="w-full px-3 py-3 rounded-xl border border-brand-slate/20 text-sm"
-                    />
-                  </div>
-
-
-                  <div className="col-span-2 md:col-span-3">
-
-                    <label className="block text-sm font-bold mb-1.5">
-                      Furnishing
-                    </label>
-
                     <select
-                      name="furnishing"
-                      defaultValue={editingListing.furnishing}
-                      className="w-full px-3 py-3 rounded-xl border border-brand-slate/20 bg-white text-sm"
+                      name="furnished"
+                      defaultValue={String(editingListing.furnishing === "Furnished")}
+                      className="w-full px-3.5 py-3 rounded-xl border border-brand-slate/20 bg-white text-sm text-brand-navy"
                     >
-                      <option>Furnished</option>
-                      <option>Unfurnished</option>
+                      <option value="true">Yes</option>
+                      <option value="false">No</option>
                     </select>
-
                   </div>
-
+                  <div>
+                    <label className="block text-xs font-bold text-brand-navy mb-1.5">
+                      Electricity included
+                    </label>
+                    <select
+                      name="electricityIncluded"
+                      defaultValue={String(editingListing.electricityIncluded)}
+                      className="w-full px-3.5 py-3 rounded-xl border border-brand-slate/20 bg-white text-sm text-brand-navy"
+                    >
+                      <option value="true">Yes</option>
+                      <option value="false">No</option>
+                    </select>
+                  </div>
+                  <div>
+                    <label className="block text-xs font-bold text-brand-navy mb-1.5">
+                      Kitchen type
+                    </label>
+                    <select
+                      name="kitchenType"
+                      defaultValue={editingListing.kitchenType}
+                      className="w-full px-3.5 py-3 rounded-xl border border-brand-slate/20 bg-white text-sm text-brand-navy"
+                    >
+                      <option value="private">Private</option>
+                      <option value="shared">Shared</option>
+                    </select>
+                  </div>
+                  <div>
+                    <label className="block text-xs font-bold text-brand-navy mb-1.5">
+                      Bathroom type
+                    </label>
+                    <select
+                      name="bathroomType"
+                      defaultValue={editingListing.bathroomType}
+                      className="w-full px-3.5 py-3 rounded-xl border border-brand-slate/20 bg-white text-sm text-brand-navy"
+                    >
+                      <option value="private">Private</option>
+                      <option value="shared">Shared</option>
+                    </select>
+                  </div>
+                  <div>
+                    <label className="block text-xs font-bold text-brand-navy mb-1.5">
+                      Gender preference
+                    </label>
+                    <select
+                      name="gender"
+                      defaultValue={editingListing.gender}
+                      className="w-full px-3.5 py-3 rounded-xl border border-brand-slate/20 bg-white text-sm text-brand-navy"
+                    >
+                      <option value="boys">Boys</option>
+                      <option value="girls">Girls</option>
+                      <option value="mixed">Mixed</option>
+                    </select>
+                  </div>
                 </div>
-
               </section>
 
+              <section className="border-t border-brand-slate/10 pt-6">
+                {editingUniversitiesStatus === "loading" ? (
+                  <p role="status" className="text-sm text-brand-slate">
+                    Loading current university associations…
+                  </p>
+                ) : editingUniversitiesStatus === "error" ? (
+                  <div
+                    role="alert"
+                    className="rounded-xl border border-rose-200 bg-rose-50 p-4 text-sm text-rose-700"
+                  >
+                    <p>{editingUniversitiesError}</p>
+                    <button
+                      type="button"
+                      disabled={busy}
+                      onClick={() => void loadEditingUniversities(editingListing.propertyId)}
+                      className="mt-2 font-bold underline disabled:opacity-50"
+                    >
+                      Retry loading associations
+                    </button>
+                  </div>
+                ) : (
+                  <PropertyUniversitySelect
+                    selected={editingUniversities}
+                    onChange={setEditingUniversities}
+                    disabled={busy}
+                  />
+                )}
+              </section>
 
               <section className="border-t border-brand-slate/10 pt-6">
-
-                <div className="flex items-center justify-between mb-4">
-
+                <div className="flex items-center justify-between gap-3 mb-4">
                   <div>
-                    <h4 className="text-sm font-bold text-brand-navy">
-                      Amenities
-                    </h4>
-
-                    <p className="text-sm text-brand-slate mt-1">
-                      Select everything available at this property.
+                    <h4 className="text-sm font-bold text-brand-navy">Property Photos</h4>
+                    <p className="text-xs text-brand-slate mt-1">
+                      {editingListing.imageLimit === null
+                        ? "Photo additions are unavailable because this boost plan could not be loaded."
+                        : `${editingListing.images.length - removedPhotoIds.filter((id) => editingListing.images.some((image) => image.media_id === id)).length + newPhotos.length} of ${editingListing.imageLimit} photos`}
                     </p>
                   </div>
-
+                  <label
+                    className={`inline-flex items-center gap-2 px-3 py-2 rounded-xl border border-brand-slate/15 text-xs font-bold ${busy || editingListing.imageLimit === null ? "opacity-50 cursor-not-allowed" : "cursor-pointer hover:bg-brand-light"}`}
+                  >
+                    <Upload className="w-3.5 h-3.5" /> Add Photos
+                    <input
+                      type="file"
+                      accept="image/jpeg,image/png,image/webp"
+                      multiple
+                      disabled={busy || editingListing.imageLimit === null}
+                      className="sr-only"
+                      onChange={(event) => {
+                        addEditPhotos(Array.from(event.currentTarget.files ?? []));
+                        event.currentTarget.value = "";
+                      }}
+                    />
+                  </label>
                 </div>
 
-
                 <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
-
-                  {[
-                    'Wi-Fi',
-                    'Electricity',
-                    'Water',
-                    'Air Conditioning',
-                    'Heating',
-                    'Kitchen',
-                    'Laundry',
-                    'Parking',
-                    'Security',
-                    'Elevator',
-                    'Balcony',
-                    'Study Area',
-                  ].map((amenity) => (
-
-                    <label
-                      key={amenity}
-                      className="flex items-center gap-3 p-3 rounded-xl border border-brand-slate/10 hover:bg-brand-light cursor-pointer"
-                    >
-
-                      <input
-                        type="checkbox"
-                        name="amenities"
-                        value={amenity}
-                        defaultChecked={editingListing.amenities?.includes(amenity)}
-                        className="w-4 h-4 accent-brand-navy"
-                      />
-
-                      <span className="text-sm font-medium text-brand-navy">
-                        {amenity}
-                      </span>
-
-                    </label>
-
-                  ))}
-
-                </div>
-
-              </section>
-
-
-
-
-              <section className="border-t border-brand-slate/10 pt-6">
-
-                <h4 className="text-sm font-bold text-brand-navy mb-4">
-                  Property Photos
-                </h4>
-
-                <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
-
-                  {editingListing.photos?.map((photo, index) => (
-
+                  {editingListing.images
+                    .filter((image) => !removedPhotoIds.includes(image.media_id))
+                    .map((image) => (
+                      <div
+                        key={image.media_id}
+                        className="relative h-32 rounded-xl overflow-hidden border border-brand-slate/10"
+                      >
+                        <Image
+                          src={image.url}
+                          alt="Property photo"
+                          width={320}
+                          height={240}
+                          unoptimized
+                          className="w-full h-full object-cover"
+                        />
+                        <button
+                          type="button"
+                          disabled={busy}
+                          aria-label="Remove property photo"
+                          onClick={() =>
+                            setRemovedPhotoIds((current) => [...current, image.media_id])
+                          }
+                          className="absolute right-2 top-2 rounded-full bg-white/95 p-2 text-rose-600 shadow-sm disabled:opacity-50"
+                        >
+                          <X className="h-4 w-4" />
+                        </button>
+                      </div>
+                    ))}
+                  {newPhotos.map((photo) => (
                     <div
-                      key={index}
+                      key={photo.requestId}
                       className="relative h-32 rounded-xl overflow-hidden border border-brand-slate/10"
                     >
-
-                      <img
-                        src={photo}
-                        alt={`Property ${index + 1}`}
+                      <Image
+                        src={photo.preview}
+                        alt={photo.file.name}
+                        width={320}
+                        height={240}
+                        unoptimized
                         className="w-full h-full object-cover"
                       />
-
+                      <button
+                        type="button"
+                        disabled={busy}
+                        aria-label={`Remove ${photo.file.name}`}
+                        onClick={() => {
+                          URL.revokeObjectURL(photo.preview);
+                          setNewPhotos((current) =>
+                            current.filter((item) => item.requestId !== photo.requestId),
+                          );
+                        }}
+                        className="absolute right-2 top-2 rounded-full bg-white/95 p-2 text-rose-600 shadow-sm disabled:opacity-50"
+                      >
+                        <X className="h-4 w-4" />
+                      </button>
                     </div>
-
                   ))}
-
                 </div>
-
-                <p className="text-[11px] text-brand-slate mt-2">
-                  Existing mock photos are shown here. File upload can be connected to Supabase Storage later.
-                </p>
-
+                {editingListing.images.length + newPhotos.length === 0 && (
+                  <p className="text-xs text-brand-slate">No photos have been added.</p>
+                )}
+                {editError && (
+                  <p role="alert" className="mt-3 text-xs text-rose-700">
+                    {editError}
+                  </p>
+                )}
               </section>
 
-
-
-
               <div className="sticky bottom-0 bg-white border-t border-brand-slate/10 pt-4 flex justify-end gap-3">
-
                 <button
                   type="button"
-                  onClick={() => setEditingListing(null)}
+                  disabled={busy}
+                  onClick={closeEditListing}
                   className="px-5 py-2.5 rounded-xl text-xs font-bold text-brand-slate hover:bg-brand-light"
                 >
                   Cancel
@@ -2298,42 +1920,39 @@ export default function OwnerDashboardPage() {
 
                 <button
                   type="submit"
+                  disabled={busy}
                   className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-brand-navy text-white text-xs font-bold hover:bg-brand-navy/90 shadow-sm"
                 >
                   <Save className="w-4 h-4" />
-                  Save Changes
+                  {busy ? "Saving…" : "Save Changes"}
                 </button>
-
               </div>
-
             </form>
-
           </div>
-
         </div>
       )}
 
       {deleteListingId && (
         <div className="fixed inset-0 z-[60] bg-brand-navy/40 backdrop-blur-sm flex items-center justify-center p-4">
-
           <div className="bg-white rounded-2xl p-6 w-full max-w-md shadow-2xl">
-
             <div className="w-11 h-11 rounded-xl bg-rose-50 flex items-center justify-center mb-4">
               <Trash2 className="w-5 h-5 text-rose-600" />
             </div>
 
-            <h3 className="text-base font-bold text-brand-navy">
-              Delete this listing?
-            </h3>
+            <h3 className="text-base font-bold text-brand-navy">Delete this listing?</h3>
 
             <p className="text-xs text-brand-slate mt-2 leading-5">
-              This listing will be removed from your My Listings page.
-              This action cannot be undone.
+              This listing will be archived and removed from public and Host active listings. Boost
+              and payment history will be retained.
             </p>
 
+            {loadError && (
+              <p role="alert" className="mt-3 text-xs text-rose-700">
+                {loadError}
+              </p>
+            )}
 
             <div className="flex justify-end gap-2 mt-6">
-
               <button
                 type="button"
                 onClick={() => setDeleteListingId(null)}
@@ -2342,38 +1961,19 @@ export default function OwnerDashboardPage() {
                 Cancel
               </button>
 
-
               <button
                 type="button"
-                onClick={() => {
-
-                  setSubmissions((prev) =>
-                    prev.filter(
-                      (item) =>
-                        item.id !== deleteListingId
-                    )
-                  );
-
-                  setDeleteListingId(null);
-
-                  triggerSuccess(
-                    'Listing deleted successfully.'
-                  );
-
-                }}
+                onClick={() => void handleDeleteListing()}
+                disabled={busy}
                 className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-rose-600 text-white text-xs font-bold hover:bg-rose-700"
               >
                 <Trash2 className="w-3.5 h-3.5" />
-                Delete Listing
+                {busy ? "Deleting…" : "Delete Listing"}
               </button>
-
             </div>
-
           </div>
-
         </div>
       )}
-
     </div>
   );
 }

@@ -6,10 +6,7 @@ export default function Loading() {
         <div className="mt-8 h-72 rounded-3xl bg-[var(--surface)]" />
         <div className="mt-8 grid grid-cols-1 gap-[18px] md:grid-cols-2 md:gap-6 lg:grid-cols-3">
           {[0, 1, 2].map((item) => (
-            <div
-              key={item}
-              className="h-[380px] rounded-3xl bg-[var(--surface)]"
-            />
+            <div key={item} className="h-[380px] rounded-3xl bg-[var(--surface)]" />
           ))}
         </div>
       </div>

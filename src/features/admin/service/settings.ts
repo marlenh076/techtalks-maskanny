@@ -13,35 +13,28 @@ export async function changeEmail(
 ): Promise<EmailChangeResult> {
   let response: Response;
   try {
-    response = await fetch(
-      `${process.env.NEXT_PUBLIC_SUPABASE_URL!}/auth/v1/user`,
-      {
-        method: "PUT",
-        cache: "no-store",
-        signal: AbortSignal.timeout(10000),
-        headers: {
-          apikey: process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY!,
-          Authorization: `Bearer ${accessToken}`,
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({ email }),
+    response = await fetch(`${process.env.NEXT_PUBLIC_SUPABASE_URL!}/auth/v1/user`, {
+      method: "PUT",
+      cache: "no-store",
+      signal: AbortSignal.timeout(10000),
+      headers: {
+        apikey: process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY!,
+        Authorization: `Bearer ${accessToken}`,
+        "Content-Type": "application/json",
       },
-    );
+      body: JSON.stringify({ email }),
+    });
   } catch {
     throw new AdminError("Auth email update unavailable", 502);
   }
   if (!response.ok) {
-    if (response.status === 429)
-      throw new AdminError("Too many attempts; try again later", 429);
+    if (response.status === 429) throw new AdminError("Too many attempts; try again later", 429);
     if (response.status === 401 || response.status === 403)
       throw new AdminError(
         "Auth requires a valid session or additional verification",
         response.status,
       );
-    throw new AdminError(
-      "Email change refused by Auth",
-      response.status >= 500 ? 502 : 400,
-    );
+    throw new AdminError("Email change refused by Auth", response.status >= 500 ? 502 : 400);
   }
   let user: { id?: string; email?: string; new_email?: string };
   try {
@@ -52,10 +45,7 @@ export async function changeEmail(
   if (!user || user.id !== userId || typeof user.email !== "string")
     throw new AdminError("Invalid Auth response", 502);
   const confirmationRequired = user.email.toLowerCase() !== email.toLowerCase();
-  if (
-    confirmationRequired &&
-    user.new_email?.toLowerCase() !== email.toLowerCase()
-  ) {
+  if (confirmationRequired && user.new_email?.toLowerCase() !== email.toLowerCase()) {
     throw new AdminError("Auth did not confirm the email change request", 502);
   }
   return {
@@ -89,8 +79,7 @@ export async function changePassword(
     password: currentPassword,
   });
   if (error || !data.user || data.user.id !== userId) {
-    if (error?.status === 429)
-      throw new AdminError("Too many attempts; try again later", 429);
+    if (error?.status === 429) throw new AdminError("Too many attempts; try again later", 429);
     throw new AdminError("Current password could not be verified", 403);
   }
   try {
@@ -112,20 +101,12 @@ export async function changePassword(
   }
 }
 
-export function avatarExtension(
-  bytes: Uint8Array,
-  mime: string,
-): "png" | "jpg" | "webp" {
+export function avatarExtension(bytes: Uint8Array, mime: string): "png" | "jpg" | "webp" {
   const matches = (offset: number, values: number[]) =>
     values.every((value, i) => bytes[offset + i] === value);
-  if (mime === "image/png" && matches(0, [137, 80, 78, 71, 13, 10, 26, 10]))
-    return "png";
+  if (mime === "image/png" && matches(0, [137, 80, 78, 71, 13, 10, 26, 10])) return "png";
   if (mime === "image/jpeg" && matches(0, [255, 216, 255])) return "jpg";
-  if (
-    mime === "image/webp" &&
-    matches(0, [82, 73, 70, 70]) &&
-    matches(8, [87, 69, 66, 80])
-  )
+  if (mime === "image/webp" && matches(0, [82, 73, 70, 70]) && matches(8, [87, 69, 66, 80]))
     return "webp";
   throw new AdminError("A PNG, JPEG or WebP image is required", 400);
 }

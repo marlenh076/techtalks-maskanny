@@ -3,17 +3,12 @@
 import { useEffect, useRef, useState } from "react";
 import type { ChangeEvent, FormEvent, ReactNode } from "react";
 import { propertySchema } from "@/src/features/properties/validation/property.schema";
-import type {
-  Property,
-  PropertyCreate,
-} from "@/src/features/properties/models/property.model";
+import type { Property, PropertyCreate } from "@/src/features/properties/models/property.model";
 import { supabase } from "@/src/lib/supabase/client";
 import { useRouter } from "next/navigation";
 import { z } from "zod";
 import { Check, ImagePlus, Trash2 } from "lucide-react";
-import PropertyCreateSelect, {
-  type PropertySelectOption,
-} from "./PropertySelect";
+import PropertyCreateSelect, { type PropertySelectOption } from "./PropertySelect";
 import PropertyLocationPicker from "./PropertyLocationPicker";
 import PropertyUniversitySelect from "./PropertyUniversitySelect";
 import type { University } from "@/src/features/universities/models/university.model";
@@ -77,8 +72,7 @@ class FormValidationError extends Error {
   }
 }
 
-const GRID_CLASSES =
-  "grid grid-cols-2 gap-x-6 gap-y-7 [@media(width<=700px)]:grid-cols-1";
+const GRID_CLASSES = "grid grid-cols-2 gap-x-6 gap-y-7 [@media(width<=700px)]:grid-cols-1";
 
 const INPUT_CLASSES = `
   block w-full min-h-[48px] appearance-none
@@ -95,10 +89,7 @@ const INPUT_CLASSES = `
   motion-reduce:transition-none
 `;
 
-function buildPayload(
-  values: FormValues,
-  location: SelectedLocation | null,
-): PropertyFormPayload {
+function buildPayload(values: FormValues, location: SelectedLocation | null): PropertyFormPayload {
   const errors: FieldErrors = {};
 
   if (!location || location.address !== values.address.trim()) {
@@ -240,9 +231,7 @@ function FormSection({
             {title}
           </h2>
 
-          <p className="mt-[7px] mb-0 text-[14px] leading-relaxed text-[#6F7F8D]">
-            {description}
-          </p>
+          <p className="mt-[7px] mb-0 text-[14px] leading-relaxed text-[#6F7F8D]">{description}</p>
 
           {number === "01" && (
             <p className="mt-2 text-[12px] leading-5 text-[#7B8996]">
@@ -291,14 +280,10 @@ function FormField({
   hint,
 }: FormFieldProps) {
   const describedBy =
-    [hint && `${id}-hint`, errors[id] && `${id}-error`]
-      .filter(Boolean)
-      .join(" ") || undefined;
+    [hint && `${id}-hint`, errors[id] && `${id}-error`].filter(Boolean).join(" ") || undefined;
 
   const inputClasses = `${INPUT_CLASSES} ${
-    errors[id]
-      ? "border-(--danger)! bg-(--danger-bg)!"
-      : ""
+    errors[id] ? "border-(--danger)! bg-(--danger-bg)!" : ""
   }`;
 
   const fieldProps = {
@@ -313,11 +298,7 @@ function FormField({
   };
 
   return (
-    <div
-      className={`min-w-0 ${
-        fullWidth ? "col-span-full [@media(width<=700px)]:col-auto" : ""
-      }`}
-    >
+    <div className={`min-w-0 ${fullWidth ? "col-span-full [@media(width<=700px)]:col-auto" : ""}`}>
       <label
         id={`${id}-label`}
         htmlFor={id}
@@ -356,19 +337,13 @@ function FormField({
       )}
 
       {hint && (
-        <p
-          id={`${id}-hint`}
-          className="mt-2 text-[12px] leading-5 text-[#7B8996]"
-        >
+        <p id={`${id}-hint`} className="mt-2 text-[12px] leading-5 text-[#7B8996]">
           {hint}
         </p>
       )}
 
       {errors[id] && (
-        <p
-          id={`${id}-error`}
-          className="mt-2 text-[13px] leading-5 text-(--danger)"
-        >
+        <p id={`${id}-error`} className="mt-2 text-[13px] leading-5 text-(--danger)">
           {errors[id]}
         </p>
       )}
@@ -415,21 +390,14 @@ function PhotoPreview({
 
         {index === 0 && (
           <span className="absolute top-3 left-3 inline-flex items-center gap-1.5 rounded-full border border-[#D7B377]/50 bg-[#2B4162] px-3 py-2 text-[12px] font-semibold text-white shadow-sm">
-            <Check
-              aria-hidden="true"
-              size={14}
-              className="text-[#D7B377]"
-            />
+            <Check aria-hidden="true" size={14} className="text-[#D7B377]" />
             Cover photo
           </span>
         )}
       </div>
 
       <figcaption className="p-3">
-        <p
-          title={photo.name}
-          className="truncate text-[13px] font-semibold text-[#2B4162]"
-        >
+        <p title={photo.name} className="truncate text-[13px] font-semibold text-[#2B4162]">
           {photo.name}
         </p>
 
@@ -463,9 +431,7 @@ function PhotoPreview({
               Make cover
             </button>
           ) : (
-            <span className="text-[12px] text-[#6F7F8D]">
-              Shown first
-            </span>
+            <span className="text-[12px] text-[#6F7F8D]">Shown first</span>
           )}
 
           <button
@@ -492,16 +458,11 @@ function PhotoPreview({
 }
 /* eslint-enable @next/next/no-img-element */
 
-export default function PropertyForm({
-  searchEnabled = false,
-}: {
-  searchEnabled?: boolean;
-}) {
+export default function PropertyForm({ searchEnabled = false }: { searchEnabled?: boolean }) {
   const router = useRouter();
 
   const [values, setValues] = useState<FormValues>(INITIAL_VALUES);
-  const [selectedLocation, setSelectedLocation] =
-    useState<SelectedLocation | null>(null);
+  const [selectedLocation, setSelectedLocation] = useState<SelectedLocation | null>(null);
   const [photos, setPhotos] = useState<File[]>([]);
   const [universities, setUniversities] = useState<University[]>([]);
   const [universitiesSaved, setUniversitiesSaved] = useState(false);
@@ -509,9 +470,7 @@ export default function PropertyForm({
   const [draftLocation, setDraftLocation] = useState<Coordinates | null>(null);
   const [errors, setErrors] = useState<FieldErrors>({});
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [createdPropertyId, setCreatedPropertyId] = useState<string | null>(
-    null,
-  );
+  const [createdPropertyId, setCreatedPropertyId] = useState<string | null>(null);
   const [creationStarted, setCreationStarted] = useState(false);
   const [uploadedPhotoCount, setUploadedPhotoCount] = useState(0);
   const [isComplete, setIsComplete] = useState(false);
@@ -524,8 +483,7 @@ export default function PropertyForm({
   const requestId = useRef<string | null>(null);
   const photoRequestIds = useRef(new WeakMap<File, string>());
 
-  const fieldsLocked =
-    isSubmitting || creationStarted || createdPropertyId !== null;
+  const fieldsLocked = isSubmitting || creationStarted || createdPropertyId !== null;
 
   useEffect(() => {
     if (!creationStarted || isComplete) return;
@@ -561,9 +519,7 @@ export default function PropertyForm({
         ...current,
         photos: "Choose JPG, PNG, or WEBP images only.",
       }));
-    } else if (
-      selected.some((file) => file.size === 0 || file.size > MAX_FILE_SIZE)
-    ) {
+    } else if (selected.some((file) => file.size === 0 || file.size > MAX_FILE_SIZE)) {
       setErrors((current) => ({
         ...current,
         photos:
@@ -587,9 +543,7 @@ export default function PropertyForm({
   function removePhoto(index: number) {
     setPhotoAnnouncement(`${photos[index].name} removed.`);
 
-    setPhotos((current) =>
-      current.filter((_, photoIndex) => photoIndex !== index),
-    );
+    setPhotos((current) => current.filter((_, photoIndex) => photoIndex !== index));
 
     setFeedback(null);
     setErrors((current) => ({ ...current, photos: undefined }));
@@ -650,8 +604,7 @@ export default function PropertyForm({
             university_ids: universities.map((u) => u.university_id),
           }).success
         ) {
-          validationErrors.universities =
-            "Choose valid universities without duplicates.";
+          validationErrors.universities = "Choose valid universities without duplicates.";
         }
 
         if (Object.keys(validationErrors).length) {
@@ -696,10 +649,7 @@ export default function PropertyForm({
         }
 
         setFeedback({
-          message:
-            error instanceof Error
-              ? error.message
-              : "Check the property details.",
+          message: error instanceof Error ? error.message : "Check the property details.",
         });
 
         return;
@@ -781,40 +731,29 @@ export default function PropertyForm({
         setSubmissionMessage("Saving selected universities…");
 
         try {
-          const response = await fetch(
-            `/api/properties/${propertyId}/universities`,
-            {
-              method: "POST",
-              headers: {
-                ...headers,
-                "Content-Type": "application/json",
-              },
-              body: JSON.stringify({
-                university_ids: universities.map((u) => u.university_id),
-              }),
+          const response = await fetch(`/api/properties/${propertyId}/universities`, {
+            method: "POST",
+            headers: {
+              ...headers,
+              "Content-Type": "application/json",
             },
-          );
+            body: JSON.stringify({
+              university_ids: universities.map((u) => u.university_id),
+            }),
+          });
 
           if (!response.ok) {
             throw new Error(await readApiError(response));
           }
 
-          const acknowledgement = propertyUniversitiesSchema.safeParse(
-            await response.json(),
-          );
+          const acknowledgement = propertyUniversitiesSchema.safeParse(await response.json());
 
           if (
             !acknowledgement.success ||
-            acknowledgement.data.university_ids.length !==
-              universities.length ||
-            universities.some(
-              (u) =>
-                !acknowledgement.data.university_ids.includes(u.university_id),
-            )
+            acknowledgement.data.university_ids.length !== universities.length ||
+            universities.some((u) => !acknowledgement.data.university_ids.includes(u.university_id))
           ) {
-            throw new Error(
-              "The server did not confirm all selected universities.",
-            );
+            throw new Error("The server did not confirm all selected universities.");
           }
 
           setUniversitiesSaved(true);
@@ -824,9 +763,7 @@ export default function PropertyForm({
           }));
         } catch (error) {
           const message = `Property saved, but selected universities could not be confirmed: ${
-            error instanceof Error
-              ? error.message
-              : "Check your connection."
+            error instanceof Error ? error.message : "Check your connection."
           } Retry to finish this submission.`;
 
           setErrors((current) => ({
@@ -838,17 +775,11 @@ export default function PropertyForm({
         }
       }
 
-      for (
-        let index = uploadedPhotoCount;
-        index < photos.length;
-        index += 1
-      ) {
+      for (let index = uploadedPhotoCount; index < photos.length; index += 1) {
         uploadingPhotoIndex = index;
 
         setActivePhotoIndex(index);
-        setSubmissionMessage(
-          `Uploading photo ${index + 1} of ${photos.length}…`,
-        );
+        setSubmissionMessage(`Uploading photo ${index + 1} of ${photos.length}…`);
 
         const formData = new FormData();
         formData.append("file", photos[index]);
@@ -1207,9 +1138,7 @@ export default function PropertyForm({
         </div>
 
         <div className="mt-3 flex flex-wrap items-center justify-between gap-x-4 gap-y-1 text-[12px] leading-5 text-[#6F7F8D]">
-          <p id="photos-help">
-            Add 1–6 photos. The cover photo appears first.
-          </p>
+          <p id="photos-help">Add 1–6 photos. The cover photo appears first.</p>
 
           <p role="status" aria-live="polite" aria-atomic="true">
             {photos.length} of {MAX_IMAGES} photos selected
@@ -1251,20 +1180,15 @@ export default function PropertyForm({
         </p>
 
         {errors.photos && (
-          <p
-            id="photos-error"
-            role="alert"
-            className="mt-3 text-[13px] text-(--danger)"
-          >
+          <p id="photos-error" role="alert" className="mt-3 text-[13px] text-(--danger)">
             {errors.photos}
           </p>
         )}
 
         {createdPropertyId && !isSubmitting && !isComplete && (
           <p role="status" className="mt-3 text-[13px] text-[#6F7F8D]">
-            Property details are saved. {uploadedPhotoCount} of {photos.length}{" "}
-            photos uploaded. Keep this page open and retry to finish your
-            submission.
+            Property details are saved. {uploadedPhotoCount} of {photos.length} photos uploaded.
+            Keep this page open and retry to finish your submission.
           </p>
         )}
       </FormSection>
@@ -1295,8 +1219,8 @@ export default function PropertyForm({
 
             {creationStarted && !createdPropertyId && (
               <p>
-                Retry this submission to safely check whether the property was
-                saved. Keep this page open.
+                Retry this submission to safely check whether the property was saved. Keep this page
+                open.
               </p>
             )}
           </div>
@@ -1316,13 +1240,10 @@ export default function PropertyForm({
         "
       >
         <div>
-          <p className="text-[15px] font-semibold text-[#2B4162]">
-            Ready to submit for review?
-          </p>
+          <p className="text-[15px] font-semibold text-[#2B4162]">Ready to submit for review?</p>
 
           <p className="text-[14px] leading-relaxed text-[#6F7F8D]">
-            Your listing needs Admin approval and an active, paid boost before
-            it is published.
+            Your listing needs Admin approval and an active, paid boost before it is published.
           </p>
 
           {(isSubmitting || isComplete) && (

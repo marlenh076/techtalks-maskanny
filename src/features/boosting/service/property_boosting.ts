@@ -1,13 +1,8 @@
-import {
-  PropertyBoosting,
-  PropertyBoostingCreate,
-} from "../models/property_boosting.model";
+import { PropertyBoosting, PropertyBoostingCreate } from "../models/property_boosting.model";
 import { IPropertyBoostingRepository } from "../repository/IPropertyBoosting.repository";
 
 export class PropertyBoostingService {
-  constructor(
-    private propertyBoostingRepository: IPropertyBoostingRepository,
-  ) {}
+  constructor(private propertyBoostingRepository: IPropertyBoostingRepository) {}
 
   async create(data: PropertyBoostingCreate): Promise<PropertyBoosting> {
     return this.propertyBoostingRepository.create(data);

@@ -1,13 +1,5 @@
-import {
-  authorized,
-  body,
-  json,
-  type IdContext,
-} from "@/src/features/admin/http";
-import {
-  approvalSchema,
-  uuidSchema,
-} from "@/src/features/admin/validation/admin.schema";
+import { authorized, body, json, type IdContext } from "@/src/features/admin/http";
+import { approvalSchema, uuidSchema } from "@/src/features/admin/validation/admin.schema";
 import { PropertyModerationRepository } from "@/src/features/properties/repository/property_moderation.repository";
 import { PropertyModerationService } from "@/src/features/properties/service/property_moderation";
 import { getAccessToken } from "@/src/lib/supabase/auth";

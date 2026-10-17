@@ -9,8 +9,7 @@ import styles from "./PropertyGallery.module.css";
 export function orderPropertyMedia(media: Media[]) {
   return [...media].sort(
     (a, b) =>
-      (a.sort_order ?? Number.MAX_SAFE_INTEGER) -
-        (b.sort_order ?? Number.MAX_SAFE_INTEGER) ||
+      (a.sort_order ?? Number.MAX_SAFE_INTEGER) - (b.sort_order ?? Number.MAX_SAFE_INTEGER) ||
       (a.media_id < b.media_id ? -1 : a.media_id > b.media_id ? 1 : 0),
   );
 }
@@ -35,13 +34,7 @@ function GalleryVideo({ item, title }: { item: Media; title: string }) {
   );
 }
 
-export function PropertyGallery({
-  media,
-  title,
-}: {
-  media: Media[];
-  title: string;
-}) {
+export function PropertyGallery({ media, title }: { media: Media[]; title: string }) {
   const [active, setActive] = useState(0);
   const [open, setOpen] = useState(false);
   const dialog = useRef<HTMLDialogElement>(null);
@@ -216,11 +209,7 @@ export function PropertyGallery({
                   className={styles.fullMedia}
                 />
               ) : (
-                <GalleryVideo
-                  key={selected.media_id}
-                  item={selected}
-                  title={title}
-                />
+                <GalleryVideo key={selected.media_id} item={selected} title={title} />
               )}
             </div>
 
@@ -237,9 +226,7 @@ export function PropertyGallery({
               )}
 
               <span className={styles.mediaLabel}>
-                {selected.type === "video"
-                  ? "Property video"
-                  : `Photo ${active + 1}`}
+                {selected.type === "video" ? "Property video" : `Photo ${active + 1}`}
               </span>
 
               {count > 1 && (

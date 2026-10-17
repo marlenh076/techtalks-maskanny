@@ -1,8 +1,5 @@
 import { Property, PropertyCreate } from "../models/property.model";
-import {
-  IPropertyRepository,
-  PropertyFilters,
-} from "../repository/IProperty.repository";
+import { IPropertyRepository, PropertyFilters } from "../repository/IProperty.repository";
 
 export class PropertyService {
   constructor(private propertyRepository: IPropertyRepository) {}

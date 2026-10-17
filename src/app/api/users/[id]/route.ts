@@ -6,10 +6,7 @@ import { UserService } from "@/src/features/users/service/user";
 import { userUpdateSchema } from "@/src/features/users/validation/user.schema";
 import { getCurrentUser, getAccessToken } from "@/src/lib/supabase/auth";
 
-export async function GET(
-  request: NextRequest,
-  { params }: { params: Promise<{ id: string }> },
-) {
+export async function GET(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   try {
     const { id } = await params;
 
@@ -53,17 +50,11 @@ export async function GET(
   } catch (error) {
     console.error(error);
 
-    return NextResponse.json(
-      { error: "Failed to fetch user" },
-      { status: 500 },
-    );
+    return NextResponse.json({ error: "Failed to fetch user" }, { status: 500 });
   }
 }
 
-export async function PATCH(
-  request: NextRequest,
-  { params }: { params: Promise<{ id: string }> },
-) {
+export async function PATCH(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   try {
     const { id } = await params;
 
@@ -127,9 +118,6 @@ export async function PATCH(
   } catch (error) {
     console.error(error);
 
-    return NextResponse.json(
-      { error: "Failed to update user" },
-      { status: 500 },
-    );
+    return NextResponse.json({ error: "Failed to update user" }, { status: 500 });
   }
 }

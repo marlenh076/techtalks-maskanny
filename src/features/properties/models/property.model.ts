@@ -25,9 +25,10 @@ export interface Property {
   gender: "boys" | "girls" | "mixed";
 
   created_at: string;
+  archived_at: string | null;
 }
 
 export type PropertyCreate = Omit<
   Property,
-  "property_id" | "created_at" | "approval_status"
+  "property_id" | "created_at" | "approval_status" | "archived_at"
 >;

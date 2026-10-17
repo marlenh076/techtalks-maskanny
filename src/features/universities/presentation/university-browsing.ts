@@ -1,6 +1,19 @@
 import type { University } from "../models/university.model";
 
-const connectingWords = new Set(["of", "the", "and", "in", "at", "for", "de", "du", "des", "la", "le", "et"]);
+const connectingWords = new Set([
+  "of",
+  "the",
+  "and",
+  "in",
+  "at",
+  "for",
+  "de",
+  "du",
+  "des",
+  "la",
+  "le",
+  "et",
+]);
 
 // Presentation overrides for existing API records; names and locations stay API-driven.
 const universityAbbreviations = new Map<string, string>([
@@ -15,15 +28,30 @@ const universityAbbreviations = new Map<string, string>([
   ["dd645f39-24c7-4b36-9c18-6547e5e19108", "AUST"], // American University of Science and Technology
 ]);
 
-export function universityMonogram({ university_id, name }: Pick<University, "university_id" | "name">): string {
+export function universityMonogram({
+  university_id,
+  name,
+}: Pick<University, "university_id" | "name">): string {
   const abbreviation = universityAbbreviations.get(university_id);
   if (abbreviation) return abbreviation;
-  const words = (name.match(/[\p{L}\p{N}]+/gu) ?? []).filter((word) => !connectingWords.has(word.toLowerCase()));
+  const words = (name.match(/[\p{L}\p{N}]+/gu) ?? []).filter(
+    (word) => !connectingWords.has(word.toLowerCase()),
+  );
   if (words.length === 1) return Array.from(words[0]).slice(0, 2).join("").toUpperCase();
-  return words.slice(0, 4).map((word) => Array.from(word)[0]).join("").toUpperCase() || "U";
+  return (
+    words
+      .slice(0, 4)
+      .map((word) => Array.from(word)[0])
+      .join("")
+      .toUpperCase() || "U"
+  );
 }
 
 export function filterUniversities(universities: University[], query: string): University[] {
   const term = query.trim().toLowerCase();
-  return term ? universities.filter((university) => `${university.name} ${university.city}`.toLowerCase().includes(term)) : universities;
+  return term
+    ? universities.filter((university) =>
+        `${university.name} ${university.city}`.toLowerCase().includes(term),
+      )
+    : universities;
 }

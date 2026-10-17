@@ -1,5 +1,5 @@
 /* MASKANNY — SHARED DESIGN SYSTEM */
-@import url('https://fonts.googleapis.com/css2?family=Inter:ital,opsz,wght@0,14..32,100..900;1,14..32,100..900&display=swap');
+@import url("https://fonts.googleapis.com/css2?family=Inter:ital,opsz,wght@0,14..32,100..900;1,14..32,100..900&display=swap");
 :root {
   --bg: #f4f2ed;
   --surface: #ffffff;
@@ -83,7 +83,17 @@ body {
   color: var(--ink);
 
   /* Inter loads first for Windows/Android; Apple system fonts take over on Mac/iOS */
-  font-family: 'Inter', -apple-system, BlinkMacSystemFont, "SF Pro Text", "SF Pro Display", "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  font-family:
+    "Inter",
+    -apple-system,
+    BlinkMacSystemFont,
+    "SF Pro Text",
+    "SF Pro Display",
+    "Segoe UI",
+    Roboto,
+    Helvetica,
+    Arial,
+    sans-serif;
 
   /* Typography feature tuning & subpixel antialiasing */
   font-feature-settings: "cv02", "cv03", "cv04", "cv11", "tnum";

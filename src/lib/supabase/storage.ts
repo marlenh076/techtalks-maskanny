@@ -1,13 +1,7 @@
 import { supabase, createAuthenticatedClient } from "./client";
 
 export class StorageService {
-  async upload(
-    accessToken: string,
-    bucket: string,
-    path: string,
-    file: File,
-    upsert = false,
-  ) {
+  async upload(accessToken: string, bucket: string, path: string, file: File, upsert = false) {
     const authenticatedSupabase = createAuthenticatedClient(accessToken);
 
     const { error } = await authenticatedSupabase.storage
@@ -22,9 +16,7 @@ export class StorageService {
   async delete(accessToken: string, bucket: string, path: string) {
     const authenticatedSupabase = createAuthenticatedClient(accessToken);
 
-    const { error } = await authenticatedSupabase.storage
-      .from(bucket)
-      .remove([path]);
+    const { error } = await authenticatedSupabase.storage.from(bucket).remove([path]);
 
     if (error) {
       throw new Error(error.message);

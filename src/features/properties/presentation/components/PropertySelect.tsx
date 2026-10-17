@@ -21,7 +21,12 @@ export const PROPERTY_INPUT_CLASSES = `
 // Discovery forms use native select events and FormData, including an empty
 // "Any" option. Keep that contract alongside the create form's Radix picker.
 export function PropertySelect({ className = "", ...props }: ComponentProps<"select">) {
-  return <select {...props} className={`${PROPERTY_INPUT_CLASSES} ${styles.select} cursor-pointer !text-sm ${className}`} />;
+  return (
+    <select
+      {...props}
+      className={`${PROPERTY_INPUT_CLASSES} ${styles.select} cursor-pointer !text-sm ${className}`}
+    />
+  );
 }
 
 export type PropertySelectOption = {
@@ -56,13 +61,7 @@ export default function PropertyCreateSelect({
   describedBy,
 }: PropertySelectProps) {
   return (
-    <Select.Root
-      name={id}
-      value={value}
-      onValueChange={onValueChange}
-      disabled={disabled}
-      required
-    >
+    <Select.Root name={id} value={value} onValueChange={onValueChange} disabled={disabled} required>
       <Select.Trigger
         id={id}
         type="button"

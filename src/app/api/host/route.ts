@@ -24,10 +24,7 @@ export async function POST(request: NextRequest) {
     const existingHost = await hostService.getByUserId(user.id);
 
     if (existingHost) {
-      return NextResponse.json(
-        { error: "User is already a host" },
-        { status: 409 },
-      );
+      return NextResponse.json({ error: "User is already a host" }, { status: 409 });
     }
 
     const host = await hostService.create(user.id);
@@ -36,9 +33,6 @@ export async function POST(request: NextRequest) {
   } catch (error) {
     console.error(error);
 
-    return NextResponse.json(
-      { error: "Failed to become a host" },
-      { status: 500 },
-    );
+    return NextResponse.json({ error: "Failed to become a host" }, { status: 500 });
   }
 }

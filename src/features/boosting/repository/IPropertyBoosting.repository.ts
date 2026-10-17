@@ -1,7 +1,4 @@
-import {
-  PropertyBoosting,
-  PropertyBoostingCreate,
-} from "../models/property_boosting.model";
+import { PropertyBoosting, PropertyBoostingCreate } from "../models/property_boosting.model";
 import { ICreateRepository } from "../../../shared/repositories/create.repository";
 import { IReadRepository } from "../../../shared/repositories/read.repository";
 import { IDeleteRepository } from "../../../shared/repositories/delete.repository";
