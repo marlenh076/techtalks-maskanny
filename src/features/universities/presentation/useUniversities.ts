@@ -2,6 +2,9 @@
 
 import { useEffect, useState } from "react";
 import type { University } from "../models/university.model";
+import { publicJson } from "@/src/lib/public-json";
+
+const UNIVERSITY_MAX_AGE_MS = 30_000;
 
 function useUniversityResource<T>(path: string | null) {
   const [revision, setRevision] = useState(0);
@@ -15,11 +18,7 @@ function useUniversityResource<T>(path: string | null) {
   useEffect(() => {
     if (!path) return;
     const controller = new AbortController();
-    fetch(path, { signal: controller.signal })
-      .then(async (response) => {
-        if (!response.ok) throw new Error("Could not load universities");
-        return response.json() as Promise<T>;
-      })
+    publicJson<T>(path, revision, UNIVERSITY_MAX_AGE_MS)
       .then((data) => {
         if (!controller.signal.aborted) setResult({ path, revision, data, status: "ready" });
       })

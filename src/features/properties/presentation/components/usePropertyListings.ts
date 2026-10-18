@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import type { PropertyListing } from "../../service/discovery";
+import { publicJson } from "@/src/lib/public-json";
 
 export function usePropertyListings(queryString = "", revision = 0) {
   const [result, setResult] = useState<{
@@ -13,14 +14,10 @@ export function usePropertyListings(queryString = "", revision = 0) {
 
   useEffect(() => {
     const controller = new AbortController();
-    fetch(`/api/properties${queryString ? `?${queryString}` : ""}`, {
-      signal: controller.signal,
-      cache: "no-store",
-    })
-      .then(async (response) => {
-        if (!response.ok) throw new Error("Could not load properties");
-        return response.json() as Promise<PropertyListing[]>;
-      })
+    publicJson<PropertyListing[]>(
+      `/api/properties${queryString ? `?${queryString}` : ""}`,
+      revision,
+    )
       .then((data) => {
         if (!controller.signal.aborted)
           setResult({ queryString, revision, properties: data, status: "ready" });

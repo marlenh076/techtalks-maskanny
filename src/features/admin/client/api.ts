@@ -43,12 +43,34 @@ export function queryString(filters: Filters) {
   return params.toString();
 }
 
+function whileActive<T>(pending: Promise<T>, signal?: AbortSignal | null): Promise<T> {
+  if (!signal) return pending;
+  if (signal.aborted) return Promise.reject(new DOMException("Aborted", "AbortError"));
+  return new Promise((resolve, reject) => {
+    const abort = () => reject(new DOMException("Aborted", "AbortError"));
+    signal.addEventListener("abort", abort, { once: true });
+    void pending.then(
+      (value) => {
+        signal.removeEventListener("abort", abort);
+        resolve(value);
+      },
+      (error) => {
+        signal.removeEventListener("abort", abort);
+        reject(error);
+      },
+    );
+  });
+}
+
 /** Uses the existing browser session; the API and database decide Admin access. */
 export function createAdminApi(
   token: () => Promise<string | null>,
   fetcher: typeof fetch = fetch,
   unauthorized: (status: number) => void = () => {},
 ) {
+  // Only concurrent GETs share a response, and only for the same bearer token.
+  // No settled private response is kept when a tab is revisited.
+  const pendingReads = new Map<string, Promise<Response>>();
   async function request(path: string, init: RequestInit = {}) {
     let accessToken: string | null;
     try {
@@ -65,7 +87,24 @@ export function createAdminApi(
     headers.set("Authorization", `Bearer ${accessToken}`);
     let response: Response;
     try {
-      response = await fetcher(path, { ...init, headers, cache: "no-store" });
+      if (init.signal?.aborted) throw new DOMException("Aborted", "AbortError");
+      if (!init.method || init.method === "GET") {
+        const key = `${accessToken}:${path}`;
+        let pending = pendingReads.get(key);
+        if (!pending) {
+          // Component cleanup must not cancel a GET that another mounted
+          // consumer has joined during React's development effect replay.
+          pending = fetcher(path, { ...init, signal: undefined, headers, cache: "no-store" });
+          pendingReads.set(key, pending);
+          const clear = () => {
+            if (pendingReads.get(key) === pending) pendingReads.delete(key);
+          };
+          void pending.then(clear, clear);
+        }
+        response = (await whileActive(pending, init.signal)).clone();
+      } else {
+        response = await fetcher(path, { ...init, headers, cache: "no-store" });
+      }
     } catch (error) {
       if (init.signal?.aborted) throw error;
       throw new AdminRequestError("Unable to reach the server. Please try again.", 0);
@@ -80,6 +119,13 @@ export function createAdminApi(
         typeof payload?.error === "string" ? payload.error : "The request could not be completed.",
         response.status,
       );
+    }
+    if (init.method && init.method !== "GET") {
+      // A completed write can make an older, still-pending GET stale. Let the
+      // next read start a new request for this Admin's session.
+      for (const key of pendingReads.keys()) {
+        if (key.startsWith(`${accessToken}:`)) pendingReads.delete(key);
+      }
     }
     return response;
   }

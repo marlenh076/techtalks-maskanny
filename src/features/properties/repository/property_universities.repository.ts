@@ -58,6 +58,18 @@ export class PropertyUniversityRepository implements IPropertyUniversityReposito
     return data.map((item) => item.university);
   }
 
+  async getUniversitiesByPropertyIds(
+    propertyIds: string[],
+  ): Promise<{ property_id: string; university: University }[]> {
+    if (propertyIds.length === 0) return [];
+    const { data, error } = await this.client
+      .from("property_university")
+      .select("property_id,university(*)")
+      .in("property_id", propertyIds);
+    if (error) throw new Error(error.message);
+    return data;
+  }
+
   async getPropertiesByUniversityId(universityId: string): Promise<Property[]> {
     const { data, error } = await this.client
       .from("property_university")

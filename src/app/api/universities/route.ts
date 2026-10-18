@@ -2,9 +2,12 @@ import { NextRequest, NextResponse } from "next/server";
 import { UniversityService } from "@/src/features/universities/service/university";
 import { UniversityRepository } from "@/src/features/universities/repository/university.repository";
 import { universityFiltersSchema } from "@/src/features/universities/validation/university.schema";
+import type { University } from "@/src/features/universities/models/university.model";
+import { inFlight } from "@/src/lib/in-flight";
 
 const universityRepository = new UniversityRepository();
 const universityService = new UniversityService(universityRepository);
+const searches = new Map<string, Promise<University[]>>();
 
 export async function GET(request: NextRequest) {
   try {
@@ -16,7 +19,9 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ error: result.error.issues }, { status: 400 });
     }
 
-    const universities = await universityService.search(result.data);
+    const universities = await inFlight(searches, JSON.stringify(result.data), () =>
+      universityService.search(result.data),
+    );
 
     return NextResponse.json(universities);
   } catch (error) {

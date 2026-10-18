@@ -7,11 +7,20 @@ import {
 } from "@/src/features/properties/validation/property.schema";
 import { HostRepository } from "@/src/features/users/repository/host.repository";
 import { getAccessToken, getCurrentUser } from "@/src/lib/supabase/auth";
-import { MediaRepository } from "@/src/features/properties/repository/media.repository";
 import { PropertyDiscoveryService } from "@/src/features/properties/service/discovery";
+import type { PropertyListing } from "@/src/features/properties/service/discovery";
+import type { PropertyFilters } from "@/src/features/properties/repository/IProperty.repository";
+import { inFlight } from "@/src/lib/in-flight";
 import { z } from "zod";
 
 const propertyRepository = new PropertyRepository();
+const searches = new Map<string, Promise<PropertyListing[]>>();
+
+function searchPublicProperties(filters: PropertyFilters) {
+  return inFlight(searches, JSON.stringify(filters), () =>
+    new PropertyDiscoveryService(propertyRepository).search(filters),
+  );
+}
 
 export async function GET(request: NextRequest) {
   try {
@@ -23,10 +32,7 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ error: result.error.issues }, { status: 400 });
     }
 
-    const properties = await new PropertyDiscoveryService(
-      propertyRepository,
-      new MediaRepository(),
-    ).search(result.data);
+    const properties = await searchPublicProperties(result.data);
 
     return NextResponse.json(properties);
   } catch (error) {

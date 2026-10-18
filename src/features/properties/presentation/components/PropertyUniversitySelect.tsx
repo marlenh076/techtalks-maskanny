@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { ChevronDown, X } from "lucide-react";
 import { z } from "zod";
 import type { University } from "@/src/features/universities/models/university.model";
+import { publicJson } from "@/src/lib/public-json";
 
 const optionsSchema = z.array(
   z.object({
@@ -40,11 +41,9 @@ export default function PropertyUniversitySelect({
       setLoading(true);
       setLoadError("");
       try {
-        const response = await fetch("/api/universities", {
-          signal: controller.signal,
-        });
-        if (!response.ok) throw new Error("University request failed");
-        const universities = optionsSchema.parse(await response.json());
+        const universities = optionsSchema.parse(
+          await publicJson<University[]>("/api/universities", attempt, 30_000),
+        );
         if (!controller.signal.aborted)
           setOptions(
             [...new Map(universities.map((u) => [u.university_id, u])).values()].sort((a, b) =>

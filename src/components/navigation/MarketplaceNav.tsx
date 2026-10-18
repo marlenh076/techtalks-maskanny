@@ -7,6 +7,7 @@ import { useRef, useState, useSyncExternalStore } from "react";
 import { ArrowLeft, Menu, X } from "lucide-react";
 import { AccountDropdown } from "./AccountDropdown";
 import { useMarketplaceAccount } from "./useMarketplaceAccount";
+import type { MarketplaceAccount } from "./useMarketplaceAccount";
 import { getBecomeHostHref } from "./marketplace-links";
 
 const focusClass =
@@ -26,11 +27,7 @@ export function MarketplaceNav() {
     pathname === "/owner" ||
     pathname.startsWith("/owner/");
   if (dashboard) return null;
-  return pathname === "/host/onboarding" ? (
-    <MinimalMarketplaceNav />
-  ) : (
-    <FullMarketplaceNav key={pathname} />
-  );
+  return pathname === "/host/onboarding" ? <MinimalMarketplaceNav /> : <FullMarketplaceNav />;
 }
 
 function MarketplaceBrand() {
@@ -75,6 +72,20 @@ function MinimalMarketplaceNav({ dashboard = false }: { dashboard?: boolean }) {
 function FullMarketplaceNav() {
   const pathname = usePathname();
   const { account, reload } = useMarketplaceAccount();
+  return (
+    <FullMarketplaceNavView key={pathname} pathname={pathname} account={account} reload={reload} />
+  );
+}
+
+function FullMarketplaceNavView({
+  pathname,
+  account,
+  reload,
+}: {
+  pathname: string;
+  account: MarketplaceAccount;
+  reload: () => void;
+}) {
   const [menuOpen, setMenuOpen] = useState(false);
   const [accountOpen, setAccountOpen] = useState(false);
   const scrolled = useSyncExternalStore(subscribeToScroll, hasScrolled, serverScrolled);

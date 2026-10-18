@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { publicJson, PublicRequestError } from "@/src/lib/public-json";
 import Link from "next/link";
 import { ArrowLeft, Building2, Heart, House, MapPin, Users } from "lucide-react";
 import type { Property } from "../../models/property.model";
@@ -168,26 +169,27 @@ export default function PropertyDetails({ propertyId }: { propertyId: string }) 
     const url = `/api/properties/${encodeURIComponent(propertyId)}`;
     async function load() {
       try {
-        const response = await fetch(url, { signal: controller.signal, cache: "no-store" });
-        if (controller.signal.aborted) return;
-        if (response.status === 404 || response.status === 400) {
-          commit({ status: "not-found" });
-          return;
+        let property: Property;
+        try {
+          property = await publicJson<Property>(url, revision);
+        } catch (error) {
+          if (
+            error instanceof PublicRequestError &&
+            (error.status === 404 || error.status === 400)
+          ) {
+            commit({ status: "not-found" });
+            return;
+          }
+          throw error;
         }
-        if (!response.ok) throw new Error("Property request failed");
-        const property = (await response.json()) as Property;
+        if (controller.signal.aborted) return;
         if (property.approval_status !== "approved") {
           commit({ status: "not-found" });
           return;
         }
-        const request = async <T,>(path: string): Promise<T> => {
-          const response = await fetch(path, { signal: controller.signal, cache: "no-store" });
-          if (!response.ok) throw new Error("Property information request failed");
-          return response.json() as Promise<T>;
-        };
         const [media, universities] = await Promise.allSettled([
-          request<Media[]>(`${url}/media`),
-          request<University[]>(`${url}/universities`),
+          publicJson<Media[]>(`${url}/media`, revision),
+          publicJson<University[]>(`${url}/universities`, revision),
         ]);
         if (controller.signal.aborted) return;
         commit({

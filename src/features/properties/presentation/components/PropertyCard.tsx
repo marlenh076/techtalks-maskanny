@@ -93,6 +93,7 @@ export function PropertyCard({ property, saved = false, onToggleSave }: Property
             src={property.thumbnail_url}
             alt={property.title}
             className="h-full w-full object-cover object-top md:object-center"
+            optimized
           />
 
           <span

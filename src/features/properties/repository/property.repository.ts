@@ -1,6 +1,23 @@
 import { supabase, createAuthenticatedClient } from "../../../lib/supabase/client";
 import { Property, PropertyCreate } from "../models/property.model";
 import { IPropertyRepository, PropertyFilters } from "./IProperty.repository";
+import { inFlight } from "@/src/lib/in-flight";
+
+type PropertyWithImages = Property & { media: { url: string }[] };
+
+// Temporary, process-local diagnostics for the public listings RPC.
+const activationRpcDiagnostics = { attempts: 0, successes: 0, failures: 0 };
+const activationRequests = new Map<
+  string,
+  Promise<{ property_id: string; activated_at: string }[]>
+>();
+
+function fetchCause(details: string | undefined) {
+  // Postgrest-js places the original fetch cause here when status is 0.
+  // Extract only its type and error code; the raw details may contain URLs.
+  const cause = details?.match(/^Caused by: ([A-Za-z]+):[^\r\n]*?(?: \(([A-Z][A-Z0-9_]+)\))?\r?$/m);
+  return cause ? { name: cause[1], code: cause[2] ?? null } : null;
+}
 
 export class PropertyUnavailableError extends Error {
   constructor() {
@@ -99,13 +116,70 @@ export class PropertyRepository implements IPropertyRepository {
   async getPublicLiveBoostActivationTimes(): Promise<
     { property_id: string; activated_at: string }[]
   > {
-    const { data, error } = await this.supabase.rpc("public_live_boost_activation_times");
-    if (error) throw new Error(error.message);
+    return inFlight(activationRequests, "public", () => this.loadPublicLiveBoostActivationTimes());
+  }
+
+  private async loadPublicLiveBoostActivationTimes(): Promise<
+    { property_id: string; activated_at: string }[]
+  > {
+    const startedAt = performance.now();
+    const attempt = ++activationRpcDiagnostics.attempts;
+    const { data, error, status } = await this.supabase.rpc("public_live_boost_activation_times");
+    const elapsedMs = Math.round(performance.now() - startedAt);
+    if (error) {
+      activationRpcDiagnostics.failures++;
+      if (typeof window === "undefined") {
+        console.error(
+          "[public_live_boost_activation_times] RPC failed " +
+            JSON.stringify({
+              attempt,
+              elapsedMs,
+              status,
+              errorCode: error.code || null,
+              fetchCause: status === 0 ? fetchCause(error.details) : null,
+              successes: activationRpcDiagnostics.successes,
+              failures: activationRpcDiagnostics.failures,
+              intermittentObserved: activationRpcDiagnostics.successes > 0,
+            }),
+        );
+      }
+      throw new Error(error.message);
+    }
+    activationRpcDiagnostics.successes++;
+    if (typeof window === "undefined") {
+      console.info(
+        "[public_live_boost_activation_times] RPC succeeded " +
+          JSON.stringify({
+            attempt,
+            elapsedMs,
+            status,
+            successes: activationRpcDiagnostics.successes,
+            failures: activationRpcDiagnostics.failures,
+            intermittentObserved: activationRpcDiagnostics.failures > 0,
+          }),
+      );
+    }
     return data ?? [];
   }
 
-  async search(filters: PropertyFilters): Promise<Property[]> {
-    let query = this.supabase.from("property").select("*").is("archived_at", null);
+  async search(filters: PropertyFilters): Promise<Property[]>;
+  async search(filters: PropertyFilters, withImages: true): Promise<PropertyWithImages[]>;
+  async search(
+    filters: PropertyFilters,
+    withImages = false,
+  ): Promise<Property[] | PropertyWithImages[]> {
+    let query = this.supabase
+      .from("property")
+      .select(withImages ? "*,media(url)" : "*")
+      .is("archived_at", null);
+    if (withImages) {
+      // The embedded relation keeps the property read and thumbnail lookup in
+      // one RLS-protected request. Its order matches the former media query.
+      query = query
+        .eq("media.type", "image")
+        .order("sort_order", { referencedTable: "media", ascending: true })
+        .order("media_id", { referencedTable: "media", ascending: true });
+    }
 
     if (filters.university_id) {
       // Use the same client and RLS as the property search. An empty association
@@ -172,6 +246,7 @@ export class PropertyRepository implements IPropertyRepository {
       throw new Error(error.message);
     }
 
-    return properties;
+    // Supabase's type-level select parser cannot resolve a conditional column string.
+    return properties as unknown as Property[] | PropertyWithImages[];
   }
 }

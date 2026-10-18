@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useMemo, useEffect, useCallback } from "react";
+import { useState, useMemo, useEffect, useCallback, useRef } from "react";
 import Image from "next/image";
 import { OwnerSidebar } from "@/src/components/owner/OwnerSidebar";
 import { MetricCard } from "@/src/components/admin/MetricCard";
@@ -211,6 +211,8 @@ export default function OwnerDashboardPage() {
   const supportAddress = process.env.NEXT_PUBLIC_SUPPORT_EMAIL?.trim() ?? "";
   const supportAddressConfigured = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(supportAddress);
   const [activeTab, setActiveTab] = useState("Overview");
+  const refreshInFlight = useRef<Promise<HostListing[] | null> | null>(null);
+  const profileLoaded = useRef<{ token: string; revision: number; at: number } | null>(null);
   const submissions = useMemo(
     () => listings.map((listing) => toOwnerSubmission(listing, boostingPlans)),
     [listings, boostingPlans],
@@ -227,30 +229,40 @@ export default function OwnerDashboardPage() {
     ...new Set(submissions.flatMap((item) => item.unavailableRelatedData)),
   ];
 
-  const refresh = useCallback(async (): Promise<HostListing[] | null> => {
-    setLoading(true);
-    setLoadError(null);
-    try {
-      const {
-        data: { session },
-      } = await supabase.auth.getSession();
-      if (!session) throw new Error("Sign in as a Host to view your listings.");
-      setToken(session.access_token);
-      setUserEmail(session.user.email ?? "");
-      const [loaded, plans] = await Promise.all([
-        loadHostListings(session.access_token),
-        hostRequest<BoostingPlan[]>("/api/boosting_plans", session.access_token).catch(() => null),
-      ]);
-      setListings(loaded);
-      setBoostingPlans(plans);
-      return loaded;
-    } catch (cause) {
-      setListings([]);
-      setLoadError(cause instanceof Error ? cause.message : "Could not load your properties.");
-      return null;
-    } finally {
-      setLoading(false);
-    }
+  const refresh = useCallback((): Promise<HostListing[] | null> => {
+    if (refreshInFlight.current) return refreshInFlight.current;
+    const request = (async () => {
+      setLoading(true);
+      setLoadError(null);
+      try {
+        const {
+          data: { session },
+        } = await supabase.auth.getSession();
+        if (!session) throw new Error("Sign in as a Host to view your listings.");
+        setToken(session.access_token);
+        setUserEmail(session.user.email ?? "");
+        const [loaded, plans] = await Promise.all([
+          loadHostListings(session.access_token),
+          hostRequest<BoostingPlan[]>("/api/boosting_plans", session.access_token).catch(
+            () => null,
+          ),
+        ]);
+        setListings(loaded);
+        setBoostingPlans(plans);
+        return loaded;
+      } catch (cause) {
+        setListings([]);
+        setLoadError(cause instanceof Error ? cause.message : "Could not load your properties.");
+        return null;
+      } finally {
+        setLoading(false);
+      }
+    })();
+    refreshInFlight.current = request;
+    void request.then(() => {
+      if (refreshInFlight.current === request) refreshInFlight.current = null;
+    });
+    return request;
   }, []);
 
   useEffect(() => {
@@ -259,9 +271,20 @@ export default function OwnerDashboardPage() {
 
   useEffect(() => {
     if (activeTab !== "Settings - Profile" || !token) return;
+    if (
+      profileLoaded.current?.token === token &&
+      profileLoaded.current.revision === profileReload &&
+      Date.now() - profileLoaded.current.at < 30_000
+    )
+      return;
     const controller = new AbortController();
     void hostRequest<typeof profile>("/api/host/profile", token, { signal: controller.signal })
-      .then(setProfile)
+      .then((loaded) => {
+        if (!controller.signal.aborted) {
+          setProfile(loaded);
+          profileLoaded.current = { token, revision: profileReload, at: Date.now() };
+        }
+      })
       .catch((error: unknown) => {
         if (!controller.signal.aborted)
           setProfileError(error instanceof Error ? error.message : "Could not load your profile.");
