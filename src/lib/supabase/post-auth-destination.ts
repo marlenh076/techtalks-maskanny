@@ -1,7 +1,11 @@
 import { supabase } from "./client";
 import { safeReturnPath } from "./safe-return";
 
-export async function postAuthDestination(userId: string, requestedPath: string | null = null) {
+export async function postAuthDestination(
+  userId: string,
+  requestedPath: string | null = null,
+  defaultDestination = "/host/onboarding",
+) {
   const safePath = safeReturnPath(requestedPath);
   if (safePath) return safePath;
 
@@ -11,5 +15,5 @@ export async function postAuthDestination(userId: string, requestedPath: string 
     .eq("user_id", userId)
     .maybeSingle();
 
-  return profile?.role === "admin" ? "/admin" : "/host/onboarding";
+  return profile?.role === "admin" ? "/admin" : defaultDestination;
 }

@@ -1,6 +1,6 @@
 import Link from "next/link";
 import type { Metadata } from "next";
-import { Check, Clock3, ShieldCheck } from "lucide-react";
+import { Check, Clock3, LayoutDashboard, ShieldCheck } from "lucide-react";
 
 export const metadata: Metadata = {
   title: "Maskanny | Property submitted",
@@ -65,15 +65,24 @@ export default function PropertyConfirmationPage() {
           </p>
         </div>
 
-        <Link
-          href="/"
-          className="mt-6 inline-flex min-h-[50px] w-full items-center justify-center rounded-full border border-[#D7B377]/50 bg-[#2B4162] px-7 py-3 text-[14px] font-semibold !text-white transition-colors duration-200 hover:border-[#D7B377] hover:bg-[#385F71] focus-visible:outline-2 focus-visible:outline-[#D7B377] focus-visible:outline-offset-4 sm:w-auto sm:min-w-[200px]"
-        >
-          Go to Home Page
-          <span aria-hidden="true" className="ml-2 text-[#D7B377]">
-            →
-          </span>
-        </Link>
+        <div className="mt-6 flex flex-col items-center justify-center gap-3 sm:flex-row">
+          <Link
+            href="/owner"
+            className="inline-flex min-h-[50px] w-full items-center justify-center rounded-full border border-[#385F71]/20 bg-[#F8F9FB] px-7 py-3 text-[14px] font-semibold !text-[#2B4162] transition-colors duration-200 hover:border-[#D7B377] hover:bg-white focus-visible:outline-2 focus-visible:outline-[#D7B377] focus-visible:outline-offset-4 sm:w-auto sm:min-w-[200px]"
+          >
+            <LayoutDashboard size={17} aria-hidden="true" className="mr-2" />
+            Go to Host Dashboard
+          </Link>
+          <Link
+            href="/"
+            className="inline-flex min-h-[50px] w-full items-center justify-center rounded-full border border-[#D7B377]/50 bg-[#2B4162] px-7 py-3 text-[14px] font-semibold !text-white transition-colors duration-200 hover:border-[#D7B377] hover:bg-[#385F71] focus-visible:outline-2 focus-visible:outline-[#D7B377] focus-visible:outline-offset-4 sm:w-auto sm:min-w-[200px]"
+          >
+            Go to Home Page
+            <span aria-hidden="true" className="ml-2 text-[#D7B377]">
+              →
+            </span>
+          </Link>
+        </div>
 
         <p className="mt-5 text-[12px] text-[#8A98A6]">Student housing, made simpler.</p>
       </section>

@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
+import Image from "next/image";
 import { ArrowLeft, Check, Copy, Rocket, Video, Wallet, X } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { LogoutAction } from "@/src/components/auth/LogoutAction";
@@ -616,9 +617,11 @@ export default function BoostingPage() {
                 <div className="rounded-2xl bg-slate-50 p-6 shadow-sm">
                   <div className="flex items-center gap-4">
                     <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-xl bg-white shadow-sm">
-                      <img
+                      <Image
                         src="/whishmoney.png"
                         alt="Whish Money"
+                        width={56}
+                        height={56}
                         className="h-full w-full object-contain p-1"
                       />
                     </div>

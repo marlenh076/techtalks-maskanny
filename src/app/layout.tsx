@@ -9,8 +9,7 @@ export const metadata: Metadata = {
     default: "Maskanny | Student Housing in Lebanon",
     template: "%s | Maskanny",
   },
-  description:
-    "Find student apartments, rooms, and dorms near universities in Lebanon.",
+  description: "Find student apartments, rooms, and dorms near universities in Lebanon.",
   icons: {
     icon: "/Maskanny.svg",
   },

@@ -91,9 +91,7 @@ export default function AdminAccessGuard({ children }: { children: ReactNode }) 
             </span>
 
             <h1 className="text-2xl font-bold tracking-tight text-brand-navy">
-              {denied === 401
-                ? "Authentication required"
-                : "Admin access required"}
+              {denied === 401 ? "Authentication required" : "Admin access required"}
             </h1>
 
             <p className="mt-3 max-w-sm text-sm leading-6 text-brand-slate">

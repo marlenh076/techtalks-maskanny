@@ -53,12 +53,9 @@ export class PropertyModerationRepository {
     reason?: string,
   ): Promise<void> {
     try {
-      const { data, error } = await this.supabase.rpc(
-        "get_property_owner_notification_details",
-        {
-          p_property_id: propertyId,
-        },
-      );
+      const { data, error } = await this.supabase.rpc("get_property_owner_notification_details", {
+        p_property_id: propertyId,
+      });
 
       if (error) {
         throw new Error(`Owner lookup failed: ${error.message}`);
@@ -67,9 +64,7 @@ export class PropertyModerationRepository {
       const ownerDetails = data?.[0];
 
       if (!ownerDetails) {
-        throw new Error(
-          `No owner notification details found for property: ${propertyId}`,
-        );
+        throw new Error(`No owner notification details found for property: ${propertyId}`);
       }
 
       const safeTitle = this.escapeHtml(ownerDetails.property_title);
@@ -87,8 +82,7 @@ export class PropertyModerationRepository {
         : "Update on your Maskanny listing";
 
       const safeReason = this.escapeHtml(
-        reason?.trim() ||
-        "Please contact the Maskanny team for more information.",
+        reason?.trim() || "Please contact the Maskanny team for more information.",
       );
 
       const html = approved
@@ -118,14 +112,9 @@ export class PropertyModerationRepository {
         html,
       });
 
-      console.info(
-        `Property moderation email sent for ${propertyId} (${decision}).`,
-      );
+      console.info(`Property moderation email sent for ${propertyId} (${decision}).`);
     } catch (error) {
-      console.error(
-        "Failed to send property moderation email:",
-        error,
-      );
+      console.error("Failed to send property moderation email:", error);
     }
   }
 }

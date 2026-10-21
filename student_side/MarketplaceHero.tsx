@@ -1,14 +1,7 @@
 "use client";
 
 import Image from "next/image";
-import {
-  ArrowUpRight,
-  GraduationCap,
-  House,
-  MapPin,
-  SlidersHorizontal,
-  Wallet,
-} from "lucide-react";
+import { GraduationCap, House, MapPin, SlidersHorizontal, Wallet } from "lucide-react";
 import type { UniversitiesResource } from "@/src/features/universities/presentation/useUniversities";
 import { HeroSearch } from "./HeroSearch";
 import styles from "./MarketplaceHero.module.css";
@@ -28,9 +21,7 @@ export function MarketplaceHero({ universities }: { universities: UniversitiesRe
       </div>
       <div className={styles.heading}>
         <h1 id="homepage-hero-title">Welcome to Maskanny — Your Next Home Starts here</h1>
-        <p>
-          Find your ideal student home near campus, with spaces that fit your needs and budget
-        </p>
+        <p>Find your ideal student home near campus, with spaces that fit your needs and budget</p>
       </div>
 
       <div className={styles.widgets}>
@@ -66,6 +57,14 @@ export function MarketplaceHero({ universities }: { universities: UniversitiesRe
                 <House size={14} aria-hidden="true" />
                 Housing
               </button>
+              <button
+                type="button"
+                aria-controls="hero-university"
+                onClick={() => document.getElementById("hero-university")?.focus()}
+              >
+                <GraduationCap size={14} aria-hidden="true" />
+                Campus
+              </button>
             </div>
           </div>
         </div>
@@ -91,7 +90,6 @@ export function MarketplaceHero({ universities }: { universities: UniversitiesRe
                   : "Discover your campus"}
               </p>
             )}
-
           </div>
         </div>
       </div>

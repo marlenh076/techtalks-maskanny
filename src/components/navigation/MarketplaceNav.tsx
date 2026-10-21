@@ -96,7 +96,7 @@ function FullMarketplaceNavView({
   const links = [
     { label: "Home", href: "/" },
     { label: "Explore", href: "/properties" },
-    { label: "About", href:"/about"},
+    { label: "About", href: "/about" },
     { label: "Become a host", href: hostHref },
   ];
 

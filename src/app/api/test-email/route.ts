@@ -1,4 +1,3 @@
-
 import { Resend } from "resend";
 import { NextResponse } from "next/server";
 
@@ -6,23 +5,14 @@ export async function POST(request: Request) {
   try {
     const { email } = await request.json();
 
-    if (
-      typeof email !== "string" ||
-      !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)
-    ) {
-      return NextResponse.json(
-        { error: "A valid email address is required." },
-        { status: 400 }
-      );
+    if (typeof email !== "string" || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+      return NextResponse.json({ error: "A valid email address is required." }, { status: 400 });
     }
 
     const apiKey = process.env.RESEND_API_KEY;
 
     if (!apiKey) {
-      return NextResponse.json(
-        { error: "Email service is not configured." },
-        { status: 500 }
-      );
+      return NextResponse.json({ error: "Email service is not configured." }, { status: 500 });
     }
 
     const resend = new Resend(apiKey);
@@ -42,22 +32,19 @@ export async function POST(request: Request) {
 
     if (error) {
       console.error("Resend error:", error);
-      return NextResponse.json(
-        { error: "Failed to send the test email." },
-        { status: 502 }
-      );
+      return NextResponse.json({ error: "Failed to send the test email." }, { status: 502 });
     }
 
     return NextResponse.json({
       success: true,
       messageId: data?.id,
     });
- } catch (error) {
-  console.error("Test email route error:", error);
+  } catch (error) {
+    console.error("Test email route error:", error);
 
-  return NextResponse.json(
-    { error: "An unexpected error occurred. Check the server terminal." },
-    { status: 500 }
-  );
-}
+    return NextResponse.json(
+      { error: "An unexpected error occurred. Check the server terminal." },
+      { status: 500 },
+    );
+  }
 }

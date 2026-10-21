@@ -36,9 +36,7 @@ export function MarketplaceFooter() {
                 className="h-7 w-7 shrink-0 rounded-lg object-contain sm:h-[38px] sm:w-[38px]"
               />
 
-              <span className="text-base font-semibold tracking-tight sm:text-xl">
-                Maskanny
-              </span>
+              <span className="text-base font-semibold tracking-tight sm:text-xl">Maskanny</span>
             </Link>
 
             <p className="mb-0 mt-1.5 max-w-[260px] text-xs leading-[18px] text-[#D4DDE8] sm:mt-3 sm:text-sm sm:leading-6">
@@ -105,10 +103,7 @@ export function MarketplaceFooter() {
           </nav>
 
           {/* Contact */}
-          <nav
-            aria-label="Footer Contact"
-            className="col-span-2 sm:col-span-1"
-          >
+          <nav aria-label="Footer Contact" className="col-span-2 sm:col-span-1">
             <h2 className="mb-1.5 text-xs font-semibold text-white sm:mb-2.5 sm:text-sm">
               Contact
             </h2>
@@ -118,10 +113,7 @@ export function MarketplaceFooter() {
                 Contact us
               </a>
 
-              <a
-                href="mailto:maskanny.org@gmail.com"
-                className={`${linkClass} whitespace-nowrap`}
-              >
+              <a href="mailto:maskanny.org@gmail.com" className={`${linkClass} whitespace-nowrap`}>
                 maskanny.org@gmail.com
               </a>
             </div>
@@ -130,9 +122,7 @@ export function MarketplaceFooter() {
 
         {/* Bottom bar */}
         <div className="flex flex-col gap-1.5 border-t border-white/10 py-2.5 text-[11px] leading-4 text-[#BFCBDA] sm:flex-row sm:items-center sm:justify-between sm:gap-2 sm:py-4 sm:text-xs sm:leading-5">
-          <p className="m-0">
-            © {new Date().getFullYear()} Maskanny. All rights reserved.
-          </p>
+          <p className="m-0">© {new Date().getFullYear()} Maskanny. All rights reserved.</p>
 
           <div className="flex flex-wrap items-center gap-x-4 gap-y-1">
             <Link

@@ -48,15 +48,14 @@ function Dashboard() {
       />
       <main className="flex-1 flex flex-col w-full min-w-0">
         <div className="p-4 sm:p-8 space-y-6 max-w-[1600px] w-full min-w-0 mx-auto flex-1 flex flex-col">
-          <div className="flex w-full max-w-full min-w-0 flex-col gap-4 overflow-hidden rounded-2xl border border-brand-slate/15 bg-white p-3 shadow-sm sm:p-5 lg:flex-row lg:items-center lg:justify-between">
-            <div className="w-full min-w-0">
+          <div className="flex w-full max-w-full min-w-0 flex-col gap-4 overflow-hidden rounded-2xl border border-brand-slate/15 bg-white p-3 shadow-sm sm:p-5 lg:flex-row lg:flex-wrap lg:items-center lg:justify-between">
+            <div className="w-full min-w-0 lg:w-auto lg:min-w-[15rem] lg:flex-1">
               <h2 className="text-xl font-bold text-brand-navy">{heading[0]}</h2>
               <p className="text-xs text-brand-slate">{heading[1]}</p>
             </div>
 
-
             {(activeTab === "Dashboard" || activeTab === "Listings") && (
-              <div className="w-full max-w-full min-w-0 lg:w-auto">
+              <div className="w-full max-w-full min-w-0 lg:w-auto lg:flex-none">
                 <div className="grid w-full max-w-full min-w-0 grid-cols-2 gap-1 rounded-xl border border-brand-slate/10 bg-brand-light p-1 text-[10px] font-semibold min-[390px]:grid-cols-4 min-[390px]:gap-0.5 sm:gap-1 lg:inline-flex lg:w-auto">
                   {(activeTab === "Listings"
                     ? ["ALL", "TODAY", "WEEK", "MONTH"]
@@ -70,28 +69,33 @@ function Dashboard() {
                           ? setListingDate(id as DatePreset | "ALL")
                           : setOverviewDate(id as DatePreset)
                       }
-                      className={`flex min-h-9 w-full min-w-0 items-center justify-center rounded-lg px-0.5 py-2 text-center text-[10px] leading-tight transition-colors min-[390px]:px-1 lg:w-auto lg:min-w-[76px] lg:px-3 lg:text-xs ${preset === id
+                      className={`flex min-h-9 w-full min-w-0 items-center justify-center rounded-lg px-0.5 py-2 text-center text-[10px] leading-tight transition-colors min-[390px]:px-1 lg:w-auto lg:min-w-[76px] lg:px-3 lg:text-xs ${
+                        preset === id
                           ? "bg-white font-bold text-brand-navy shadow-sm"
                           : "text-brand-slate hover:bg-white/60 hover:text-brand-navy"
-                        }`}
+                      }`}
                     >
                       <span className="lg:hidden">
-                        {{
-                          ALL: "All Time",
-                          TODAY: "Today",
-                          WEEK: "7 Days",
-                          MONTH: "30 Days",
-                          YEAR: "365 Days",
-                        }[id]}
+                        {
+                          {
+                            ALL: "All Time",
+                            TODAY: "Today",
+                            WEEK: "7 Days",
+                            MONTH: "30 Days",
+                            YEAR: "365 Days",
+                          }[id]
+                        }
                       </span>
                       <span className="hidden lg:inline">
-                        {{
-                          ALL: "All Time",
-                          TODAY: "Today",
-                          WEEK: "Last 7 Days",
-                          MONTH: "Last 30 Days",
-                          YEAR: "Last 365 Days",
-                        }[id]}
+                        {
+                          {
+                            ALL: "All Time",
+                            TODAY: "Today",
+                            WEEK: "Last 7 Days",
+                            MONTH: "Last 30 Days",
+                            YEAR: "Last 365 Days",
+                          }[id]
+                        }
                       </span>
                     </button>
                   ))}

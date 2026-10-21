@@ -1,4 +1,3 @@
-
 import Link from "next/link";
 
 import {
@@ -10,7 +9,6 @@ import {
   MapPin,
   Search,
   ShieldCheck,
-  Users,
 } from "lucide-react";
 
 import type { Metadata } from "next";
@@ -59,10 +57,9 @@ export default function AboutPage() {
           </h1>
 
           <p className="mt-4 max-w-2xl text-sm leading-7 text-[#D4DDE8] sm:text-base">
-            Finding a place to live while studying should feel simpler.
-            Maskanny brings student housing options together in one place,
-            helping students explore properties near their universities
-            and helping property owners connect with them.
+            Finding a place to live while studying should feel simpler. Maskanny brings student
+            housing options together in one place, helping students explore properties near their
+            universities and helping property owners connect with them.
           </p>
 
           <div className="mt-5 flex flex-wrap gap-3">
@@ -98,19 +95,18 @@ export default function AboutPage() {
 
           <div className="space-y-4 text-base leading-8 text-[#526174]">
             <p>
-              Finding student accommodation can mean searching across
-              different platforms, comparing scattered details, and trying
-              to work out which location fits your daily routine and budget.
+              Finding student accommodation can mean searching across different platforms, comparing
+              scattered details, and trying to work out which location fits your daily routine and
+              budget.
             </p>
             <p>
-              Maskanny aims to make that process more organized by bringing
-              property information and useful search options into one
-              student-focused platform.
+              Maskanny aims to make that process more organized by bringing property information and
+              useful search options into one student-focused platform.
             </p>
             <p>
-              Our goal is to help students make more informed housing
-              decisions while giving property owners a dedicated place to
-              present their accommodation to the student community.
+              Our goal is to help students make more informed housing decisions while giving
+              property owners a dedicated place to present their accommodation to the student
+              community.
             </p>
           </div>
         </div>
@@ -127,8 +123,7 @@ export default function AboutPage() {
               Designed around student needs
             </h2>
             <p className="mt-4 leading-7 text-[#647184]">
-              Useful information and a straightforward way to explore
-              housing options.
+              Useful information and a straightforward way to explore housing options.
             </p>
           </div>
 
@@ -144,12 +139,8 @@ export default function AboutPage() {
                   <div className="grid size-12 place-items-center rounded-xl bg-[#EAEFF3] text-[#2B4162]">
                     <Icon size={23} aria-hidden="true" />
                   </div>
-                  <h3 className="mt-5 text-lg font-semibold">
-                    {feature.title}
-                  </h3>
-                  <p className="mt-3 text-sm leading-7 text-[#647184]">
-                    {feature.description}
-                  </p>
+                  <h3 className="mt-5 text-lg font-semibold">{feature.title}</h3>
+                  <p className="mt-3 text-sm leading-7 text-[#647184]">{feature.description}</p>
                 </article>
               );
             })}
@@ -174,13 +165,10 @@ export default function AboutPage() {
               <div className="grid size-12 place-items-center rounded-xl bg-[#EAEFF3] text-[#2B4162]">
                 <GraduationCap size={25} aria-hidden="true" />
               </div>
-              <h3 className="mt-5 text-xl font-semibold">
-                For students
-              </h3>
+              <h3 className="mt-5 text-xl font-semibold">For students</h3>
               <p className="mt-3 text-sm leading-7 text-[#647184]">
-                Explore accommodation options, compare important property
-                details, and find a place that fits your university,
-                preferences, and budget.
+                Explore accommodation options, compare important property details, and find a place
+                that fits your university, preferences, and budget.
               </p>
               <Link
                 href="/properties"
@@ -195,13 +183,10 @@ export default function AboutPage() {
               <div className="grid size-12 place-items-center rounded-xl bg-[#F5EBDD] text-[#8F754F]">
                 <Building2 size={25} aria-hidden="true" />
               </div>
-              <h3 className="mt-5 text-xl font-semibold">
-                For property owners
-              </h3>
+              <h3 className="mt-5 text-xl font-semibold">For property owners</h3>
               <p className="mt-3 text-sm leading-7 text-[#647184]">
-                Present your accommodation, share useful property details,
-                and reach students looking for housing near their
-                universities.
+                Present your accommodation, share useful property details, and reach students
+                looking for housing near their universities.
               </p>
               <Link
                 href="/properties/create"
@@ -230,21 +215,18 @@ export default function AboutPage() {
               Clear information helps you choose with confidence.
             </h2>
             <p className="mt-5 leading-8 text-[#526174]">
-              We believe housing decisions should be based on useful,
-              understandable information. Students should review listing
-              details and availability information carefully, and property
-              owners should keep their listings accurate and up to date.
+              We believe housing decisions should be based on useful, understandable information.
+              Students should review listing details and availability information carefully, and
+              property owners should keep their listings accurate and up to date.
             </p>
             <p className="mt-3 leading-8 text-[#526174]">
-              If something about a listing seems incorrect or concerning,
-              use the reporting options available on the platform, where
-              provided. Always communicate with property owners to confirm
-              important details before making housing or payment decisions.
+              If something about a listing seems incorrect or concerning, use the reporting options
+              available on the platform, where provided. Always communicate with property owners to
+              confirm important details before making housing or payment decisions.
             </p>
             <p className="mt-3 text-sm leading-7 text-[#647184]">
-              Listing information is not a guarantee of availability,
-              property condition, or owner identity. Please confirm
-              relevant details directly before committing to a property.
+              Listing information is not a guarantee of availability, property condition, or owner
+              identity. Please confirm relevant details directly before committing to a property.
             </p>
           </div>
         </div>
@@ -261,8 +243,8 @@ export default function AboutPage() {
               Have a question? We’re here to help.
             </h2>
             <p className="mt-4 text-sm leading-7 text-[#D4DDE8] sm:text-base">
-              Whether you’re looking for student housing or want to list
-              a property, reach out to the Maskanny team.
+              Whether you’re looking for student housing or want to list a property, reach out to
+              the Maskanny team.
             </p>
           </div>
 

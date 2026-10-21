@@ -61,7 +61,7 @@ export default function BoostingPlansView() {
   }
   async function submitDecision() {
     const paymentRecord = detail.data?.payment;
-    if (!selected || !decision) return;
+    if (!selected || !decision || detail.data?.review_status !== "pending") return;
     const outcome = await action.run(() =>
       adminApi.decideBoostPayment(
         selected,
@@ -276,35 +276,47 @@ export default function BoostingPlansView() {
                       </p>
                     </td>
                     <td className="px-4 py-3">
-                      <div className="flex gap-2">
-                        <button
-                          type="button"
-                          onClick={() => openDecision(row.property_boosting_id, "approved")}
-                          disabled={
-                            row.property_status !== "approved" ||
-                            row.boost_status !== "pending" ||
-                            !["not_submitted", "pending", "verified", "rejected"].includes(
-                              row.payment_status,
-                            )
-                          }
-                          className="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-lg border border-emerald-200 text-emerald-700 bg-emerald-50 disabled:opacity-40"
-                        >
-                          <CheckCircle2 className="h-3.5 w-3.5" />
-                          Approve
-                        </button>
-                        <button
-                          type="button"
-                          onClick={() => openDecision(row.property_boosting_id, "rejected")}
-                          disabled={
-                            row.boost_status !== "pending" ||
-                            !["not_submitted", "pending", "rejected"].includes(row.payment_status)
-                          }
-                          className="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-lg border border-rose-200 text-rose-700 bg-rose-50 disabled:opacity-40"
-                        >
-                          <XCircle className="h-3.5 w-3.5" />
-                          Reject
-                        </button>
-                      </div>
+                      {row.review_status === "approved" && (
+                        <span className="inline-flex rounded-lg border border-emerald-200 bg-emerald-50 px-2.5 py-1.5 font-semibold text-emerald-700">
+                          Accepted
+                        </span>
+                      )}
+                      {row.review_status === "rejected" && (
+                        <span className="inline-flex rounded-lg border border-rose-200 bg-rose-50 px-2.5 py-1.5 font-semibold text-rose-700">
+                          Rejected
+                        </span>
+                      )}
+                      {row.review_status === "pending" && (
+                        <div className="flex gap-2">
+                          <button
+                            type="button"
+                            onClick={() => openDecision(row.property_boosting_id, "approved")}
+                            disabled={
+                              row.property_status !== "approved" ||
+                              row.boost_status !== "pending" ||
+                              !["not_submitted", "pending", "verified", "rejected"].includes(
+                                row.payment_status,
+                              )
+                            }
+                            className="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-lg border border-emerald-200 text-emerald-700 bg-emerald-50 disabled:opacity-40"
+                          >
+                            <CheckCircle2 className="h-3.5 w-3.5" />
+                            Approve
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => openDecision(row.property_boosting_id, "rejected")}
+                            disabled={
+                              row.boost_status !== "pending" ||
+                              !["not_submitted", "pending", "rejected"].includes(row.payment_status)
+                            }
+                            className="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-lg border border-rose-200 text-rose-700 bg-rose-50 disabled:opacity-40"
+                          >
+                            <XCircle className="h-3.5 w-3.5" />
+                            Reject
+                          </button>
+                        </div>
+                      )}
                     </td>
                   </tr>
                 ))}
@@ -430,6 +442,7 @@ export default function BoostingPlansView() {
                     className={buttonClass}
                     disabled={
                       action.pending ||
+                      detail.data.review_status !== "pending" ||
                       detail.data.property_status !== "approved" ||
                       detail.data.boost_status !== "pending" ||
                       !whishConfirmed ||
@@ -462,7 +475,10 @@ export default function BoostingPlansView() {
                     type="button"
                     className={buttonClass}
                     disabled={
-                      action.pending || detail.data.boost_status !== "pending" || !reason.trim()
+                      action.pending ||
+                      detail.data.review_status !== "pending" ||
+                      detail.data.boost_status !== "pending" ||
+                      !reason.trim()
                     }
                     onClick={submitDecision}
                   >

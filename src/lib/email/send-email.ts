@@ -6,11 +6,7 @@ type SendEmailParams = {
   html: string;
 };
 
-export async function sendEmail({
-  to,
-  subject,
-  html,
-}: SendEmailParams): Promise<void> {
+export async function sendEmail({ to, subject, html }: SendEmailParams): Promise<void> {
   const apiKey = process.env.RESEND_API_KEY;
 
   if (!apiKey) {
@@ -19,10 +15,8 @@ export async function sendEmail({
 
   const resend = new Resend(apiKey);
 
-  const { data , error } = await resend.emails.send({
-    from:
-      process.env.RESEND_FROM_EMAIL ??
-      "Maskanny <onboarding@resend.dev>",
+  const { data, error } = await resend.emails.send({
+    from: process.env.RESEND_FROM_EMAIL ?? "Maskanny <onboarding@resend.dev>",
     to: [to],
     subject,
     html,

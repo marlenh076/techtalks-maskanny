@@ -31,10 +31,12 @@
   content: "";
   position: absolute;
   inset: 0;
-  background: linear-gradient(180deg,
-      rgb(22 34 53 / 58%) 0%,
-      rgb(35 53 78 / 44%) 55%,
-      rgb(43 65 98 / 32%) 100%);
+  background: linear-gradient(
+    180deg,
+    rgb(22 34 53 / 58%) 0%,
+    rgb(35 53 78 / 44%) 55%,
+    rgb(43 65 98 / 32%) 100%
+  );
 }
 
 .heading {
@@ -275,7 +277,7 @@
     background-color 180ms ease;
 }
 
-.mobileSearchPill>svg {
+.mobileSearchPill > svg {
   flex-shrink: 0;
 }
 
@@ -300,7 +302,7 @@
   line-height: 1.4;
 }
 
-.mobileSearchCopy>span {
+.mobileSearchCopy > span {
   color: var(--hero-slate);
   font-size: 11px;
   line-height: 1.4;
@@ -403,7 +405,7 @@
     display: flex;
     flex-direction: column;
     gap: 16px;
-    min-height: auto;
+    min-height: 340px;
     padding: 76px 16px 24px;
   }
 
@@ -538,7 +540,7 @@
 
   .mobileSearchPill {
     min-height: 62px;
-    margin-top: 4px;
+    margin-top: auto;
     padding: 10px 14px;
   }
 }
@@ -604,8 +606,7 @@
   }
 
   .fields {
-    grid-template-columns:
-      minmax(0, 1.5fr) minmax(0, 1fr) minmax(0, 1fr) 56px;
+    grid-template-columns: minmax(0, 1.5fr) minmax(0, 1fr) minmax(0, 1fr) 56px;
     align-items: center;
     gap: 0;
   }
@@ -740,6 +741,10 @@
       background-color 240ms ease;
   }
 
+  .universityWidget .glassCard {
+    min-height: 140px;
+  }
+
   .searchWidget:hover .glassCard,
   .universityWidget:hover .glassCard {
     transform: translateY(-5px);
@@ -858,7 +863,6 @@
 /* Reduced motion accessibility */
 
 @media (prefers-reduced-motion: reduce) {
-
   .glassCard,
   .indicators button,
   .searchButton,
@@ -881,15 +885,7 @@
 
 @media (max-width: 767px) {
   .widgets {
-    display: grid !important;
-    grid-template-columns: 1fr 1fr;
-    visibility: visible !important;
-    opacity: 1 !important;
-    position: relative !important;
-    z-index: 10 !important;
-    width: 100% !important;
-    gap: 8px;
-    margin-top: 0;
+    display: none !important;
   }
 
   .searchWidget,
@@ -1016,5 +1012,4 @@
     padding: 4px;
     font-size: 8px;
   }
-  
 }

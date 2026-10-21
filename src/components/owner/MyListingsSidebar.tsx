@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import Image from "next/image";
 import type { OwnerSubmission } from "@/src/app/(dashboard)/owner/page";
 import { Building2, DollarSign, Tag, Edit3, X, Check } from "lucide-react";
 
@@ -178,11 +179,18 @@ export function MyListingsSidebar({ listings, onUpdateListing }: MyListingsSideb
             ) : (
               <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
                 <div className="flex items-center gap-4">
-                  <img
-                    src={item.imageUrl}
-                    alt={item.property}
-                    className="w-16 h-16 rounded-xl object-cover border border-brand-slate/10"
-                  />
+                  {item.imageUrl ? (
+                    <Image
+                      src={item.imageUrl}
+                      alt={item.property}
+                      width={64}
+                      height={64}
+                      unoptimized
+                      className="w-16 h-16 rounded-xl object-cover border border-brand-slate/10"
+                    />
+                  ) : (
+                    <div className="w-16 h-16 rounded-xl border border-brand-slate/10" />
+                  )}
                   <div>
                     <div className="flex items-center gap-2">
                       <span className="text-[10px] font-bold px-2 py-0.5 bg-brand-navy/10 text-brand-navy rounded-full uppercase">

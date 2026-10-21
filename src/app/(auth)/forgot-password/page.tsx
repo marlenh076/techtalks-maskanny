@@ -6,7 +6,6 @@ import { supabase } from "@/src/lib/supabase/client";
 import { recoveryRedirectUrl } from "@/src/lib/supabase/recovery-flow";
 import { AuthButton, AuthField, AuthHeading, AuthNotice } from "../auth-ui";
 
-
 export default function ForgotPasswordPage() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);

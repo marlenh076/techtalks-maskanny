@@ -107,13 +107,12 @@ export class BoostPaymentRepository {
     // Send the confirmation email after payment submission succeeds.
     // Email failure must not undo the saved payment submission.
     try {
-      const { data: ownerData, error: ownerError } =
-        await this.client.rpc(
-          "get_host_boost_payment_notification_details",
-          {
-            p_boost_id: boostId,
-          },
-        );
+      const { data: ownerData, error: ownerError } = await this.client.rpc(
+        "get_host_boost_payment_notification_details",
+        {
+          p_boost_id: boostId,
+        },
+      );
 
       if (ownerError) {
         throw new Error(ownerError.message);
@@ -146,8 +145,8 @@ export class BoostPaymentRepository {
         owner.amount_due == null
           ? ""
           : `<p><strong>Amount:</strong> ${escapeHtml(
-            String(owner.amount_due),
-          )} ${escapeHtml(owner.currency || "")}</p>`;
+              String(owner.amount_due),
+            )} ${escapeHtml(owner.currency || "")}</p>`;
 
       await sendEmail({
         to: owner.owner_email,
@@ -171,13 +170,9 @@ export class BoostPaymentRepository {
 
       console.info("Boost payment confirmation email sent:", payment.payment_id);
     } catch (emailError) {
-      console.error(
-        "Failed to send boost payment confirmation email:",
-        emailError,
-      );
+      console.error("Failed to send boost payment confirmation email:", emailError);
     }
 
     return payment;
-
   }
 }

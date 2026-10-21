@@ -11,29 +11,19 @@ interface MetricCardProps {
   subtitle?: string;
 }
 
-export function MetricCard({
-  title,
-  value,
-  change,
-  isPositive = true,
-  subtitle,
-}: MetricCardProps) {
+export function MetricCard({ title, value, change, isPositive = true, subtitle }: MetricCardProps) {
   return (
     <div className="flex min-w-0 flex-col items-center justify-center rounded-2xl border border-brand-slate/15 bg-white p-5 text-center shadow-sm transition-all hover:border-brand-slate/30">
       <span className="block w-full truncate text-center text-xs font-semibold uppercase tracking-wider text-brand-slate">
         {title}
       </span>
 
-      <span className="mt-2 text-2xl font-bold tabular-nums text-brand-navy">
-        {value}
-      </span>
+      <span className="mt-2 text-2xl font-bold tabular-nums text-brand-navy">{value}</span>
 
       {change && (
         <span
           className={`mt-2 inline-flex items-center rounded-full px-2 py-0.5 text-xs font-semibold ${
-            isPositive
-              ? "bg-brand-gold/20 text-brand-navy"
-              : "bg-rose-50 text-rose-700"
+            isPositive ? "bg-brand-gold/20 text-brand-navy" : "bg-rose-50 text-rose-700"
           }`}
         >
           {isPositive ? (

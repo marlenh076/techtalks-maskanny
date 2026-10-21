@@ -26,8 +26,8 @@ export default function SignInPage({
       .then(async ({ data, error: userError }) => {
         if (!active) return;
         if (!userError && data.user) {
-          const destination = await postAuthDestination(data.user.id, next).catch(
-            () => next ?? "/host/onboarding",
+          const destination = await postAuthDestination(data.user.id, next, "/").catch(
+            () => next ?? "/",
           );
           if (active) window.location.replace(destination);
           return;
@@ -66,7 +66,7 @@ export default function SignInPage({
         return;
       }
       sessionStorage.removeItem("maskanny-recovery");
-      const destination = await postAuthDestination(result.user.id, next);
+      const destination = await postAuthDestination(result.user.id, next, "/");
       window.location.replace(destination);
     } catch {
       setError("We couldn't sign you in. Please check your connection and try again.");

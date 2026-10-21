@@ -1,4 +1,3 @@
-
 import { NextResponse } from "next/server";
 import { createClient } from "@supabase/supabase-js";
 import { sendEmail } from "@/src/lib/email/send-email";
@@ -37,9 +36,7 @@ function getBeirutDate(): string {
     day: "2-digit",
   }).formatToParts(new Date());
 
-  const values = Object.fromEntries(
-    parts.map(({ type, value }) => [type, value]),
-  );
+  const values = Object.fromEntries(parts.map(({ type, value }) => [type, value]));
 
   return `${values.year}-${values.month}-${values.day}`;
 }
@@ -56,10 +53,7 @@ export async function GET(request: Request) {
   const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
 
   if (!supabaseUrl || !serviceRoleKey) {
-    return NextResponse.json(
-      { error: "Server environment is not configured" },
-      { status: 500 },
-    );
+    return NextResponse.json({ error: "Server environment is not configured" }, { status: 500 });
   }
 
   const supabase = createClient(supabaseUrl, serviceRoleKey, {
@@ -69,18 +63,14 @@ export async function GET(request: Request) {
     },
   });
 
-  const { data, error } = await supabase.rpc(
-    "get_boosts_needing_expiry_notifications",
-    { p_today: getBeirutDate() },
-  );
+  const { data, error } = await supabase.rpc("get_boosts_needing_expiry_notifications", {
+    p_today: getBeirutDate(),
+  });
 
   if (error) {
     console.error("Could not fetch expiring boosts:", error.message);
 
-    return NextResponse.json(
-      { error: "Could not fetch expiring boosts" },
-      { status: 500 },
-    );
+    return NextResponse.json({ error: "Could not fetch expiring boosts" }, { status: 500 });
   }
 
   const boosts = (data ?? []) as ExpiringBoost[];
@@ -105,9 +95,11 @@ export async function GET(request: Request) {
             </p>
             <p><strong>Expiry date:</strong> ${escapeHtml(boost.end_date.slice(0, 10))}</p>
             <p>
-              ${expired
-                ? "Visit Maskanny to review the available boosting plans if you would like to boost your listing again."
-                : "Review your boosting options before the expiry date if you would like to keep your listing boosted."}
+              ${
+                expired
+                  ? "Visit Maskanny to review the available boosting plans if you would like to boost your listing again."
+                  : "Review your boosting options before the expiry date if you would like to keep your listing boosted."
+              }
             </p>
             <p>Thank you for using Maskanny!</p>
             <p>The Maskanny Team</p>
@@ -117,10 +109,7 @@ export async function GET(request: Request) {
 
       results.push({ boostId: boost.boost_id, status: "sent" });
     } catch (emailError) {
-      console.error(
-        `Expiry email failed for boost ${boost.boost_id}:`,
-        emailError,
-      );
+      console.error(`Expiry email failed for boost ${boost.boost_id}:`, emailError);
 
       results.push({ boostId: boost.boost_id, status: "failed" });
     }
