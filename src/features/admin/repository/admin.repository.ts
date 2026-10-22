@@ -1,6 +1,7 @@
 import { createAuthenticatedClient } from "@/src/lib/supabase/client";
 import type { Json, Database } from "@/src/lib/database/types";
 import { databaseError } from "../service/errors";
+import { sendEmail } from "@/src/lib/email/send-email";
 import type {
   Page,
   AdminProfile,
@@ -63,6 +64,7 @@ export class AdminRepository {
       .createSignedUrl(path, 300);
     return error ? null : (data?.signedUrl ?? null);
   }
+
   async decideBoostPayment(
     id: string,
     input: {
@@ -73,7 +75,7 @@ export class AdminRepository {
       reason?: string;
     },
   ) {
-    return this.rpc("admin_decide_boost_payment", {
+    const boost = await this.rpc("admin_decide_boost_payment", {
       p_boost_id: id,
       p_payment_id: input.payment_id,
       p_reference: input.reference,
@@ -81,7 +83,105 @@ export class AdminRepository {
       p_whish_confirmed: input.whish_confirmed,
       p_reason: input.reason ?? null,
     });
+
+    if (input.decision === "approved") {
+      const { data, error } = await this.client.rpc(
+        "get_host_boost_payment_notification_details",
+        { p_boost_id: id },
+      );
+
+      if (error) {
+        databaseError(error, "get_host_boost_payment_notification_details");
+      }
+
+      const owner = data?.[0];
+
+      if (!owner?.owner_email) {
+        throw new Error("Owner email was not found.");
+      }
+
+      if (!boost.end_date) {
+        throw new Error("The approved boost has no expiry date.");
+      }
+
+      const escapeHtml = (value: string) =>
+        value.replace(/[&<>"']/g, (character) =>
+          ({
+            "&": "&amp;",
+            "<": "&lt;",
+            ">": "&gt;",
+            '"': "&quot;",
+            "'": "&#039;",
+          })[character]!,
+        );
+
+      const name = escapeHtml(owner.owner_firstname || "there");
+      const property = escapeHtml(owner.property_title || "your property");
+      const plan = escapeHtml(owner.plan_name || "Boost plan");
+
+      const expiryDate = new Date(boost.end_date).toLocaleDateString(
+        "en-GB",
+        {
+          day: "2-digit",
+          month: "long",
+          year: "numeric",
+          timeZone: "UTC",
+        },
+      );
+
+      await sendEmail({
+        to: owner.owner_email,
+        subject: "Your Maskanny property boost is approved!",
+        html: `
+        <div style="font-family:Arial,sans-serif;max-width:600px;margin:0 auto;color:#171717;line-height:1.6;">
+          <div style="background:#000;color:#fff;padding:24px;text-align:center;">
+            <h1 style="margin:0;font-size:26px;">Maskanny</h1>
+          </div>
+
+          <div style="padding:28px 24px;border:1px solid #e5e5e5;">
+            <h2 style="margin-top:0;">Your boost is approved!</h2>
+
+            <p>Hello ${name},</p>
+
+            <p>
+              Great news! Your payment has been verified and your property
+              boost is now active on Maskanny.
+            </p>
+
+            <div style="background:#f7f7f7;padding:18px;margin:24px 0;border-left:4px solid #000;">
+              <p style="margin:0 0 10px;">
+                <strong>Property:</strong> ${property}
+              </p>
+              <p style="margin:0 0 10px;">
+                <strong>Boost plan:</strong> ${plan}
+              </p>
+              <p style="margin:0;">
+                <strong>Expires on:</strong> ${expiryDate}
+              </p>
+            </div>
+
+            <p>
+              Your boost will remain active until its expiry date.
+              Thank you for choosing Maskanny!
+            </p>
+
+            <p style="margin-bottom:0;">
+              Best regards,<br />
+              <strong>Maskanny Team</strong>
+            </p>
+          </div>
+
+          <p style="font-size:12px;color:#777;text-align:center;padding:12px;">
+            This is an automated notification from Maskanny.
+          </p>
+        </div>
+      `,
+      });
+    }
+
+    return boost;
   }
+
   async statistics(from: string, to: string): Promise<AdminStatistics> {
     return (await this.rpc("admin_statistics", {
       p_from: from,

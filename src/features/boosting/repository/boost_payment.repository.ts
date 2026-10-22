@@ -145,28 +145,135 @@ export class BoostPaymentRepository {
         owner.amount_due == null
           ? ""
           : `<p><strong>Amount:</strong> ${escapeHtml(
-              String(owner.amount_due),
-            )} ${escapeHtml(owner.currency || "")}</p>`;
+            String(owner.amount_due),
+          )} ${escapeHtml(owner.currency || "")}</p>`;
+
 
       await sendEmail({
         to: owner.owner_email,
         subject: "We received your Maskanny boost payment confirmation",
         html: `
-          <div style="font-family: Arial, sans-serif; line-height: 1.7; color: #2B4162;">
-            <h2>Payment confirmation received</h2>
-            <p>Hello ${name},</p>
-            <p>We've received your payment confirmation for
-              <strong>${property}</strong>.</p>
-            <p><strong>Boosting plan:</strong> ${plan}</p>
-            ${amount}
-            <p><strong>Status:</strong> Pending verification</p>
-            <p>Our team will review your payment. Your boost will only be
-              activated after your payment has been verified and approved.</p>
-            <p>Thank you for choosing Maskanny!</p>
-            <p>The Maskanny Team</p>
-          </div>
-        `,
+    <div style="margin:0; padding:0; background-color:#f5f5f5; font-family:Arial,Helvetica,sans-serif; color:#111111;">
+      <table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0" style="background-color:#f5f5f5; padding:32px 12px;">
+        <tr>
+          <td align="center">
+            <table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0" style="max-width:560px; background-color:#ffffff; border:1px solid #e5e5e5;">
+
+              <!-- Header -->
+              <tr>
+                <td style="padding:26px 32px; border-bottom:1px solid #e5e5e5;">
+                  <p style="margin:0; font-size:24px; font-weight:700; letter-spacing:-0.7px; color:#111111;">
+                    Maskanny
+                  </p>
+                  <p style="margin:6px 0 0; font-size:12px; color:#777777;">
+                    Student Housing
+                  </p>
+                </td>
+              </tr>
+
+              <!-- Main content -->
+              <tr>
+                <td style="padding:32px;">
+                  <p style="margin:0 0 12px; font-size:12px; font-weight:600; letter-spacing:1px; color:#777777;">
+                    PAYMENT NOTIFICATION
+                  </p>
+
+                  <h1 style="margin:0 0 24px; font-size:25px; line-height:1.35; font-weight:600; color:#111111;">
+                    Payment confirmation received
+                  </h1>
+
+                  <p style="margin:0 0 16px; font-size:15px; line-height:1.7; color:#333333;">
+                    Hello ${name},
+                  </p>
+
+                  <p style="margin:0 0 24px; font-size:15px; line-height:1.7; color:#333333;">
+                    We've received your payment confirmation for
+                    <strong style="color:#111111;">${property}</strong>.
+                    Thank you for submitting your payment details.
+                  </p>
+
+                  <!-- Payment details -->
+                  <table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0" style="border:1px solid #e5e5e5; margin:0 0 24px;">
+                    <tr>
+                      <td colspan="2" style="padding:14px 16px; background-color:#fafafa; border-bottom:1px solid #e5e5e5;">
+                        <p style="margin:0; font-size:14px; font-weight:600; color:#111111;">
+                          Payment details
+                        </p>
+                      </td>
+                    </tr>
+                    <tr>
+                      <td style="padding:14px 16px; font-size:14px; color:#777777; border-bottom:1px solid #eeeeee;">
+                        Property
+                      </td>
+                      <td align="right" style="padding:14px 16px; font-size:14px; font-weight:600; color:#111111; border-bottom:1px solid #eeeeee;">
+                        ${property}
+                      </td>
+                    </tr>
+                    <tr>
+                      <td style="padding:14px 16px; font-size:14px; color:#777777; border-bottom:1px solid #eeeeee;">
+                        Boosting plan
+                      </td>
+                      <td align="right" style="padding:14px 16px; font-size:14px; font-weight:600; color:#111111; border-bottom:1px solid #eeeeee;">
+                        ${plan}
+                      </td>
+                    </tr>
+                    ${owner.amount_due != null
+            ? `
+                          <tr>
+                            <td style="padding:14px 16px; font-size:14px; color:#777777; border-bottom:1px solid #eeeeee;">
+                              Amount
+                            </td>
+                            <td align="right" style="padding:14px 16px; font-size:14px; font-weight:600; color:#111111; border-bottom:1px solid #eeeeee;">
+                              ${escapeHtml(String(owner.amount_due))} ${escapeHtml(owner.currency || "")}
+                            </td>
+                          </tr>
+                        `
+            : ""
+          }
+                    <tr>
+                      <td style="padding:14px 16px; font-size:14px; color:#777777;">
+                        Status
+                      </td>
+                      <td align="right" style="padding:14px 16px; font-size:14px; font-weight:600; color:#111111;">
+                        Pending verification
+                      </td>
+                    </tr>
+                  </table>
+
+                  <p style="margin:0 0 16px; font-size:15px; line-height:1.7; color:#333333;">
+                    Our team will review your payment submission. Your boost will only be activated after your payment has been verified and approved.
+                  </p>
+
+                  <p style="margin:24px 0 0; font-size:15px; line-height:1.7; color:#333333;">
+                    Best regards,<br />
+                    <strong style="color:#111111;">Maskanny Team</strong>
+                  </p>
+                </td>
+              </tr>
+
+              <!-- Footer -->
+              <tr>
+                <td style="padding:22px 32px; border-top:1px solid #e5e5e5; background-color:#fafafa;">
+                  <p style="margin:0 0 8px; font-size:12px; line-height:1.6; color:#777777;">
+                    Maskanny · Student Housing
+                  </p>
+                  <p style="margin:0; font-size:12px; line-height:1.6; color:#777777;">
+                    This is an automated notification from Maskanny.
+                  </p>
+                  <p style="margin:12px 0 0; font-size:12px; color:#999999;">
+                    © ${new Date().getFullYear()} Maskanny. All rights reserved.
+                  </p>
+                </td>
+              </tr>
+
+            </table>
+          </td>
+        </tr>
+      </table>
+    </div>
+  `,
       });
+
 
       console.info("Boost payment confirmation email sent:", payment.payment_id);
     } catch (emailError) {

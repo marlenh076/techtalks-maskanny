@@ -31,12 +31,10 @@
   content: "";
   position: absolute;
   inset: 0;
-  background: linear-gradient(
-    180deg,
-    rgb(22 34 53 / 58%) 0%,
-    rgb(35 53 78 / 44%) 55%,
-    rgb(43 65 98 / 32%) 100%
-  );
+  background: linear-gradient(180deg,
+      rgb(22 34 53 / 58%) 0%,
+      rgb(35 53 78 / 44%) 55%,
+      rgb(43 65 98 / 32%) 100%);
 }
 
 .heading {
@@ -66,13 +64,13 @@
   text-wrap: balance;
 }
 
-/* Decorative widgets */
 
 .widgets {
-  display: none;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  align-items: stretch;
+  gap: 16px;
 }
-
-/* Search form */
 
 .searchForm {
   width: 100%;
@@ -83,6 +81,28 @@
   border-radius: 24px;
   background: var(--hero-white);
   box-shadow: 0 14px 36px -18px rgb(20 32 51 / 30%);
+}
+
+.campusLink {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-top: auto;
+  padding-top: 12px;
+  border-top: 1px solid rgba(31, 29, 29, 0.25);
+  color: inherit;
+  font-size: 13px;
+  font-weight: 600;
+  text-decoration: none;
+}
+
+.campusLink svg {
+  transform: rotate(45deg);
+  transition: transform 0.2s ease;
+}
+
+.campusLink:hover svg {
+  transform: rotate(45deg) translateY(-3px);
 }
 
 .fields {
@@ -277,7 +297,7 @@
     background-color 180ms ease;
 }
 
-.mobileSearchPill > svg {
+.mobileSearchPill>svg {
   flex-shrink: 0;
 }
 
@@ -302,7 +322,7 @@
   line-height: 1.4;
 }
 
-.mobileSearchCopy > span {
+.mobileSearchCopy>span {
   color: var(--hero-slate);
   font-size: 11px;
   line-height: 1.4;
@@ -570,6 +590,7 @@
     font-size: 8px;
   }
 }
+
 /* Tablet and desktop */
 
 @media (min-width: 768px) {
@@ -863,6 +884,7 @@
 /* Reduced motion accessibility */
 
 @media (prefers-reduced-motion: reduce) {
+
   .glassCard,
   .indicators button,
   .searchButton,

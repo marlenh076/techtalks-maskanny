@@ -85,26 +85,101 @@ export class PropertyModerationRepository {
         reason?.trim() || "Please contact the Maskanny team for more information.",
       );
 
-      const html = approved
-        ? `
-        <div style="font-family: Arial, sans-serif; line-height: 1.6;">
-          <h2>Your listing has been approved!</h2>
-          <p>Hello ${safeName},</p>
-          <p>Your Maskanny listing <strong>${safeTitle}</strong> has been approved by our team.</p>
-          <p>Your listing can now be shown to students on Maskanny.</p>
-          <p>Thank you for using Maskanny!</p>
-        </div>
-      `
-        : `
-        <div style="font-family: Arial, sans-serif; line-height: 1.6;">
-          <h2>Update on your Maskanny listing</h2>
-          <p>Hello ${safeName},</p>
-          <p>Your listing <strong>${safeTitle}</strong> was not approved at this time.</p>
-          <p><strong>Reason:</strong> ${safeReason}</p>
-          <p>Please review the reason and make the necessary changes before resubmitting.</p>
-          <p>Thank you,<br />The Maskanny Team</p>
-        </div>
-      `;
+
+      const html = `
+  <div style="margin:0; padding:0; background-color:#f5f5f5; font-family:Arial,Helvetica,sans-serif; color:#111111;">
+    <table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0" style="background-color:#f5f5f5; padding:32px 12px;">
+      <tr>
+        <td align="center">
+          <table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0" style="max-width:560px; background-color:#ffffff; border:1px solid #e5e5e5;">
+
+            <!-- Header -->
+            <tr>
+              <td style="padding:26px 32px; border-bottom:1px solid #e5e5e5;">
+                <p style="margin:0; font-size:24px; font-weight:700; letter-spacing:-0.7px; color:#111111;">
+                  Maskanny
+                </p>
+                <p style="margin:6px 0 0; font-size:12px; color:#777777;">
+                  Student Housing
+                </p>
+              </td>
+            </tr>
+
+            <!-- Content -->
+            <tr>
+              <td style="padding:32px;">
+                <p style="margin:0 0 12px; font-size:12px; font-weight:600; letter-spacing:1px; color:#777777;">
+                  LISTING NOTIFICATION
+                </p>
+
+                <h1 style="margin:0 0 24px; font-size:25px; line-height:1.35; font-weight:600; color:#111111;">
+                  ${approved
+          ? "Your listing has been approved"
+          : "Update on your Maskanny listing"
+        }
+                </h1>
+
+                <p style="margin:0 0 16px; font-size:15px; line-height:1.7; color:#333333;">
+                  Hello ${safeName},
+                </p>
+
+                ${approved
+          ? `
+                      <p style="margin:0 0 16px; font-size:15px; line-height:1.7; color:#333333;">
+                        Great news! Your listing <strong style="color:#111111;">${safeTitle}</strong> has been approved by our team.
+                      </p>
+                      <p style="margin:0 0 24px; font-size:15px; line-height:1.7; color:#333333;">
+                        Your listing can now be shown to students on Maskanny.
+                      </p>
+                    `
+          : `
+                      <p style="margin:0 0 16px; font-size:15px; line-height:1.7; color:#333333;">
+                        Your listing <strong style="color:#111111;">${safeTitle}</strong> was not approved at this time.
+                      </p>
+
+                      <div style="margin:20px 0; padding:16px; background-color:#f7f7f7; border-left:3px solid #111111;">
+                        <p style="margin:0 0 8px; font-size:13px; font-weight:600; color:#111111;">
+                          Reason for rejection
+                        </p>
+                        <p style="margin:0; font-size:14px; line-height:1.7; color:#333333;">
+                          ${safeReason}
+                        </p>
+                      </div>
+
+                      <p style="margin:0 0 24px; font-size:15px; line-height:1.7; color:#333333;">
+                        Please review the reason above, make the necessary changes, and resubmit your listing for review.
+                      </p>
+                    `
+        }
+
+                <p style="margin:0; font-size:15px; line-height:1.7; color:#333333;">
+                  Best regards,<br />
+                  <strong style="color:#111111;">Maskanny Team</strong>
+                </p>
+              </td>
+            </tr>
+
+            <!-- Footer -->
+            <tr>
+              <td style="padding:22px 32px; border-top:1px solid #e5e5e5; background-color:#fafafa;">
+                <p style="margin:0 0 8px; font-size:12px; line-height:1.6; color:#777777;">
+                  Maskanny · Student Housing
+                </p>
+                <p style="margin:0; font-size:12px; line-height:1.6; color:#777777;">
+                  This is an automated notification from Maskanny.
+                </p>
+                <p style="margin:12px 0 0; font-size:12px; color:#999999;">
+                  © ${new Date().getFullYear()} Maskanny. All rights reserved.
+                </p>
+              </td>
+            </tr>
+
+          </table>
+        </td>
+      </tr>
+    </table>
+  </div>
+`;
 
       await sendEmail({
         to: ownerEmail,

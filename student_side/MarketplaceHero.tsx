@@ -1,7 +1,7 @@
 "use client";
 
 import Image from "next/image";
-import { GraduationCap, House, MapPin, SlidersHorizontal, Wallet } from "lucide-react";
+import { GraduationCap, House, MapPin, SlidersHorizontal, Wallet, ArrowUp } from "lucide-react";
 import type { UniversitiesResource } from "@/src/features/universities/presentation/useUniversities";
 import { HeroSearch } from "./HeroSearch";
 import styles from "./MarketplaceHero.module.css";
@@ -90,6 +90,10 @@ export function MarketplaceHero({ universities }: { universities: UniversitiesRe
                   : "Discover your campus"}
               </p>
             )}
+            <a href="#hero-search" className={styles.campusLink}>
+              Closer to campus
+              <ArrowUp size={14} aria-hidden="true" />
+            </a>
           </div>
         </div>
       </div>
